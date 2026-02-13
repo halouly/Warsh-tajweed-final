@@ -29,7 +29,6 @@
             --active-bg: #374151; --active-border: #fbbf24;
         }
 
-        /* --- LAYOUT --- */
         body { font-family: 'Amiri', serif; background: var(--bg); color: var(--text); margin:0; padding-bottom:180px; transition: 0.3s; }
         header { position: sticky; top: 0; z-index: 900; background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
@@ -130,45 +129,36 @@
     </div>
 
     <script>
-    window.onload = function() {
-        try {
-            // 1. DATA (Explicit List)
-            const SURAH_NAMES = [
-                "Al-Fatiha", "Al-Baqarah", "Al-Imran", "An-Nisa", "Al-Ma'idah", "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Tawbah", "Yunus",
-                "Hud", "Yusuf", "Ar-Ra'd", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra", "Al-Kahf", "Maryam", "Ta-Ha",
-                "Al-Anbiya", "Al-Hajj", "Al-Mu'minun", "An-Nur", "Al-Furqan", "Ash-Shu'ara", "An-Naml", "Al-Qasas", "Al-Ankabut", "Ar-Rum",
-                "Luqman", "As-Sajdah", "Al-Ahzab", "Saba", "Fatir", "Ya-Sin", "As-Saffat", "Sad", "Az-Zumar", "Ghafir",
-                "Fussilat", "Ash-Shura", "Az-Zukhruf", "Ad-Dukhan", "Al-Jathiyah", "Al-Ahqaf", "Muhammad", "Al-Fath", "Al-Hujurat", "Qaf",
-                "Adh-Dhariyat", "At-Tur", "An-Najm", "Al-Qamar", "Ar-Rahman", "Al-Waqi'ah", "Al-Hadid", "Al-Mujadila", "Al-Hashr", "Al-Mumtahanah",
-                "As-Saff", "Al-Jumu'ah", "Al-Munafiqun", "At-Taghabun", "At-Talaq", "At-Tahrim", "Al-Mulk", "Al-Qalam", "Al-Haqqah", "Al-Ma'arij",
-                "Nuh", "Al-Jinn", "Al-Muzzammil", "Al-Muddathir", "Al-Qiyamah", "Al-Insan", "Al-Mursalat", "An-Naba", "An-Nazi'at", "Abasa",
-                "At-Takwir", "Al-Infitar", "Al-Mutaffifin", "Al-Inshiqaq", "Al-Buruj", "At-Tariq", "Al-A'la", "Al-Ghashiyah", "Al-Fajr", "Al-Balad",
-                "Ash-Shams", "Al-Layl", "Ad-Duhaa", "Ash-Sharh", "At-Tin", "Al-Alaq", "Al-Qadr", "Al-Bayyinah", "Az-Zalzalah", "Al-Adiyat",
-                "Al-Qari'ah", "At-Takathur", "Al-Asr", "Al-Humazah", "Al-Fil", "Quraysh", "Al-Ma'un", "Al-Kawthar", "Al-Kafirun", "An-Nasr",
-                "Al-Masad", "Al-Ikhlas", "Al-Falaq", "An-Nas"
-            ];
+    // --- 1. DATA (Define this FIRST) ---
+    const SURAH_NAMES = [
+        "Al-Fatiha", "Al-Baqarah", "Al-Imran", "An-Nisa", "Al-Ma'idah", "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Tawbah", "Yunus",
+        "Hud", "Yusuf", "Ar-Ra'd", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra", "Al-Kahf", "Maryam", "Ta-Ha",
+        "Al-Anbiya", "Al-Hajj", "Al-Mu'minun", "An-Nur", "Al-Furqan", "Ash-Shu'ara", "An-Naml", "Al-Qasas", "Al-Ankabut", "Ar-Rum",
+        "Luqman", "As-Sajdah", "Al-Ahzab", "Saba", "Fatir", "Ya-Sin", "As-Saffat", "Sad", "Az-Zumar", "Ghafir",
+        "Fussilat", "Ash-Shura", "Az-Zukhruf", "Ad-Dukhan", "Al-Jathiyah", "Al-Ahqaf", "Muhammad", "Al-Fath", "Al-Hujurat", "Qaf",
+        "Adh-Dhariyat", "At-Tur", "An-Najm", "Al-Qamar", "Ar-Rahman", "Al-Waqi'ah", "Al-Hadid", "Al-Mujadila", "Al-Hashr", "Al-Mumtahanah",
+        "As-Saff", "Al-Jumu'ah", "Al-Munafiqun", "At-Taghabun", "At-Talaq", "At-Tahrim", "Al-Mulk", "Al-Qalam", "Al-Haqqah", "Al-Ma'arij",
+        "Nuh", "Al-Jinn", "Al-Muzzammil", "Al-Muddathir", "Al-Qiyamah", "Al-Insan", "Al-Mursalat", "An-Naba", "An-Nazi'at", "Abasa",
+        "At-Takwir", "Al-Infitar", "Al-Mutaffifin", "Al-Inshiqaq", "Al-Buruj", "At-Tariq", "Al-A'la", "Al-Ghashiyah", "Al-Fajr", "Al-Balad",
+        "Ash-Shams", "Al-Layl", "Ad-Duhaa", "Ash-Sharh", "At-Tin", "Al-Alaq", "Al-Qadr", "Al-Bayyinah", "Az-Zalzalah", "Al-Adiyat",
+        "Al-Qari'ah", "At-Takathur", "Al-Asr", "Al-Humazah", "Al-Fil", "Quraysh", "Al-Ma'un", "Al-Kawthar", "Al-Kafirun", "An-Nasr",
+        "Al-Masad", "Al-Ikhlas", "Al-Falaq", "An-Nas"
+    ];
 
-            // 2. POPULATE DROPDOWN
-            const sel = document.getElementById('surah-select');
-            sel.innerHTML = ""; // Clear existing
-            SURAH_NAMES.forEach((n, i) => {
-                let opt = document.createElement('option');
-                opt.value = i + 1;
-                opt.text = (i + 1) + ". " + n;
-                sel.appendChild(opt);
-            });
+    // --- 2. POPULATE DROPDOWN IMMEDIATELY ---
+    const sel = document.getElementById('surah-select');
+    sel.innerHTML = "";
+    for (let i = 0; i < SURAH_NAMES.length; i++) {
+        let opt = document.createElement('option');
+        opt.value = i + 1;
+        opt.text = (i + 1) + ". " + SURAH_NAMES[i];
+        sel.appendChild(opt);
+    }
 
-            // 3. START APP
-            init();
-
-        } catch (err) {
-            alert("Startup Error: " + err);
-        }
-    };
-
+    // --- 3. PWA ---
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 
-    // --- TAJWEED ---
+    // --- 4. TAJWEED ENGINE ---
     const SUKUN='\u0652', SHADDA='\u0651', FATHA='\u064E', DAMMA='\u064F', KASRA='\u0650';
     const DAGGER='\u0670', MADD_SIGN='\u0653', WARSH_DOT='\u06EC'; 
     const QALQ='قطبجد', IDGH_GH='ينمو', IDGH_NO='لر', IKHFA='تثجدذزسشصضطظفقك';
@@ -209,6 +199,7 @@
                     if(has(t,p.i,KASRA) || (p.c==='ي' && (has(t,p.i,SUKUN)||!getDiac(t,p.i).length))) rule='tj-light';
                 }
             }
+            // Strict Madd Logic
             else if(MADD.includes(c) && !hasVowel && !isShadda){
                 if(has(t,i,MADD_SIGN)) rule='tj-mandatory'; 
                 else if(n && (has(t,n.i,SHADDA) || has(t,n.i,SUKUN))) rule='tj-mandatory';
@@ -230,6 +221,7 @@
             const nc = x ? x.cls : null;
             const c = t[i];
             
+            // ZWJ Logic
             const prevC = (i > 0) ? t[i-1] : null;
             const nextC = (i < t.length-1) ? t[i+1] : null;
             let prefix = "", suffix = "";
@@ -246,7 +238,7 @@
         return h;
     }
 
-    // --- STATE ---
+    // --- 5. APP STATE & FUNCTIONS ---
     let state = { surah: 1, chunkSize: 'all', offset: 1, data: null };
     let bookmarks = [], fullQuranCache = null, playing = false, stopReq = false;
     const aud = new Audio();
@@ -265,7 +257,10 @@
         }
         document.getElementById('surah-select').value = state.surah;
         const bm = JSON.parse(localStorage.getItem('warsh_bookmarks')); if(bm) bookmarks = bm;
-        renderBMList(); changeSurah(state.surah, true);
+        renderBMList(); 
+        
+        // LOAD DATA
+        changeSurah(state.surah, true);
     }
 
     function saveState() {
@@ -282,6 +277,92 @@
         }));
     }
 
-    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
-    function navSurah(dir) { let next = state.surah + dir; if(next >= 1 && next <= 114) changeSurah(next); }
-    function changeViewMode(mode) { const inp = document.getElementById('custom-chunk-input'); if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } else { inp.classList.remove('show'); s
+    async function changeSurah(id, skipOffsetReset) { 
+        state.surah = parseInt(id); 
+        if(!skipOffsetReset) state.offset = 1; 
+        document.getElementById('surah-select').value = state.surah; 
+        saveState(); 
+        await loadData(); 
+        render(); 
+    }
+
+    function navSurah(dir) { 
+        let next = state.surah + dir; 
+        if(next >= 1 && next <= 114) changeSurah(next); 
+    }
+    
+    function changeViewMode(mode) { 
+        const inp = document.getElementById('custom-chunk-input'); 
+        if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } 
+        else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); } 
+        updateNavVisibility(); saveState(); 
+    }
+    
+    function setCustomChunk(val) { 
+        let n = parseInt(val); 
+        if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); } 
+    }
+    
+    function updateNavVisibility() { 
+        const nav = document.getElementById('page-controls'); 
+        if(state.chunkSize === 'all') nav.classList.add('hidden'); else nav.classList.remove('hidden'); 
+    }
+    
+    function changePage(dir) { 
+        if(state.chunkSize === 'all') return; 
+        const next = state.offset + (dir * state.chunkSize); 
+        if(next >= 1 && next <= state.data.verses.length) { state.offset = next; render(); saveState(); } 
+    }
+
+    async function loadData() {
+        document.getElementById('status').innerText = "Loading data...";
+        try { 
+            const res = await fetch(`data/${state.surah}.json`); 
+            if(!res.ok) throw new Error("File not found"); 
+            state.data = await res.json(); 
+            document.getElementById('surah-title').innerText = `${state.surah}. ${state.data.name_ar} (${state.data.name_en})`; 
+            document.getElementById('status').innerText = "Ready"; 
+        } catch(e) { 
+            document.getElementById('display').innerHTML = `<div style="color:red;text-align:center">Error: ${e.message}</div>`; 
+        }
+    }
+
+    function render() {
+        if(!state.data) return;
+        const div = document.getElementById('display'); let html = "";
+        if (state.surah != 1 && state.surah != 9 && state.offset === 1) { const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${apply(bism, detect(bism))}</div>`; }
+        let startIdx = state.offset - 1; let endIdx = state.chunkSize === 'all' ? state.data.verses.length : Math.min(startIdx + state.chunkSize, state.data.verses.length); const chunk = state.data.verses.slice(startIdx, endIdx);
+        chunk.forEach((txt, i) => { let n = startIdx + i + 1; let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); let starClass = isSaved ? 'bm-icon saved' : 'bm-icon'; html += `<div class="verse" id="v${n}" onclick="pick(${n})">${apply(txt, detect(txt))} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span></div>`; });
+        div.innerHTML = html; window.scrollTo({ top: 0, behavior: 'smooth' });
+        if(state.chunkSize !== 'all') document.getElementById('page-info').innerText = `${state.offset}-${endIdx}`; document.getElementById('v_start').value = state.offset; document.getElementById('v_end').value = endIdx;
+    }
+
+    async function runGlobalSearch() {
+        const q = document.getElementById('search-input').value.trim(); const resDiv = document.getElementById('search-results'); const stat = document.getElementById('search-status');
+        if(!q) return; resDiv.innerHTML = ""; stat.innerText = "Indexing entire Quran...";
+        if (!fullQuranCache) { try { fullQuranCache = []; const promises = []; for(let i=1; i<=114; i++) promises.push(fetch(`data/${i}.json`).then(r => r.json())); fullQuranCache = await Promise.all(promises); } catch(e) { stat.innerText = "Error loading Quran data."; return; } }
+        stat.innerText = "Searching..."; let results = [];
+        fullQuranCache.forEach((surahData, sIdx) => { surahData.verses.forEach((txt, vIdx) => { if (txt.includes(q)) { results.push({ s: sIdx + 1, v: vIdx + 1, name: surahData.name_en, txt: txt }); } }); });
+        stat.innerText = `Found ${results.length} matches.`;
+        if (results.length === 0) resDiv.innerHTML = "<div class='pop-item'>No matches found.</div>"; else { resDiv.innerHTML = results.map(r => `<div class="pop-item" onclick="jumpTo(${r.s}, ${r.v}); togglePanel('search-panel')"><div><strong>${r.s}. ${r.name} (${r.v})</strong><br><span style="color:#666; font-size:0.8em">${r.txt.substring(0, 60)}...</span></div></div>`).join(''); }
+    }
+
+    function toggleBM(e, v) { e.stopPropagation(); const existingIdx = bookmarks.findIndex(b => b.s === state.surah && b.v === v); if(existingIdx >= 0) bookmarks.splice(existingIdx, 1); else bookmarks.push({s: state.surah, v: v, name: state.data.name_en}); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); render(); renderBMList(); }
+    function renderBMList() { const div = document.getElementById('bm-list'); if(bookmarks.length === 0) { div.innerHTML = "No bookmarks yet."; return; } div.innerHTML = bookmarks.map((b, i) => `<div class="pop-item" onclick="jumpTo(${b.s}, ${b.v})"><span>${b.s}. ${b.name} (${b.v})</span><span style="color:red" onclick="removeBM(event, ${i})">✕</span></div>`).join(''); }
+    function removeBM(e, i) { e.stopPropagation(); bookmarks.splice(i, 1); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); renderBMList(); render(); }
+    async function jumpTo(s, v) { await changeSurah(s, true); if (state.chunkSize !== 'all') { const pageStart = Math.floor((v - 1) / state.chunkSize) * state.chunkSize + 1; state.offset = pageStart; } else { state.offset = v; } await render(); setTimeout(() => pick(v), 300); togglePanel('bm-panel'); }
+    function pick(n) { document.getElementById('v_start').value = n; hl(n); }
+    function hl(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
+
+    async function play() { if(playing) return; playing=true; stopReq=false; const btn = document.getElementById('play-btn'); const reciter = document.getElementById('reciter-select').value; const sId = String(state.surah).padStart(3,'0'); const st = document.getElementById('status'); btn.innerText = "⏸ Playing"; while(true) { const start = parseInt(document.getElementById('v_start').value); const end = parseInt(document.getElementById('v_end').value); for(let a=start; a<=end; a++) { if(stopReq) break; hl(a); st.innerText = `Playing Ayah ${a} / ${end}`; aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`; try { await new Promise((resolve) => { aud.onended = resolve; aud.onerror = () => { console.error('Audio Err'); st.innerText="Err: Missing Audio"; resolve(); }; aud.play().catch(resolve); }); } catch(e){} if(!stopReq) await new Promise(r=>setTimeout(r, 200)); } if(stopReq || !document.getElementById('loop-box').checked) break; st.innerText = "Looping..."; await new Promise(r=>setTimeout(r, 500)); } playing=false; btn.innerText = "▶ PLAY"; st.innerText = "Ready"; }
+    function stop() { stopReq=true; aud.pause(); document.getElementById('play-btn').innerText = "▶ PLAY"; }
+    function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
+    function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
+    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
+    function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
+    
+    // START APP
+    init();
+    </script>
+</body>
+</html>
