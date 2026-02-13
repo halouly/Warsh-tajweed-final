@@ -17,8 +17,8 @@
         .tj-silent    { color: #9ca3af !important; } /* Grey */
         
         /* MADD RULES */
-        .tj-mandatory { color: #800020 !important; font-weight: bold; } /* Burgundy (Madd Lazim/Wajib) */
-        .tj-madd      { color: #dc2626 !important; } /* Red (Normal/Badal) */
+        .tj-mandatory { color: #800020 !important; font-weight: bold; } /* Burgundy */
+        .tj-madd      { color: #dc2626 !important; } /* Red */
 
         /* --- THEMES --- */
         :root { 
@@ -54,6 +54,7 @@
         html[dir="rtl"] .popover { right: auto; left: 20px; }
         .pop-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
         .pop-item:hover { background: rgba(0,0,0,0.05); }
+        
         .typo-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
         .typo-label { font-size: 0.8rem; opacity: 0.8; }
 
@@ -104,7 +105,9 @@
         <div id="search-status" style="font-size:0.8rem; color:#666; margin-bottom:5px;"></div>
         <div id="search-results" style="max-height:300px; overflow-y:auto;"></div>
     </div>
+    
     <div id="bm-panel" class="popover"><h3 style="margin-top:0">Bookmarks</h3><div id="bm-list">No bookmarks yet.</div></div>
+    
     <div id="typo-panel" class="popover">
         <div class="typo-row"><span class="typo-label">Text Size</span><input type="range" min="20" max="70" value="32" oninput="updateSetting('sz', this.value+'px')"></div>
         <div class="typo-row"><span class="typo-label">Line Height</span><input type="range" min="1.5" max="4.0" step="0.1" value="2.8" oninput="updateSetting('lh', this.value)"></div>
@@ -154,9 +157,23 @@
     </div>
 
     <script>
+    // PWA Check
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 
-    const SURAH_NAMES = ["Al-Fatiha","Al-Baqarah","Al-Imran","An-Nisa","Al-Ma'idah","Al-An'am","Al-A'raf","Al-Anfal","At-Tawbah","Yunus","Hud","Yusuf","Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha","Al-Anbiya","Al-Hajj","Al-Mu'minun","An-Nur","Al-Furqan","Ash-Shu'ara","An-Naml","Al-Qasas","Al-Ankabut","Ar-Rum","Luqman","As-Sajdah","Al-Ahzab","Saba","Fatir","Ya-Sin","As-Saffat","Sad","Az-Zumar","Ghafir","Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan","Al-Jathiyah","Al-Ahqaf","Muhammad","Al-Fath","Al-Hujurat","Qaf","Adh-Dhariyat","At-Tur","An-Najm","Al-Qamar","Ar-Rahman","Al-Waqi'ah","Al-Hadid","Al-Mujadila","Al-Hashr","Al-Mumtahanah","As-Saff","Al-Jumu'ah","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqah","Al-Ma'arij","Nuh","Al-Jinn","Al-Muzzammil","Al-Muddathir","Al-Qiyamah","Al-Insan","Al-Mursalat","An-Naba","An-Nazi'at","Abasa","At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-A'la","Al-Ghashiyah","Al-Fajr","Al-Balad","Ash-Shams","Al-Layl","Ad-Duhaa","Ash-Sharh","At-Tin","Al-Alaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-Adiyat","Al-Qari'ah","At-Takathur","Al-Asr","Al-Humazah","Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar","Al-Kafirun","An-Nasr","Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"];
+    const SURAH_NAMES = [
+        "Al-Fatiha", "Al-Baqarah", "Al-Imran", "An-Nisa", "Al-Ma'idah", "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Tawbah", "Yunus",
+        "Hud", "Yusuf", "Ar-Ra'd", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra", "Al-Kahf", "Maryam", "Ta-Ha",
+        "Al-Anbiya", "Al-Hajj", "Al-Mu'minun", "An-Nur", "Al-Furqan", "Ash-Shu'ara", "An-Naml", "Al-Qasas", "Al-Ankabut", "Ar-Rum",
+        "Luqman", "As-Sajdah", "Al-Ahzab", "Saba", "Fatir", "Ya-Sin", "As-Saffat", "Sad", "Az-Zumar", "Ghafir",
+        "Fussilat", "Ash-Shura", "Az-Zukhruf", "Ad-Dukhan", "Al-Jathiyah", "Al-Ahqaf", "Muhammad", "Al-Fath", "Al-Hujurat", "Qaf",
+        "Adh-Dhariyat", "At-Tur", "An-Najm", "Al-Qamar", "Ar-Rahman", "Al-Waqi'ah", "Al-Hadid", "Al-Mujadila", "Al-Hashr", "Al-Mumtahanah",
+        "As-Saff", "Al-Jumu'ah", "Al-Munafiqun", "At-Taghabun", "At-Talaq", "At-Tahrim", "Al-Mulk", "Al-Qalam", "Al-Haqqah", "Al-Ma'arij",
+        "Nuh", "Al-Jinn", "Al-Muzzammil", "Al-Muddathir", "Al-Qiyamah", "Al-Insan", "Al-Mursalat", "An-Naba", "An-Nazi'at", "Abasa",
+        "At-Takwir", "Al-Infitar", "Al-Mutaffifin", "Al-Inshiqaq", "Al-Buruj", "At-Tariq", "Al-A'la", "Al-Ghashiyah", "Al-Fajr", "Al-Balad",
+        "Ash-Shams", "Al-Layl", "Ad-Duhaa", "Ash-Sharh", "At-Tin", "Al-Alaq", "Al-Qadr", "Al-Bayyinah", "Az-Zalzalah", "Al-Adiyat",
+        "Al-Qari'ah", "At-Takathur", "Al-Asr", "Al-Humazah", "Al-Fil", "Quraysh", "Al-Ma'un", "Al-Kawthar", "Al-Kafirun", "An-Nasr",
+        "Al-Masad", "Al-Ikhlas", "Al-Falaq", "An-Nas"
+    ];
 
     // --- REFINED TAJWEED ENGINE ---
     const SUKUN='\u0652', SHADDA='\u0651', FATHA='\u064E', DAMMA='\u064F', KASRA='\u0650';
@@ -164,92 +181,4 @@
     const QALQ='قطبجد', IDGH_GH='ينمو', IDGH_NO='لر', IKHFA='تثجدذزسشصضطظفقك';
     const MADD='اوى'+DAGGER, HAMZA='ءأإؤئ', HEAVY_LAM_TRIGGERS = 'صطظ'; 
 
-    function isDiac(c){const x=c.charCodeAt(0); return (x>=0x064B && x<=0x065F) || x===0x0670 || (x>=0x06D6 && x<=0x06ED);}
-    function isLtr(c){const x=c.charCodeAt(0); return !isDiac(c) && x>=0x0600 && x<=0x06FF;}
-    function getDiac(t,i){let d=[]; for(let j=i+1;j<t.length&&isDiac(t[j]);j++)d.push(t[j]); return d;}
-    function has(t,i,c){return getDiac(t,i).includes(c);}
-    function getEnd(t, i){let j=i+1; while(j<t.length&&isDiac(t[j]))j++; return j;}
-    function nextL(t,i){for(let j=i+1;j<t.length;j++)if(isLtr(t[j]))return{c:t[j],i:j}; return null;}
-    function prevL(t,i){for(let j=i-1;j>=0;j--)if(isLtr(t[j]))return{c:t[j],i:j}; return null;}
-
-    function detect(t){
-        const a=[];
-        for(let i=0;i<t.length;i++){
-            const c=t[i]; if(!isLtr(c)) continue;
-            const n=nextL(t,i), p=prevL(t,i), rangeEnd=getEnd(t, i);
-            const diacs=getDiac(t,i);
-            const isSakin=has(t,i,SUKUN) || (!diacs.length && n && !has(t,i,SHADDA)); 
-            const hasVowel=has(t,i,FATHA) || has(t,i,DAMMA) || has(t,i,KASRA);
-            const isShadda=has(t,i,SHADDA);
-            let rule=null;
-
-            if (has(t, i, WARSH_DOT) || has(t, i, '\u065F')) rule='tj-special';
-            else if((c==='ن'||c==='م') && isShadda) rule='tj-ghunnah';
-            else if(c==='ن' && isSakin && n){
-                if(IDGH_GH.includes(n.c) || n.c==='ب' || IKHFA.includes(n.c)) rule='tj-ghunnah';
-                else if(IDGH_NO.includes(n.c)) rule='tj-silent';
-            }
-            else if(c==='م' && isSakin && n && n.c==='ب') rule='tj-ghunnah';
-            else if(QALQ.includes(c) && (has(t,i,SUKUN) || (!hasVowel && !n))) rule='tj-qalqalah';
-            else if(c==='ل' && has(t,i,FATHA) && p && HEAVY_LAM_TRIGGERS.includes(p.c) && (has(t,p.i,FATHA)||has(t,p.i,SUKUN)||!getDiac(t,p.i).length)) rule='tj-heavy';
-            else if(c==='ر'){
-                if(has(t,i,FATHA) || has(t,i,DAMMA)) rule='tj-heavy';
-                if(has(t,i,KASRA)) rule='tj-light'; 
-                else if((has(t,i,FATHA) || has(t,i,DAMMA)) && p){
-                    if(has(t,p.i,KASRA) || (p.c==='ي' && (has(t,p.i,SUKUN)||!getDiac(t,p.i).length))) rule='tj-light';
-                }
-            }
-            // --- STRICT MADD LOGIC ---
-            else if(MADD.includes(c) && !hasVowel && !isShadda){
-                // Mandatory (Burgundy)
-                if(has(t,i,MADD_SIGN)) rule='tj-mandatory'; 
-                else if(n && (has(t,n.i,SHADDA) || has(t,n.i,SUKUN))) rule='tj-mandatory';
-                else if(n && HAMZA.includes(n.c)) rule='tj-mandatory'; 
-                // Badal (Red)
-                else if(!rule && p && HAMZA.includes(p.c)) rule='tj-madd';
-            }
-            else if(c==='ل' && isSakin && n && has(t,n.i,SHADDA)) rule='tj-silent';
-            if(rule) a.push({s:i, e:rangeEnd, cls:rule});
-        }
-        return a;
-    }
-
-    // --- UPDATED APPLY WITH ZWJ LIGATURE FIX ---
-    function apply(t, ann){
-        // Characters that NEVER connect to the Left (Forward)
-        const NO_LEFT_JOIN = "اأإآٱدذرزوؤةى"; 
-        
-        const m = new Map(); 
-        for(const x of ann) for(let i=x.s; i<x.e; i++) m.set(i, x);
-        
-        let h = '', cls = null;
-        
-        for(let i=0; i<t.length; i++){
-            const x = m.get(i);
-            const nc = x ? x.cls : null;
-            const c = t[i];
-            
-            // Look around to determine connectivity
-            const prevC = (i > 0) ? t[i-1] : null;
-            const nextC = (i < t.length-1) ? t[i+1] : null;
-
-            let prefix = ""; 
-            let suffix = "";
-            
-            // If we are coloring this letter, check if it SHOULD connect
-            if(nc) {
-                // Connect to Previous? (If previous allows left-joining, and isn't a space)
-                if(prevC && !NO_LEFT_JOIN.includes(prevC) && prevC !== ' ' && !isDiac(prevC)) prefix = "&zwj;";
-                
-                // Connect to Next? (If current allows left-joining, and next isn't a space)
-                if(!NO_LEFT_JOIN.includes(c) && nextC && nextC !== ' ' && !isDiac(nextC)) suffix = "&zwj;";
-            }
-
-            if(nc !== cls){ 
-                if(cls) h += '</span>'; 
-                if(nc) h += `<span class="${nc}">`; 
-                cls = nc; 
-            }
-            
-            // Inject invisible joiners inside the span
-            h += prefix + c + suffi
+    function isDiac(c){const x=c.charCod
