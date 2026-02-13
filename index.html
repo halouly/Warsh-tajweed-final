@@ -9,14 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- TAJWEED COLORS --- */
-        .tj-ghunnah   { color: #16a34a !important; }
-        .tj-qalqalah  { color: #0284c7 !important; }
-        .tj-heavy     { color: #1e3a8a !important; font-weight: bold; }
-        .tj-light     { color: #06b6d4 !important; }
-        .tj-special   { color: #d97706 !important; font-weight: bold; }
-        .tj-silent    { color: #9ca3af !important; }
-        .tj-mandatory { color: #800020 !important; font-weight: bold; }
-        .tj-madd      { color: #dc2626 !important; }
+        .tj-ghunnah   { color: #16a34a !important; } /* Green */
+        .tj-qalqalah  { color: #0284c7 !important; } /* Blue */
+        .tj-heavy     { color: #1e3a8a !important; font-weight: bold; } /* Dark Blue */
+        .tj-light     { color: #06b6d4 !important; } /* Cyan */
+        .tj-special   { color: #d97706 !important; font-weight: bold; } /* Orange */
+        .tj-silent    { color: #9ca3af !important; } /* Grey */
+        .tj-mandatory { color: #800020 !important; font-weight: bold; } /* Burgundy (6 counts) */
+        .tj-madd      { color: #dc2626 !important; } /* Red (Badal/2-4-6) */
 
         /* --- THEMES --- */
         :root { 
@@ -129,7 +129,7 @@
     </div>
 
     <script>
-    // --- 1. DATA (Define this FIRST) ---
+    // --- 1. DATA ---
     const SURAH_NAMES = [
         "Al-Fatiha", "Al-Baqarah", "Al-Imran", "An-Nisa", "Al-Ma'idah", "Al-An'am", "Al-A'raf", "Al-Anfal", "At-Tawbah", "Yunus",
         "Hud", "Yusuf", "Ar-Ra'd", "Ibrahim", "Al-Hijr", "An-Nahl", "Al-Isra", "Al-Kahf", "Maryam", "Ta-Ha",
@@ -145,7 +145,7 @@
         "Al-Masad", "Al-Ikhlas", "Al-Falaq", "An-Nas"
     ];
 
-    // --- 2. POPULATE DROPDOWN IMMEDIATELY ---
+    // Pop dropdown
     const sel = document.getElementById('surah-select');
     sel.innerHTML = "";
     for (let i = 0; i < SURAH_NAMES.length; i++) {
@@ -155,12 +155,13 @@
         sel.appendChild(opt);
     }
 
-    // --- 3. PWA ---
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 
-    // --- 4. TAJWEED ENGINE ---
+    // --- 2. TAJWEED ENGINE (REFINED) ---
     const SUKUN='\u0652', SHADDA='\u0651', FATHA='\u064E', DAMMA='\u064F', KASRA='\u0650';
     const DAGGER='\u0670', MADD_SIGN='\u0653', WARSH_DOT='\u06EC'; 
+    const SILENT_ALIF_MARKS = ['\u06DF', '\u06E0', '\u0652']; // Marks often found on silent letters
+    
     const QALQ='قطبجد', IDGH_GH='ينمو', IDGH_NO='لر', IKHFA='تثجدذزسشصضطظفقك';
     const MADD='اوى'+DAGGER, HAMZA='ءأإؤئ', HEAVY_LAM_TRIGGERS = 'صطظ'; 
 
@@ -183,14 +184,26 @@
             const isShadda=has(t,i,SHADDA);
             let rule=null;
 
+            // --- 1. SPECIAL WARSH DOT ---
             if (has(t, i, WARSH_DOT) || has(t, i, '\u065F')) rule='tj-special';
+            
+            // --- 2. EXPLICIT MADD SIGN (Catch-all for Alif Lam Mim) ---
+            else if (has(t, i, MADD_SIGN)) {
+                rule = 'tj-mandatory'; 
+            }
+            
+            // --- 3. GHUNNAH (Noon/Mim) ---
             else if((c==='ن'||c==='م') && isShadda) rule='tj-ghunnah';
             else if(c==='ن' && isSakin && n){
                 if(IDGH_GH.includes(n.c) || n.c==='ب' || IKHFA.includes(n.c)) rule='tj-ghunnah';
                 else if(IDGH_NO.includes(n.c)) rule='tj-silent';
             }
             else if(c==='م' && isSakin && n && n.c==='ب') rule='tj-ghunnah';
+            
+            // --- 4. QALQALAH ---
             else if(QALQ.includes(c) && (has(t,i,SUKUN) || (!hasVowel && !n))) rule='tj-qalqalah';
+            
+            // --- 5. HEAVY LAM/RA ---
             else if(c==='ل' && has(t,i,FATHA) && p && HEAVY_LAM_TRIGGERS.includes(p.c) && (has(t,p.i,FATHA)||has(t,p.i,SUKUN)||!getDiac(t,p.i).length)) rule='tj-heavy';
             else if(c==='ر'){
                 if(has(t,i,FATHA) || has(t,i,DAMMA)) rule='tj-heavy';
@@ -199,14 +212,33 @@
                     if(has(t,p.i,KASRA) || (p.c==='ي' && (has(t,p.i,SUKUN)||!getDiac(t,p.i).length))) rule='tj-light';
                 }
             }
-            // Strict Madd Logic
+
+            // --- 6. MADD RULES (REFINED) ---
             else if(MADD.includes(c) && !hasVowel && !isShadda){
-                if(has(t,i,MADD_SIGN)) rule='tj-mandatory'; 
-                else if(n && (has(t,n.i,SHADDA) || has(t,n.i,SUKUN))) rule='tj-mandatory';
-                else if(n && HAMZA.includes(n.c)) rule='tj-mandatory'; 
-                else if(!rule && p && HAMZA.includes(p.c)) rule='tj-madd';
+                // Determine target for Hamza/Sukun checks
+                let checkNext = n;
+                // If next is Silent Alif, look PAST it for Hamza/Sukun checks
+                if(checkNext && checkNext.c === 'ا' && (has(t, checkNext.i, SUKUN) || has(t, checkNext.i, '\u06DF') || has(t, checkNext.i, '\u06E0'))) {
+                    checkNext = nextL(t, checkNext.i);
+                }
+
+                if (checkNext && HAMZA.includes(checkNext.c)) {
+                    rule = 'tj-mandatory'; // Madd Munfasil/Wajib
+                }
+                else if (checkNext && (has(t, checkNext.i, SHADDA) || has(t, checkNext.i, SUKUN))) {
+                    // Check if it's NOT a silent Alif that we failed to skip above
+                    if (checkNext.c !== 'ا') {
+                        rule = 'tj-mandatory'; // Madd Lazim
+                    }
+                }
+                else if (p && HAMZA.includes(p.c)) {
+                    rule = 'tj-madd'; // Madd Badal
+                }
             }
+            
+            // --- 7. SILENT LETTERS ---
             else if(c==='ل' && isSakin && n && has(t,n.i,SHADDA)) rule='tj-silent';
+            
             if(rule) a.push({s:i, e:rangeEnd, cls:rule});
         }
         return a;
@@ -220,17 +252,13 @@
             const x = m.get(i);
             const nc = x ? x.cls : null;
             const c = t[i];
-            
-            // ZWJ Logic
             const prevC = (i > 0) ? t[i-1] : null;
             const nextC = (i < t.length-1) ? t[i+1] : null;
             let prefix = "", suffix = "";
-            
             if(nc) {
                 if(prevC && !NO_LEFT_JOIN.includes(prevC) && prevC !== ' ' && !isDiac(prevC)) prefix = "&zwj;";
                 if(!NO_LEFT_JOIN.includes(c) && nextC && nextC !== ' ' && !isDiac(nextC)) suffix = "&zwj;";
             }
-
             if(nc !== cls){ if(cls) h += '</span>'; if(nc) h += `<span class="${nc}">`; cls = nc; }
             h += prefix + c + suffix;
         }
@@ -238,7 +266,7 @@
         return h;
     }
 
-    // --- 5. APP STATE & FUNCTIONS ---
+    // --- 3. APP STATE ---
     let state = { surah: 1, chunkSize: 'all', offset: 1, data: null };
     let bookmarks = [], fullQuranCache = null, playing = false, stopReq = false;
     const aud = new Audio();
@@ -258,8 +286,6 @@
         document.getElementById('surah-select').value = state.surah;
         const bm = JSON.parse(localStorage.getItem('warsh_bookmarks')); if(bm) bookmarks = bm;
         renderBMList(); 
-        
-        // LOAD DATA
         changeSurah(state.surah, true);
     }
 
@@ -286,33 +312,11 @@
         render(); 
     }
 
-    function navSurah(dir) { 
-        let next = state.surah + dir; 
-        if(next >= 1 && next <= 114) changeSurah(next); 
-    }
-    
-    function changeViewMode(mode) { 
-        const inp = document.getElementById('custom-chunk-input'); 
-        if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } 
-        else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); } 
-        updateNavVisibility(); saveState(); 
-    }
-    
-    function setCustomChunk(val) { 
-        let n = parseInt(val); 
-        if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); } 
-    }
-    
-    function updateNavVisibility() { 
-        const nav = document.getElementById('page-controls'); 
-        if(state.chunkSize === 'all') nav.classList.add('hidden'); else nav.classList.remove('hidden'); 
-    }
-    
-    function changePage(dir) { 
-        if(state.chunkSize === 'all') return; 
-        const next = state.offset + (dir * state.chunkSize); 
-        if(next >= 1 && next <= state.data.verses.length) { state.offset = next; render(); saveState(); } 
-    }
+    function navSurah(dir) { let next = state.surah + dir; if(next >= 1 && next <= 114) changeSurah(next); }
+    function changeViewMode(mode) { const inp = document.getElementById('custom-chunk-input'); if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); } updateNavVisibility(); saveState(); }
+    function setCustomChunk(val) { let n = parseInt(val); if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); } }
+    function updateNavVisibility() { const nav = document.getElementById('page-controls'); if(state.chunkSize === 'all') nav.classList.add('hidden'); else nav.classList.remove('hidden'); }
+    function changePage(dir) { if(state.chunkSize === 'all') return; const next = state.offset + (dir * state.chunkSize); if(next >= 1 && next <= state.data.verses.length) { state.offset = next; render(); saveState(); } }
 
     async function loadData() {
         document.getElementById('status').innerText = "Loading data...";
@@ -354,15 +358,4 @@
     function pick(n) { document.getElementById('v_start').value = n; hl(n); }
     function hl(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
 
-    async function play() { if(playing) return; playing=true; stopReq=false; const btn = document.getElementById('play-btn'); const reciter = document.getElementById('reciter-select').value; const sId = String(state.surah).padStart(3,'0'); const st = document.getElementById('status'); btn.innerText = "⏸ Playing"; while(true) { const start = parseInt(document.getElementById('v_start').value); const end = parseInt(document.getElementById('v_end').value); for(let a=start; a<=end; a++) { if(stopReq) break; hl(a); st.innerText = `Playing Ayah ${a} / ${end}`; aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`; try { await new Promise((resolve) => { aud.onended = resolve; aud.onerror = () => { console.error('Audio Err'); st.innerText="Err: Missing Audio"; resolve(); }; aud.play().catch(resolve); }); } catch(e){} if(!stopReq) await new Promise(r=>setTimeout(r, 200)); } if(stopReq || !document.getElementById('loop-box').checked) break; st.innerText = "Looping..."; await new Promise(r=>setTimeout(r, 500)); } playing=false; btn.innerText = "▶ PLAY"; st.innerText = "Ready"; }
-    function stop() { stopReq=true; aud.pause(); document.getElementById('play-btn').innerText = "▶ PLAY"; }
-    function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
-    function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
-    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
-    function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
-    
-    // START APP
-    init();
-    </script>
-</body>
-</html>
+    async function play() { if(playing) return; playing=true; sto
