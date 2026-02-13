@@ -19,7 +19,8 @@
         :root { 
             --bg: #fffcf2; --text: #1a1a1a; --accent: #92400e; --panel: #ffffff; --border: #e5e5e5;
             --active-bg: #fef3c7; --active-border: #92400e;
-            --sz: 32px;
+            /* TYPOGRAPHY VARS */
+            --sz: 32px; --lh: 2.8; --ws: normal; --max-w: 800px;
         }
         body.dark {
             --bg: #1f2937; --text: #f3f4f6; --accent: #fbbf24; --panel: #111827; --border: #374151;
@@ -38,7 +39,26 @@
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
         .tools { display: flex; gap: 10px; }
         
-        #display { padding: 40px 20px; max-width: 800px; margin: 0 auto; line-height: 2.8; text-align: justify; }
+        /* SETTINGS PANEL (Hidden by default) */
+        #typo-panel {
+            display: none; position: absolute; top: 60px; left: 20px; 
+            background: var(--panel); border: 1px solid var(--border); 
+            padding: 15px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 950; min-width: 200px;
+        }
+        #typo-panel.show { display: block; }
+        .typo-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .typo-label { font-size: 0.8rem; opacity: 0.8; }
+
+        /* CONTENT */
+        #display { 
+            padding: 40px 20px; 
+            max-width: var(--max-w); 
+            margin: 0 auto; 
+            line-height: var(--lh); 
+            word-spacing: var(--ws);
+            text-align: justify; 
+        }
         
         .verse { 
             display: inline; font-size: var(--sz); cursor: pointer; padding: 4px 0; 
@@ -57,6 +77,7 @@
             user-select: none; display: inline-block;
         }
 
+        /* CONTROLS */
         #controls {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--panel); border-top: 2px solid var(--accent);
@@ -75,9 +96,11 @@
         button.primary:hover { opacity: 0.9; }
         
         .icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
-        input[type=range] { accent-color: var(--accent); cursor: pointer; }
+        input[type=range] { accent-color: var(--accent); cursor: pointer; width: 100%; }
         #status { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-top: 5px; }
 
+        /* BIGGER ARROWS */
+        .big-btn { font-size: 1.5rem; padding: 0 15px; line-height: 1; }
         .page-nav { display: flex; gap: 5px; align-items: center; }
         .page-nav.hidden { display: none; }
         #custom-chunk-input { width: 50px; display: none; text-align: center; }
@@ -90,24 +113,45 @@
         <div class="tools">
             <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌗</button>
             <button class="icon-btn" onclick="toggleFullScreen()" title="Full Screen">⛶</button>
-            <input type="range" min="20" max="60" value="32" style="width:80px" 
-                   oninput="document.documentElement.style.setProperty('--sz', this.value+'px')" title="Font Size">
+            <button class="icon-btn" onclick="toggleTypo()" title="Text Settings">T</button>
         </div>
         <h1 id="surah-title">Warsh Reader</h1>
     </header>
 
+    <!-- TYPOGRAPHY SETTINGS -->
+    <div id="typo-panel">
+        <div class="typo-row">
+            <span class="typo-label">Text Size</span>
+            <input type="range" min="20" max="70" value="32" oninput="setVar('--sz', this.value+'px')">
+        </div>
+        <div class="typo-row">
+            <span class="typo-label">Line Height</span>
+            <input type="range" min="1.5" max="4.0" step="0.1" value="2.8" oninput="setVar('--lh', this.value)">
+        </div>
+        <div class="typo-row">
+            <span class="typo-label">Word Spacing</span>
+            <input type="range" min="0" max="20" value="0" oninput="setVar('--ws', this.value+'px')">
+        </div>
+        <div class="typo-row">
+            <span class="typo-label">Content Width</span>
+            <input type="range" min="400" max="1200" value="800" oninput="setVar('--max-w', this.value+'px')">
+        </div>
+    </div>
+
     <div id="display">Select a Surah...</div>
 
     <div id="controls">
-        <!-- Row 1: Surah & View Settings -->
+        <!-- Row 1: Surah Nav & View Settings -->
         <div class="row">
+            <button onclick="navSurah(-1)" title="Prev Surah">«</button>
             <select id="surah-select" onchange="changeSurah(this.value)" style="width:160px"></select>
+            <button onclick="navSurah(1)" title="Next Surah">»</button>
             
-            <span style="opacity:0.5">|</span>
+            <span style="opacity:0.5; margin:0 5px;">|</span>
 
             <div style="display:flex; align-items:center; gap:5px;">
                 <select id="view-mode" onchange="changeViewMode(this.value)" style="width:100px">
-                    <option value="all">All Verses</option>
+                    <option value="all">All</option>
                     <option value="5">5 Verses</option>
                     <option value="10">10 Verses</option>
                     <option value="custom">Custom...</option>
@@ -115,16 +159,16 @@
                 <input type="number" id="custom-chunk-input" min="1" max="286" placeholder="#" onchange="setCustomChunk(this.value)">
             </div>
 
+            <!-- PAGINATION ARROWS -->
             <div id="page-controls" class="page-nav hidden">
-                <button onclick="changePage(-1)">❮</button>
+                <button class="big-btn" onclick="changePage(-1)">‹</button>
                 <span id="page-info" style="font-size:0.9rem; min-width:60px; text-align:center">1-5</span>
-                <button onclick="changePage(1)">❯</button>
+                <button class="big-btn" onclick="changePage(1)">›</button>
             </div>
         </div>
 
         <!-- Row 2: Audio & Playback -->
         <div class="row">
-            <!-- Reciter Select (VERIFIED PATHS WITH 'warsh/' PREFIX) -->
             <select id="reciter-select" style="width:160px">
                 <option value="warsh/warsh_ibrahim_aldosary_128kbps">Ibrahim Al-Dosary</option>
                 <option value="warsh/warsh_yassin_al_jazaery_64kbps">Yassin Al-Jazaery</option>
@@ -251,6 +295,11 @@
         document.getElementById('surah-select').value = state.surah;
         await loadData(); render();
     }
+    
+    function navSurah(dir) {
+        let next = state.surah + dir;
+        if(next >= 1 && next <= 114) changeSurah(next);
+    }
 
     function changeViewMode(mode) {
         const inp = document.getElementById('custom-chunk-input');
@@ -333,8 +382,6 @@
             for(let a=start; a<=end; a++) {
                 if(stopReq) break;
                 hl(a); st.innerText = `Playing Ayah ${a} / ${end}`;
-                
-                // CORRECTED AUDIO URL
                 aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`;
                 
                 try {
@@ -357,6 +404,9 @@
     function stop() { stopReq=true; aud.pause(); document.getElementById('play-btn').innerText = "▶ PLAY"; }
     function toggleTheme() { document.body.classList.toggle('dark'); }
     function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
+    
+    function toggleTypo() { document.getElementById('typo-panel').classList.toggle('show'); }
+    function setVar(name, val) { document.documentElement.style.setProperty(name, val); }
 
     // Init
     changeSurah(1);
