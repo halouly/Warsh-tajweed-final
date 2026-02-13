@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warsh Reader Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- TAJWEED COLORS --- */
+        .tj-ghunnah { color: #16a34a !important; }
+        .tj-madd    { color: #dc2626 !important; }
+        .tj-qalqalah{ color: #0284c7 !important; }
+        .tj-heavy   { color: #1e3a8a !important; font-weight: bold; }
+        .tj-light   { color: #06b6d4 !important; }
+        .tj-special { color: #d97706 !important; font-weight: bold; }
+        .tj-silent  { color: #9ca3af !important; }
+
+        /* --- THEMES --- */
+        :root { 
+            --bg: #fffcf2; --text: #1a1a1a; --accent: #92400e; --panel: #ffffff; --border: #e5e5e5;
+            --active-bg: #fef3c7; --active-border: #92400e;
+            --sz: 32px;
+        }
+        body.dark {
+            --bg: #1f2937; --text: #f3f4f6; --accent: #fbbf24; --panel: #111827; --border: #374151;
+            --active-bg: #374151; --active-border: #fbbf24;
+        }
+
+        /* --- LAYOUT --- */
+        body { font-family: 'Amiri', serif; background: var(--bg); color: var(--text); margin:0; padding-bottom:180px; transition: 0.3s; }
+        
+        header {
+            position: sticky; top: 0; z-index: 900;
+            background: var(--panel); border-bottom: 1px solid var(--border);
+            padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
+        .tools { display: flex; gap: 10px; }
+        
+        #display { padding: 40px 20px; max-width: 800px; margin: 0 auto; line-height: 2.8; text-align: justify; }
+        
+        .verse { 
+            display: inline; font-size: var(--sz); cursor: pointer; padding: 4px 0; 
+            border-bottom: 1px dashed var(--border); transition: 0.2s;
+        }
+        .verse:hover { background: rgba(0,0,0,0.05); }
+        .verse.active { 
+            background: var(--active-bg); 
+            box-shadow: 0 0 0 3px var(--active-bg); 
+            border-radius: 6px; 
+            color: var(--text) !important;
+        }
+        .num { 
+            font-size: 0.5em; color: var(--accent); border: 1px solid var(--accent); 
+            border-radius: 50%; padding: 0 6px; margin: 0 6px; vertical-align: middle; 
+            user-select: none; display: inline-block;
+        }
+
+        #controls {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--panel); border-top: 2px solid var(--accent);
+            padding: 15px; z-index: 1000; direction: ltr;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.1);
+        }
+        .row { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+        
+        select, input, button { 
+            padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); 
+            background: var(--bg); color: var(--text); font-size: 14px; outline: none;
+        }
+        button { cursor: pointer; font-weight: bold; background: var(--bg); }
+        button:hover { background: var(--border); }
+        button.primary { background: var(--accent); color: #fff; border: none; }
+        button.primary:hover { opacity: 0.9; }
+        
+        .icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
+        input[type=range] { accent-color: var(--accent); cursor: pointer; }
+        #status { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-top: 5px; }
+
+        .page-nav { display: flex; gap: 5px; align-items: center; }
+        .page-nav.hidden { display: none; }
+        #custom-chunk-input { width: 50px; display: none; text-align: center; }
+        #custom-chunk-input.show { display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="tools">
+            <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌗</button>
+            <button class="icon-btn" onclick="toggleFullScreen()" title="Full Screen">⛶</button>
+            <input type="range" min="20" max="60" value="32" style="width:80px" 
+                   oninput="document.documentElement.style.setProperty('--sz', this.value+'px')" title="Font Size">
+        </div>
+        <h1 id="surah-title">Warsh Reader</h1>
+    </header>
+
+    <div id="display">Select a Surah...</div>
+
+    <div id="controls">
+        <!-- Row 1: Surah & View Settings -->
+        <div class="row">
+            <select id="surah-select" onchange="changeSurah(this.value)" style="width:160px"></select>
+            
+            <span style="opacity:0.5">|</span>
+
+            <div style="display:flex; align-items:center; gap:5px;">
+                <select id="view-mode" onchange="changeViewMode(this.value)" style="width:100px">
+                    <option value="all">All Verses</option>
+                    <option value="5">5 Verses</option>
+                    <option value="10">10 Verses</option>
+                    <option value="custom">Custom...</option>
+                </select>
+                <input type="number" id="custom-chunk-input" min="1" max="286" placeholder="#" onchange="setCustomChunk(this.value)">
+            </div>
+
+            <div id="page-controls" class="page-nav hidden">
+                <button onclick="changePage(-1)">❮</button>
+                <span id="page-info" style="font-size:0.9rem; min-width:60px; text-align:center">1-5</span>
+                <button onclick="changePage(1)">❯</button>
+            </div>
+        </div>
+
+        <!-- Row 2: Audio & Playback -->
+        <div class="row">
+            <!-- Reciter Select (VERIFIED PATHS) -->
+            <select id="reciter-select" style="width:160px">
+                <option value="warsh_ibrahim_aldosary_128kbps">Ibrahim Al-Dosary</option>
+                <option value="warsh_yassin_al_jazairi_64kbps">Yassin Al-Jazairi</option>
+                <option value="Abdul_Basit_Murattal_192kbps">Abdul Basit (Murattal)</option>
+                <option value="Husary_128kbps">Al-Husary (Teacher)</option>
+            </select>
+
+            <div style="width:1px; height:20px; background:var(--border)"></div>
+
+            <div style="display:flex; align-items:center; gap:5px; font-size:0.9rem;">
+                <span>Ayah:</span>
+                <input type="number" id="v_start" value="1" min="1" style="width:50px">
+                <span>to</span>
+                <input type="number" id="v_end" value="1" min="1" style="width:50px">
+            </div>
+            
+            <label style="display:flex; align-items:center; gap:5px; font-size:0.8rem; cursor:pointer">
+                <input type="checkbox" id="loop-box"> Loop
+            </label>
+
+            <button class="primary" onclick="play()" id="play-btn">▶ PLAY</button>
+            <button onclick="stop()">⏹</button>
+        </div>
+        <div id="status">Ready</div>
+    </div>
+
+    <script>
+    // --- 0. DATA ---
+    const SURAH_NAMES = [
+        "Al-Fatiha","Al-Baqarah","Al-Imran","An-Nisa","Al-Ma'idah","Al-An'am","Al-A'raf","Al-Anfal","At-Tawbah","Yunus",
+        "Hud","Yusuf","Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha",
+        "Al-Anbiya","Al-Hajj","Al-Mu'minun","An-Nur","Al-Furqan","Ash-Shu'ara","An-Naml","Al-Qasas","Al-Ankabut","Ar-Rum",
+        "Luqman","As-Sajdah","Al-Ahzab","Saba","Fatir","Ya-Sin","As-Saffat","Sad","Az-Zumar","Ghafir",
+        "Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan","Al-Jathiyah","Al-Ahqaf","Muhammad","Al-Fath","Al-Hujurat","Qaf",
+        "Adh-Dhariyat","At-Tur","An-Najm","Al-Qamar","Ar-Rahman","Al-Waqi'ah","Al-Hadid","Al-Mujadila","Al-Hashr","Al-Mumtahanah",
+        "As-Saff","Al-Jumu'ah","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqah","Al-Ma'arij",
+        "Nuh","Al-Jinn","Al-Muzzammil","Al-Muddathir","Al-Qiyamah","Al-Insan","Al-Mursalat","An-Naba","An-Nazi'at","Abasa",
+        "At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-A'la","Al-Ghashiyah","Al-Fajr","Al-Balad",
+        "Ash-Shams","Al-Layl","Ad-Duhaa","Ash-Sharh","At-Tin","Al-Alaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-Adiyat",
+        "Al-Qari'ah","At-Takathur","Al-Asr","Al-Humazah","Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar","Al-Kafirun","An-Nasr",
+        "Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"
+    ];
+
+    // --- 1. TAJWEED ENGINE ---
+    const SUKUN='\u0652', SHADDA='\u0651', FATHA='\u064E', DAMMA='\u064F', KASRA='\u0650';
+    const DAGGER='\u0670', MADD_SIGN='\u0653', WARSH_DOT='\u06EC'; 
+    const QALQ='قطبجد', IDGH_GH='ينمو', IDGH_NO='لر', IKHFA='تثجدذزسشصضطظفقك';
+    const MADD='اوى'+DAGGER, HAMZA='ءأإؤئ', HEAVY_LAM_TRIGGERS = 'صطظ'; 
+
+    function isDiac(c){const x=c.charCodeAt(0); return (x>=0x064B && x<=0x065F) || x===0x0670 || (x>=0x06D6 && x<=0x06ED);}
+    function isLtr(c){const x=c.charCodeAt(0); return !isDiac(c) && x>=0x0600 && x<=0x06FF;}
+    function getDiac(t,i){let d=[]; for(let j=i+1;j<t.length&&isDiac(t[j]);j++)d.push(t[j]); return d;}
+    function has(t,i,c){return getDiac(t,i).includes(c);}
+    function getEnd(t, i){let j=i+1; while(j<t.length&&isDiac(t[j]))j++; return j;}
+    function nextL(t,i){for(let j=i+1;j<t.length;j++)if(isLtr(t[j]))return{c:t[j],i:j}; return null;}
+    function prevL(t,i){for(let j=i-1;j>=0;j--)if(isLtr(t[j]))return{c:t[j],i:j}; return null;}
+
+    function detect(t){
+        const a=[];
+        for(let i=0;i<t.length;i++){
+            const c=t[i];
+            if(!isLtr(c)) continue;
+            const n=nextL(t,i), p=prevL(t,i), rangeEnd=getEnd(t, i);
+            const diacs=getDiac(t,i);
+            const isSakin=has(t,i,SUKUN) || (!diacs.length && n && !has(t,i,SHADDA)); 
+            const hasVowel=has(t,i,FATHA) || has(t,i,DAMMA) || has(t,i,KASRA);
+            const isShadda=has(t,i,SHADDA);
+            let rule=null;
+
+            if (has(t, i, WARSH_DOT) || has(t, i, '\u065F')) rule='tj-special';
+            else if((c==='ن'||c==='م') && isShadda) rule='tj-ghunnah';
+            else if(c==='ن' && isSakin && n){
+                if(IDGH_GH.includes(n.c) || n.c==='ب' || IKHFA.includes(n.c)) rule='tj-ghunnah';
+                else if(IDGH_NO.includes(n.c)) rule='tj-silent';
+            }
+            else if(c==='م' && isSakin && n && n.c==='ب') rule='tj-ghunnah';
+            else if(QALQ.includes(c) && (has(t,i,SUKUN) || (!hasVowel && !n))) rule='tj-qalqalah';
+            else if(c==='ل' && has(t,i,FATHA) && p && HEAVY_LAM_TRIGGERS.includes(p.c) && (has(t,p.i,FATHA)||has(t,p.i,SUKUN)||!getDiac(t,p.i).length)) rule='tj-heavy';
+            else if(c==='ر'){
+                if(has(t,i,FATHA) || has(t,i,DAMMA)) rule='tj-heavy';
+                if(has(t,i,KASRA)) rule='tj-light'; 
+                else if((has(t,i,FATHA) || has(t,i,DAMMA)) && p){
+                    if(has(t,p.i,KASRA) || (p.c==='ي' && (has(t,p.i,SUKUN)||!getDiac(t,p.i).length))) rule='tj-light';
+                }
+            }
+            else if(MADD.includes(c) && !hasVowel && !isShadda){
+                if(has(t,i,MADD_SIGN)) rule='tj-madd';
+                else if(n && (HAMZA.includes(n.c) || has(t,n.i,SUKUN) || has(t,n.i,SHADDA))) rule='tj-madd';
+                else if(p && HAMZA.includes(p.c)) rule='tj-madd';
+            }
+            else if(c==='ل' && isSakin && n && has(t,n.i,SHADDA)) rule='tj-silent';
+            if(rule) a.push({s:i, e:rangeEnd, cls:rule});
+        }
+        return a;
+    }
+
+    function apply(t,ann){
+        const m=new Map();
+        for(const x of ann) for(let i=x.s;i<x.e;i++) m.set(i,x);
+        let h='',cls=null,open=false;
+        for(let i=0;i<t.length;i++){
+            const x=m.get(i),nc=x?x.cls:null;
+            if(nc!==cls){ if(open)h+='</span>'; if(nc){h+=`<span class="${nc}">`;open=true} else open=false; cls=nc; }
+            h+=t[i];
+        }
+        if(open)h+='</span>'; return h;
+    }
+
+    // --- 2. STATE ---
+    let state = { surah: 1, chunkSize: 'all', offset: 1, data: null };
+    let playing = false, stopReq = false;
+    const aud = new Audio();
+    
+    // Init Select
+    const sel = document.getElementById('surah-select');
+    SURAH_NAMES.forEach((n,i) => {
+        let opt = document.createElement('option');
+        opt.value = i+1; opt.text = `${i+1}. ${n}`;
+        sel.appendChild(opt);
+    });
+
+    // --- 3. ACTIONS ---
+    async function changeSurah(id) {
+        state.surah = parseInt(id); state.offset = 1; 
+        document.getElementById('surah-select').value = state.surah;
+        await loadData(); render();
+    }
+
+    function changeViewMode(mode) {
+        const inp = document.getElementById('custom-chunk-input');
+        if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } 
+        else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); }
+        updateNavVisibility();
+    }
+
+    function setCustomChunk(val) {
+        let n = parseInt(val);
+        if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); }
+    }
+
+    function updateNavVisibility() {
+        const nav = document.getElementById('page-controls');
+        if(state.chunkSize === 'all') nav.classList.add('hidden'); else nav.classList.remove('hidden');
+    }
+
+    function changePage(dir) {
+        if(state.chunkSize === 'all') return;
+        const next = state.offset + (dir * state.chunkSize);
+        if(next >= 1 && next <= state.data.verses.length) { state.offset = next; render(); }
+    }
+
+    async function loadData() {
+        document.getElementById('status').innerText = "Loading data...";
+        try {
+            const res = await fetch(`data/${state.surah}.json`);
+            if(!res.ok) throw new Error("File not found");
+            state.data = await res.json();
+            document.getElementById('surah-title').innerText = `${state.surah}. ${state.data.name_ar} (${state.data.name_en})`;
+            document.getElementById('status').innerText = "Ready";
+        } catch(e) { document.getElementById('display').innerHTML = `<div style="color:red;text-align:center">Error: ${e.message}</div>`; }
+    }
+
+    function render() {
+        if(!state.data) return;
+        const div = document.getElementById('display');
+        let html = "";
+        
+        if (state.surah != 1 && state.surah != 9 && state.offset === 1) {
+            const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ";
+            html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${apply(bism, detect(bism))}</div>`;
+        }
+
+        let startIdx = state.offset - 1;
+        let endIdx = state.chunkSize === 'all' ? state.data.verses.length : Math.min(startIdx + state.chunkSize, state.data.verses.length);
+        const chunk = state.data.verses.slice(startIdx, endIdx);
+
+        chunk.forEach((txt, i) => {
+            let n = startIdx + i + 1;
+            html += `<div class="verse" id="v${n}" onclick="pick(${n})">${apply(txt, detect(txt))} <span class="num">${n}</span></div>`;
+        });
+        
+        div.innerHTML = html;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if(state.chunkSize !== 'all') document.getElementById('page-info').innerText = `${state.offset}-${endIdx}`;
+        document.getElementById('v_start').value = state.offset;
+        document.getElementById('v_end').value = endIdx;
+    }
+
+    function pick(n) { document.getElementById('v_start').value = n; hl(n); }
+    function hl(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
+
+    async function play() {
+        if(playing) return; playing=true; stopReq=false;
+        
+        const btn = document.getElementById('play-btn');
+        const reciter = document.getElementById('reciter-select').value;
+        const sId = String(state.surah).padStart(3,'0');
+        const st = document.getElementById('status');
+        
+        btn.innerText = "⏸ Playing";
+        
+        while(true) { 
+            const start = parseInt(document.getElementById('v_start').value);
+            const end = parseInt(document.getElementById('v_end').value);
+
+            for(let a=start; a<=end; a++) {
+                if(stopReq) break;
+                hl(a); st.innerText = `Playing Ayah ${a} / ${end}`;
+                
+                // Use HTTPS and handle potential errors
+                aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`;
+                
+                try {
+                    await new Promise((resolve, reject) => {
+                        aud.onended = resolve;
+                        aud.onerror = () => { 
+                            console.error(`Audio missing: ${aud.src}`); 
+                            st.innerText = "Audio missing for this reciter/ayah";
+                            resolve(); // Skip missing files
+                        }; 
+                        aud.play().catch(e => {
+                            console.error("Play error:", e);
+                            resolve();
+                        });
+                    });
+                } catch(e){}
+                
+                if(!stopReq) await new Promise(r=>setTimeout(r, 200)); 
+            }
+            if(stopReq || !document.getElementById('loop-box').checked) break;
+            st.innerText = "Looping...";
+            await new Promise(r=>setTimeout(r, 500));
+        }
+        playing=false; btn.innerText = "▶ PLAY"; st.innerText = "Ready";
+    }
+
+    function stop() { stopReq=true; aud.pause(); document.getElementById('play-btn').innerText = "▶ PLAY"; }
+    function toggleTheme() { document.body.classList.toggle('dark'); }
+    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
+
+    // Init
+    changeSurah(1);
+    </script>
+</body>
+</html>
