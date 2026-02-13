@@ -13,12 +13,12 @@
         .tj-qalqalah  { color: #0284c7 !important; } /* Blue */
         .tj-heavy     { color: #1e3a8a !important; font-weight: bold; } /* Dark Blue */
         .tj-light     { color: #06b6d4 !important; } /* Cyan */
-        .tj-special   { color: #d97706 !important; font-weight: bold; } /* Orange (Warsh Dot) */
+        .tj-special   { color: #d97706 !important; font-weight: bold; } /* Orange */
         .tj-silent    { color: #9ca3af !important; } /* Grey */
         
         /* MADD RULES */
-        .tj-mandatory { color: #800020 !important; font-weight: bold; } /* Burgundy (6 counts) */
-        .tj-madd      { color: #dc2626 !important; } /* Red (Badal / Lin) */
+        .tj-mandatory { color: #800020 !important; font-weight: bold; } /* Burgundy (Madd Lazim/Wajib) */
+        .tj-madd      { color: #dc2626 !important; } /* Red (Normal/Badal) */
 
         /* --- THEMES --- */
         :root { 
@@ -201,15 +201,12 @@
             }
             // --- STRICT MADD LOGIC ---
             else if(MADD.includes(c) && !hasVowel && !isShadda){
-                // 1. Mandatory (Burgundy): Explicit Madd Sign ~ OR followed by Shadda/Sukun
+                // Mandatory (Burgundy)
                 if(has(t,i,MADD_SIGN)) rule='tj-mandatory'; 
                 else if(n && (has(t,n.i,SHADDA) || has(t,n.i,SUKUN))) rule='tj-mandatory';
-                else if(n && HAMZA.includes(n.c)) rule='tj-mandatory'; // Wajib/Munfasil
-
-                // 2. Badal (Red): Preceded by Hamza (and not Mandatory)
+                else if(n && HAMZA.includes(n.c)) rule='tj-mandatory'; 
+                // Badal (Red)
                 else if(!rule && p && HAMZA.includes(p.c)) rule='tj-madd';
-                
-                // 3. Natural: Left as is (Black)
             }
             else if(c==='ل' && isSakin && n && has(t,n.i,SHADDA)) rule='tj-silent';
             if(rule) a.push({s:i, e:rangeEnd, cls:rule});
@@ -217,98 +214,42 @@
         return a;
     }
 
-    function apply(t,ann){
-        const m=new Map(); for(const x of ann) for(let i=x.s;i<x.e;i++) m.set(i,x);
-        let h='',cls=null,open=false;
-        for(let i=0;i<t.length;i++){
-            const x=m.get(i),nc=x?x.cls:null;
-            if(nc!==cls){ if(open)h+='</span>'; if(nc){h+=`<span class="${nc}">`;open=true} else open=false; cls=nc; }
-            h+=t[i];
-        }
-        if(open)h+='</span>'; return h;
-    }
+    // --- UPDATED APPLY WITH ZWJ LIGATURE FIX ---
+    function apply(t, ann){
+        // Characters that NEVER connect to the Left (Forward)
+        const NO_LEFT_JOIN = "اأإآٱدذرزوؤةى"; 
+        
+        const m = new Map(); 
+        for(const x of ann) for(let i=x.s; i<x.e; i++) m.set(i, x);
+        
+        let h = '', cls = null;
+        
+        for(let i=0; i<t.length; i++){
+            const x = m.get(i);
+            const nc = x ? x.cls : null;
+            const c = t[i];
+            
+            // Look around to determine connectivity
+            const prevC = (i > 0) ? t[i-1] : null;
+            const nextC = (i < t.length-1) ? t[i+1] : null;
 
-    let state = { surah: 1, chunkSize: 'all', offset: 1, data: null };
-    let bookmarks = [], fullQuranCache = null, playing = false, stopReq = false;
-    const aud = new Audio();
-    const sel = document.getElementById('surah-select');
-    SURAH_NAMES.forEach((n,i) => { let opt = document.createElement('option'); opt.value = i+1; opt.text = `${i+1}. ${n}`; sel.appendChild(opt); });
-
-    function init() {
-        const saved = JSON.parse(localStorage.getItem('warsh_state'));
-        if(saved) {
-            state.surah = saved.surah || 1; state.chunkSize = saved.chunkSize || 'all'; state.offset = saved.offset || 1;
-            document.getElementById('reciter-select').value = saved.reciter || "warsh/warsh_ibrahim_aldosary_128kbps";
-            if(saved.theme === 'dark') document.body.classList.add('dark');
-            if(saved.css) Object.keys(saved.css).forEach(k => document.documentElement.style.setProperty(k, saved.css[k]));
-            document.getElementById('view-mode').value = state.chunkSize === 'all' ? 'all' : (state.chunkSize > 10 ? 'custom' : state.chunkSize);
-            updateNavVisibility();
-        }
-        const bm = JSON.parse(localStorage.getItem('warsh_bookmarks')); if(bm) bookmarks = bm;
-        renderBMList(); changeSurah(state.surah, true);
-    }
-
-    function saveState() {
-        localStorage.setItem('warsh_state', JSON.stringify({
-            surah: state.surah, chunkSize: state.chunkSize, offset: state.offset,
-            reciter: document.getElementById('reciter-select').value,
-            theme: document.body.classList.contains('dark') ? 'dark' : 'light',
-            css: {
-                '--sz': getComputedStyle(document.documentElement).getPropertyValue('--sz'),
-                '--lh': getComputedStyle(document.documentElement).getPropertyValue('--lh'),
-                '--ws': getComputedStyle(document.documentElement).getPropertyValue('--ws'),
-                '--max-w': getComputedStyle(document.documentElement).getPropertyValue('--max-w')
+            let prefix = ""; 
+            let suffix = "";
+            
+            // If we are coloring this letter, check if it SHOULD connect
+            if(nc) {
+                // Connect to Previous? (If previous allows left-joining, and isn't a space)
+                if(prevC && !NO_LEFT_JOIN.includes(prevC) && prevC !== ' ' && !isDiac(prevC)) prefix = "&zwj;";
+                
+                // Connect to Next? (If current allows left-joining, and next isn't a space)
+                if(!NO_LEFT_JOIN.includes(c) && nextC && nextC !== ' ' && !isDiac(nextC)) suffix = "&zwj;";
             }
-        }));
-    }
 
-    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
-    function navSurah(dir) { let next = state.surah + dir; if(next >= 1 && next <= 114) changeSurah(next); }
-    function changeViewMode(mode) { const inp = document.getElementById('custom-chunk-input'); if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); } updateNavVisibility(); saveState(); }
-    function setCustomChunk(val) { let n = parseInt(val); if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); } }
-    function updateNavVisibility() { const nav = document.getElementById('page-controls'); if(state.chunkSize === 'all') nav.classList.add('hidden'); else nav.classList.remove('hidden'); }
-    function changePage(dir) { if(state.chunkSize === 'all') return; const next = state.offset + (dir * state.chunkSize); if(next >= 1 && next <= state.data.verses.length) { state.offset = next; render(); saveState(); } }
-
-    async function loadData() {
-        document.getElementById('status').innerText = "Loading data...";
-        try { const res = await fetch(`data/${state.surah}.json`); if(!res.ok) throw new Error("File not found"); state.data = await res.json(); document.getElementById('surah-title').innerText = `${state.surah}. ${state.data.name_ar} (${state.data.name_en})`; document.getElementById('status').innerText = "Ready"; } catch(e) { document.getElementById('display').innerHTML = `<div style="color:red;text-align:center">Error: ${e.message}</div>`; }
-    }
-
-    function render() {
-        if(!state.data) return;
-        const div = document.getElementById('display'); let html = "";
-        if (state.surah != 1 && state.surah != 9 && state.offset === 1) { const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${apply(bism, detect(bism))}</div>`; }
-        let startIdx = state.offset - 1; let endIdx = state.chunkSize === 'all' ? state.data.verses.length : Math.min(startIdx + state.chunkSize, state.data.verses.length); const chunk = state.data.verses.slice(startIdx, endIdx);
-        chunk.forEach((txt, i) => { let n = startIdx + i + 1; let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); let starClass = isSaved ? 'bm-icon saved' : 'bm-icon'; html += `<div class="verse" id="v${n}" onclick="pick(${n})">${apply(txt, detect(txt))} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span></div>`; });
-        div.innerHTML = html; window.scrollTo({ top: 0, behavior: 'smooth' });
-        if(state.chunkSize !== 'all') document.getElementById('page-info').innerText = `${state.offset}-${endIdx}`; document.getElementById('v_start').value = state.offset; document.getElementById('v_end').value = endIdx;
-    }
-
-    async function runGlobalSearch() {
-        const q = document.getElementById('search-input').value.trim(); const resDiv = document.getElementById('search-results'); const stat = document.getElementById('search-status');
-        if(!q) return; resDiv.innerHTML = ""; stat.innerText = "Indexing entire Quran...";
-        if (!fullQuranCache) { try { fullQuranCache = []; const promises = []; for(let i=1; i<=114; i++) promises.push(fetch(`data/${i}.json`).then(r => r.json())); fullQuranCache = await Promise.all(promises); } catch(e) { stat.innerText = "Error loading Quran data."; return; } }
-        stat.innerText = "Searching..."; let results = [];
-        fullQuranCache.forEach((surahData, sIdx) => { surahData.verses.forEach((txt, vIdx) => { if (txt.includes(q)) { results.push({ s: sIdx + 1, v: vIdx + 1, name: surahData.name_en, txt: txt }); } }); });
-        stat.innerText = `Found ${results.length} matches.`;
-        if (results.length === 0) resDiv.innerHTML = "<div class='pop-item'>No matches found.</div>"; else { resDiv.innerHTML = results.map(r => `<div class="pop-item" onclick="jumpTo(${r.s}, ${r.v}); togglePanel('search-panel')"><div><strong>${r.s}. ${r.name} (${r.v})</strong><br><span style="color:#666; font-size:0.8em">${r.txt.substring(0, 60)}...</span></div></div>`).join(''); }
-    }
-
-    function toggleBM(e, v) { e.stopPropagation(); const existingIdx = bookmarks.findIndex(b => b.s === state.surah && b.v === v); if(existingIdx >= 0) bookmarks.splice(existingIdx, 1); else bookmarks.push({s: state.surah, v: v, name: state.data.name_en}); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); render(); renderBMList(); }
-    function renderBMList() { const div = document.getElementById('bm-list'); if(bookmarks.length === 0) { div.innerHTML = "No bookmarks yet."; return; } div.innerHTML = bookmarks.map((b, i) => `<div class="pop-item" onclick="jumpTo(${b.s}, ${b.v})"><span>${b.s}. ${b.name} (${b.v})</span><span style="color:red" onclick="removeBM(event, ${i})">✕</span></div>`).join(''); }
-    function removeBM(e, i) { e.stopPropagation(); bookmarks.splice(i, 1); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); renderBMList(); render(); }
-    async function jumpTo(s, v) { await changeSurah(s, true); if (state.chunkSize !== 'all') { const pageStart = Math.floor((v - 1) / state.chunkSize) * state.chunkSize + 1; state.offset = pageStart; } else { state.offset = v; } await render(); setTimeout(() => pick(v), 300); togglePanel('bm-panel'); }
-    function pick(n) { document.getElementById('v_start').value = n; hl(n); }
-    function hl(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
-
-    async function play() { if(playing) return; playing=true; stopReq=false; const btn = document.getElementById('play-btn'); const reciter = document.getElementById('reciter-select').value; const sId = String(state.surah).padStart(3,'0'); const st = document.getElementById('status'); btn.innerText = "⏸ Playing"; while(true) { const start = parseInt(document.getElementById('v_start').value); const end = parseInt(document.getElementById('v_end').value); for(let a=start; a<=end; a++) { if(stopReq) break; hl(a); st.innerText = `Playing Ayah ${a} / ${end}`; aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`; try { await new Promise((resolve) => { aud.onended = resolve; aud.onerror = () => { console.error('Audio Err'); st.innerText="Err: Missing Audio"; resolve(); }; aud.play().catch(resolve); }); } catch(e){} if(!stopReq) await new Promise(r=>setTimeout(r, 200)); } if(stopReq || !document.getElementById('loop-box').checked) break; st.innerText = "Looping..."; await new Promise(r=>setTimeout(r, 500)); } playing=false; btn.innerText = "▶ PLAY"; st.innerText = "Ready"; }
-    function stop() { stopReq=true; aud.pause(); document.getElementById('play-btn').innerText = "▶ PLAY"; }
-    function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
-    function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
-    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
-    function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
-    
-    init();
-    </script>
-</body>
-</html>
+            if(nc !== cls){ 
+                if(cls) h += '</span>'; 
+                if(nc) h += `<span class="${nc}">`; 
+                cls = nc; 
+            }
+            
+            // Inject invisible joiners inside the span
+            h += prefix + c + suffi
