@@ -1,40 +1,54 @@
-const CACHE_NAME = 'warsh-v1';
-const ASSETS = [
+const CACHE_NAME = 'warsh-v2-offline-data'; // Changed version to force update
+const APP_SHELL = [
+    './',
     './index.html',
     './manifest.json'
 ];
 
-// 1. Install & Pre-cache App Shell
+// Generate list of all 114 Surah data files
+const DATA_FILES = [];
+for (let i = 1; i <= 114; i++) {
+    DATA_FILES.push(`./data/${i}.json`);
+}
+
+const ALL_ASSETS = [...APP_SHELL, ...DATA_FILES];
+
+// 1. INSTALL: Download EVERYTHING immediately
 self.addEventListener('install', e => {
+    console.log('[Service Worker] Installing and downloading all data...');
     e.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll(ASSETS);
+            return cache.addAll(ALL_ASSETS);
         })
     );
+    self.skipWaiting(); // Force this new SW to become active immediately
 });
 
-// 2. Runtime Caching (Cache JSON data as you use it)
+// 2. ACTIVATE: Clean up old caches (v1)
+self.addEventListener('activate', e => {
+    e.waitUntil(
+        caches.keys().then(keyList => {
+            return Promise.all(keyList.map(key => {
+                if (key !== CACHE_NAME) {
+                    console.log('[Service Worker] Removing old cache', key);
+                    return caches.delete(key);
+                }
+            }));
+        })
+    );
+    return self.clients.claim();
+});
+
+// 3. FETCH: Serve from Cache first, then Network
 self.addEventListener('fetch', e => {
     e.respondWith(
-        caches.match(e.request).then(cached => {
-            // Return cached response if found
-            if (cached) return cached;
-
-            // Otherwise fetch from network
-            return fetch(e.request).then(response => {
-                // Check if valid response
-                if (!response || response.status !== 200 || response.type !== 'basic') {
-                    return response;
-                }
-
-                // Cache the new file (like data/1.json)
-                const responseToCache = response.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(e.request, responseToCache);
-                });
-
-                return response;
-            });
+        caches.match(e.request).then(cachedResponse => {
+            // Return cached file if found (Instant & Offline)
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            // Otherwise try network (e.g. Audio files)
+            return fetch(e.request);
         })
     );
 });
