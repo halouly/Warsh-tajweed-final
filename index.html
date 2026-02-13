@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warsh Reader Pro</title>
+    <!-- PWA MANIFEST -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#92400e">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- TAJWEED COLORS --- */
@@ -38,24 +41,23 @@
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
         .tools { display: flex; gap: 8px; }
         
-        /* PANELS (Settings, Search, Bookmarks) */
+        /* PANELS */
         .popover {
-            display: none; position: absolute; top: 60px; right: 20px; /* Default right for RTL might need left logic */
+            display: none; position: absolute; top: 60px; right: 20px;
             background: var(--panel); border: 1px solid var(--border); 
             padding: 15px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            z-index: 950; min-width: 250px; max-height: 400px; overflow-y: auto;
+            z-index: 950; min-width: 300px; max-height: 500px; overflow-y: auto;
         }
         .popover.show { display: block; }
-        /* Fix positioning for RTL */
         html[dir="rtl"] .popover { right: auto; left: 20px; }
 
         .pop-item { 
-            padding: 8px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.9rem;
+            padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.9rem;
             display: flex; justify-content: space-between; align-items: center;
         }
         .pop-item:hover { background: rgba(0,0,0,0.05); }
-        .pop-item:last-child { border: none; }
-
+        
+        /* TYPOGRAPHY */
         .typo-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
         .typo-label { font-size: 0.8rem; opacity: 0.8; }
 
@@ -79,8 +81,6 @@
             border-radius: 50%; padding: 0 6px; margin: 0 6px; vertical-align: middle; 
             user-select: none; display: inline-block;
         }
-        
-        /* BOOKMARK ACTION IN VERSE */
         .bm-icon { font-size: 0.6em; margin-left: 5px; color: #ccc; cursor: pointer; transition: 0.2s; }
         .bm-icon:hover, .bm-icon.saved { color: #f59e0b; }
 
@@ -100,7 +100,6 @@
         button { cursor: pointer; font-weight: bold; background: var(--bg); }
         button:hover { background: var(--border); }
         button.primary { background: var(--accent); color: #fff; border: none; }
-        button.primary:hover { opacity: 0.9; }
         
         .icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; color: var(--text); }
         input[type=range] { accent-color: var(--accent); cursor: pointer; width: 100%; }
@@ -126,20 +125,24 @@
         <h1 id="surah-title">Warsh Reader</h1>
     </header>
 
-    <!-- 1. SEARCH PANEL -->
+    <!-- 1. SEARCH PANEL (GLOBAL) -->
     <div id="search-panel" class="popover">
-        <h3 style="margin-top:0">Search Current Surah</h3>
-        <input type="text" id="search-input" placeholder="Type to search..." onkeyup="runSearch()" style="width:90%; margin-bottom:10px">
-        <div id="search-results" style="max-height:200px; overflow-y:auto; font-size:0.9rem"></div>
+        <h3 style="margin-top:0">Search</h3>
+        <div style="display:flex; gap:5px; margin-bottom:10px;">
+            <input type="text" id="search-input" placeholder="Type word (e.g. Musa)..." style="flex:1">
+            <button onclick="runGlobalSearch()">Go</button>
+        </div>
+        <div id="search-status" style="font-size:0.8rem; color:#666; margin-bottom:5px;"></div>
+        <div id="search-results" style="max-height:300px; overflow-y:auto;"></div>
     </div>
 
-    <!-- 2. BOOKMARKS PANEL -->
+    <!-- 2. BOOKMARKS -->
     <div id="bm-panel" class="popover">
         <h3 style="margin-top:0">Bookmarks</h3>
         <div id="bm-list">No bookmarks yet.</div>
     </div>
 
-    <!-- 3. TYPOGRAPHY PANEL -->
+    <!-- 3. TYPOGRAPHY -->
     <div id="typo-panel" class="popover">
         <div class="typo-row">
             <span class="typo-label">Text Size</span>
@@ -162,11 +165,10 @@
     <div id="display">Select a Surah...</div>
 
     <div id="controls">
-        <!-- Row 1: Nav -->
         <div class="row">
-            <button onclick="navSurah(-1)" title="Prev Surah">«</button>
+            <button onclick="navSurah(-1)">«</button>
             <select id="surah-select" onchange="changeSurah(this.value)" style="width:160px"></select>
-            <button onclick="navSurah(1)" title="Next Surah">»</button>
+            <button onclick="navSurah(1)">»</button>
             
             <span style="opacity:0.5; margin:0 5px;">|</span>
 
@@ -187,7 +189,6 @@
             </div>
         </div>
 
-        <!-- Row 2: Playback -->
         <div class="row">
             <select id="reciter-select" style="width:160px" onchange="saveState()">
                 <option value="warsh/warsh_ibrahim_aldosary_128kbps">Ibrahim Al-Dosary</option>
@@ -215,7 +216,13 @@
     </div>
 
     <script>
-    // --- 0. DATA & CONFIG ---
+    // --- 0. PWA REGISTRATION ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('Service Worker Registered (Offline Ready)'));
+    }
+
+    // --- 1. DATA ---
     const SURAH_NAMES = [
         "Al-Fatiha","Al-Baqarah","Al-Imran","An-Nisa","Al-Ma'idah","Al-An'am","Al-A'raf","Al-Anfal","At-Tawbah","Yunus",
         "Hud","Yusuf","Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha",
@@ -230,8 +237,8 @@
         "Al-Qari'ah","At-Takathur","Al-Asr","Al-Humazah","Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar","Al-Kafirun","An-Nasr",
         "Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"
     ];
-    
-    // --- 1. TAJWEED ENGINE ---
+
+    // --- 2. TAJWEED ENGINE ---
     const SUKUN='\u0652', SHADDA='\u0651', FATHA='\u064E', DAMMA='\u064F', KASRA='\u0650';
     const DAGGER='\u0670', MADD_SIGN='\u0653', WARSH_DOT='\u06EC'; 
     const QALQ='قطبجد', IDGH_GH='ينمو', IDGH_NO='لر', IKHFA='تثجدذزسشصضطظفقك';
@@ -295,13 +302,14 @@
         if(open)h+='</span>'; return h;
     }
 
-    // --- 2. STATE & STORAGE ---
+    // --- 3. STATE ---
     let state = { surah: 1, chunkSize: 'all', offset: 1, data: null };
     let bookmarks = [];
+    let fullQuranCache = null; // For Global Search
     let playing = false, stopReq = false;
     const aud = new Audio();
     
-    // Init
+    // Init UI
     const sel = document.getElementById('surah-select');
     SURAH_NAMES.forEach((n,i) => {
         let opt = document.createElement('option');
@@ -309,10 +317,8 @@
         sel.appendChild(opt);
     });
 
-    // --- 3. LOGIC ---
-    
+    // --- 4. LOGIC ---
     function init() {
-        // Load Saved State
         const saved = JSON.parse(localStorage.getItem('warsh_state'));
         if(saved) {
             state.surah = saved.surah || 1;
@@ -320,27 +326,19 @@
             state.offset = saved.offset || 1;
             document.getElementById('reciter-select').value = saved.reciter || "warsh/warsh_ibrahim_aldosary_128kbps";
             if(saved.theme === 'dark') document.body.classList.add('dark');
-            if(saved.css) {
-                Object.keys(saved.css).forEach(k => document.documentElement.style.setProperty(k, saved.css[k]));
-            }
-            // Update UI inputs to match loaded settings
-            document.getElementById('view-mode').value = state.chunkSize === 'all' || isNaN(state.chunkSize) ? 'all' : (state.chunkSize > 10 ? 'custom' : state.chunkSize);
-            if(state.chunkSize !== 'all') updateNavVisibility();
+            if(saved.css) Object.keys(saved.css).forEach(k => document.documentElement.style.setProperty(k, saved.css[k]));
+            document.getElementById('view-mode').value = state.chunkSize === 'all' ? 'all' : (state.chunkSize > 10 ? 'custom' : state.chunkSize);
+            updateNavVisibility();
         }
-
-        // Load Bookmarks
         const bm = JSON.parse(localStorage.getItem('warsh_bookmarks'));
         if(bm) bookmarks = bm;
         renderBMList();
-
-        changeSurah(state.surah, true); // True = skip reset offset
+        changeSurah(state.surah, true);
     }
 
     function saveState() {
-        const s = {
-            surah: state.surah,
-            chunkSize: state.chunkSize,
-            offset: state.offset,
+        localStorage.setItem('warsh_state', JSON.stringify({
+            surah: state.surah, chunkSize: state.chunkSize, offset: state.offset,
             reciter: document.getElementById('reciter-select').value,
             theme: document.body.classList.contains('dark') ? 'dark' : 'light',
             css: {
@@ -349,16 +347,14 @@
                 '--ws': getComputedStyle(document.documentElement).getPropertyValue('--ws'),
                 '--max-w': getComputedStyle(document.documentElement).getPropertyValue('--max-w')
             }
-        };
-        localStorage.setItem('warsh_state', JSON.stringify(s));
+        }));
     }
 
     async function changeSurah(id, skipOffsetReset) {
         state.surah = parseInt(id); 
         if(!skipOffsetReset) state.offset = 1; 
         document.getElementById('surah-select').value = state.surah;
-        saveState();
-        await loadData(); render();
+        saveState(); await loadData(); render();
     }
     
     function navSurah(dir) {
@@ -418,7 +414,6 @@
             let n = startIdx + i + 1;
             let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n);
             let starClass = isSaved ? 'bm-icon saved' : 'bm-icon';
-            
             html += `<div class="verse" id="v${n}" onclick="pick(${n})">
                 ${apply(txt, detect(txt))} 
                 <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span>
@@ -427,19 +422,72 @@
         
         div.innerHTML = html;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-
         if(state.chunkSize !== 'all') document.getElementById('page-info').innerText = `${state.offset}-${endIdx}`;
         document.getElementById('v_start').value = state.offset;
         document.getElementById('v_end').value = endIdx;
     }
 
-    // --- BOOKMARKS ---
+    // --- GLOBAL SEARCH ---
+    async function runGlobalSearch() {
+        const q = document.getElementById('search-input').value.trim();
+        const resDiv = document.getElementById('search-results');
+        const stat = document.getElementById('search-status');
+        if(!q) return;
+
+        resDiv.innerHTML = "";
+        stat.innerText = "Indexing entire Quran...";
+
+        // 1. Fetch ALL data if not cached
+        if (!fullQuranCache) {
+            try {
+                fullQuranCache = [];
+                // Fetch in batches to avoid browser hang
+                const promises = [];
+                for(let i=1; i<=114; i++) promises.push(fetch(`data/${i}.json`).then(r => r.json()));
+                fullQuranCache = await Promise.all(promises);
+            } catch(e) {
+                stat.innerText = "Error loading Quran data.";
+                return;
+            }
+        }
+
+        // 2. Search
+        stat.innerText = "Searching...";
+        let results = [];
+        fullQuranCache.forEach((surahData, sIdx) => {
+            surahData.verses.forEach((txt, vIdx) => {
+                if (txt.includes(q)) {
+                    results.push({
+                        s: sIdx + 1,
+                        v: vIdx + 1,
+                        name: surahData.name_en,
+                        txt: txt
+                    });
+                }
+            });
+        });
+
+        stat.innerText = `Found ${results.length} matches.`;
+        
+        // 3. Render
+        if (results.length === 0) resDiv.innerHTML = "<div class='pop-item'>No matches found.</div>";
+        else {
+            resDiv.innerHTML = results.map(r => `
+                <div class="pop-item" onclick="jumpTo(${r.s}, ${r.v}); togglePanel('search-panel')">
+                    <div>
+                        <strong>${r.s}. ${r.name} (${r.v})</strong><br>
+                        <span style="color:#666; font-size:0.8em">${r.txt.substring(0, 60)}...</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
     function toggleBM(e, v) {
         e.stopPropagation();
         const existingIdx = bookmarks.findIndex(b => b.s === state.surah && b.v === v);
         if(existingIdx >= 0) bookmarks.splice(existingIdx, 1);
         else bookmarks.push({s: state.surah, v: v, name: state.data.name_en});
-        
         localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks));
         render(); renderBMList();
     }
@@ -449,68 +497,36 @@
         if(bookmarks.length === 0) { div.innerHTML = "No bookmarks yet."; return; }
         div.innerHTML = bookmarks.map((b, i) => `
             <div class="pop-item" onclick="jumpTo(${b.s}, ${b.v})">
-                <span>${b.s}. ${b.name} (Ayah ${b.v})</span>
+                <span>${b.s}. ${b.name} (${b.v})</span>
                 <span style="color:red" onclick="removeBM(event, ${i})">✕</span>
             </div>
         `).join('');
     }
 
-    function removeBM(e, i) {
-        e.stopPropagation();
-        bookmarks.splice(i, 1);
-        localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks));
-        renderBMList(); render();
-    }
+    function removeBM(e, i) { e.stopPropagation(); bookmarks.splice(i, 1); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); renderBMList(); render(); }
 
     async function jumpTo(s, v) {
         await changeSurah(s, true);
-        state.offset = v; // Simple logic: set offset to that verse so it's on the page
-        // If paginated, ensure we are on the right page
         if (state.chunkSize !== 'all') {
             const pageStart = Math.floor((v - 1) / state.chunkSize) * state.chunkSize + 1;
             state.offset = pageStart;
+        } else {
+            state.offset = v;
         }
         await render();
         setTimeout(() => pick(v), 300);
-        togglePanel('bm-panel'); // Close menu
+        togglePanel('bm-panel');
     }
 
-    // --- SEARCH ---
-    function runSearch() {
-        const q = document.getElementById('search-input').value.trim();
-        const resDiv = document.getElementById('search-results');
-        if(!q || !state.data) { resDiv.innerHTML = ""; return; }
-
-        let matches = [];
-        state.data.verses.forEach((txt, i) => {
-            if(txt.includes(q)) matches.push({v: i+1, txt: txt});
-        });
-
-        if(matches.length === 0) resDiv.innerHTML = "No matches in this Surah.";
-        else {
-            resDiv.innerHTML = matches.map(m => `
-                <div class="pop-item" onclick="jumpTo(${state.surah}, ${m.v}); togglePanel('search-panel')">
-                    <div>
-                        <strong>Ayah ${m.v}</strong><br>
-                        <span style="color:#666; font-size:0.8em">${m.txt.substring(0, 50)}...</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-    }
-
-    // --- CORE ---
     function pick(n) { document.getElementById('v_start').value = n; hl(n); }
     function hl(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
 
     async function play() {
         if(playing) return; playing=true; stopReq=false;
-        
         const btn = document.getElementById('play-btn');
         const reciter = document.getElementById('reciter-select').value;
         const sId = String(state.surah).padStart(3,'0');
         const st = document.getElementById('status');
-        
         btn.innerText = "⏸ Playing";
         
         while(true) { 
@@ -521,7 +537,6 @@
                 if(stopReq) break;
                 hl(a); st.innerText = `Playing Ayah ${a} / ${end}`;
                 aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`;
-                
                 try {
                     await new Promise((resolve) => {
                         aud.onended = resolve;
@@ -539,23 +554,11 @@
     }
 
     function stop() { stopReq=true; aud.pause(); document.getElementById('play-btn').innerText = "▶ PLAY"; }
-    
-    // UI Toggles
-    function togglePanel(id) {
-        document.querySelectorAll('.popover').forEach(p => {
-            if(p.id !== id) p.classList.remove('show');
-        });
-        document.getElementById(id).classList.toggle('show');
-    }
-    
+    function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
     function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
     function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
-    function updateSetting(prop, val) { 
-        document.documentElement.style.setProperty('--'+prop, val); 
-        saveState();
-    }
+    function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
     
-    // START
     init();
     </script>
 </body>
