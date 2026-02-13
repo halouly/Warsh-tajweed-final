@@ -19,7 +19,6 @@
         :root { 
             --bg: #fffcf2; --text: #1a1a1a; --accent: #92400e; --panel: #ffffff; --border: #e5e5e5;
             --active-bg: #fef3c7; --active-border: #92400e;
-            /* TYPOGRAPHY VARS */
             --sz: 32px; --lh: 2.8; --ws: normal; --max-w: 800px;
         }
         body.dark {
@@ -37,45 +36,53 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
-        .tools { display: flex; gap: 10px; }
+        .tools { display: flex; gap: 8px; }
         
-        /* SETTINGS PANEL (Hidden by default) */
-        #typo-panel {
-            display: none; position: absolute; top: 60px; left: 20px; 
+        /* PANELS (Settings, Search, Bookmarks) */
+        .popover {
+            display: none; position: absolute; top: 60px; right: 20px; /* Default right for RTL might need left logic */
             background: var(--panel); border: 1px solid var(--border); 
             padding: 15px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            z-index: 950; min-width: 200px;
+            z-index: 950; min-width: 250px; max-height: 400px; overflow-y: auto;
         }
-        #typo-panel.show { display: block; }
+        .popover.show { display: block; }
+        /* Fix positioning for RTL */
+        html[dir="rtl"] .popover { right: auto; left: 20px; }
+
+        .pop-item { 
+            padding: 8px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 0.9rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .pop-item:hover { background: rgba(0,0,0,0.05); }
+        .pop-item:last-child { border: none; }
+
         .typo-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
         .typo-label { font-size: 0.8rem; opacity: 0.8; }
 
         /* CONTENT */
         #display { 
-            padding: 40px 20px; 
-            max-width: var(--max-w); 
-            margin: 0 auto; 
-            line-height: var(--lh); 
-            word-spacing: var(--ws);
-            text-align: justify; 
+            padding: 40px 20px; max-width: var(--max-w); margin: 0 auto; 
+            line-height: var(--lh); word-spacing: var(--ws); text-align: justify; 
         }
         
         .verse { 
             display: inline; font-size: var(--sz); cursor: pointer; padding: 4px 0; 
-            border-bottom: 1px dashed var(--border); transition: 0.2s;
+            border-bottom: 1px dashed var(--border); transition: 0.2s; position: relative;
         }
         .verse:hover { background: rgba(0,0,0,0.05); }
         .verse.active { 
-            background: var(--active-bg); 
-            box-shadow: 0 0 0 3px var(--active-bg); 
-            border-radius: 6px; 
-            color: var(--text) !important;
+            background: var(--active-bg); box-shadow: 0 0 0 3px var(--active-bg); 
+            border-radius: 6px; color: var(--text) !important;
         }
         .num { 
             font-size: 0.5em; color: var(--accent); border: 1px solid var(--accent); 
             border-radius: 50%; padding: 0 6px; margin: 0 6px; vertical-align: middle; 
             user-select: none; display: inline-block;
         }
+        
+        /* BOOKMARK ACTION IN VERSE */
+        .bm-icon { font-size: 0.6em; margin-left: 5px; color: #ccc; cursor: pointer; transition: 0.2s; }
+        .bm-icon:hover, .bm-icon.saved { color: #f59e0b; }
 
         /* CONTROLS */
         #controls {
@@ -95,11 +102,10 @@
         button.primary { background: var(--accent); color: #fff; border: none; }
         button.primary:hover { opacity: 0.9; }
         
-        .icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
+        .icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; color: var(--text); }
         input[type=range] { accent-color: var(--accent); cursor: pointer; width: 100%; }
         #status { text-align: center; font-size: 0.8rem; opacity: 0.7; margin-top: 5px; }
 
-        /* BIGGER ARROWS */
         .big-btn { font-size: 1.5rem; padding: 0 15px; line-height: 1; }
         .page-nav { display: flex; gap: 5px; align-items: center; }
         .page-nav.hidden { display: none; }
@@ -111,37 +117,52 @@
 
     <header>
         <div class="tools">
+            <button class="icon-btn" onclick="togglePanel('search-panel')" title="Search">🔍</button>
+            <button class="icon-btn" onclick="togglePanel('bm-panel')" title="Bookmarks">★</button>
+            <button class="icon-btn" onclick="togglePanel('typo-panel')" title="Text Settings">T</button>
             <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌗</button>
             <button class="icon-btn" onclick="toggleFullScreen()" title="Full Screen">⛶</button>
-            <button class="icon-btn" onclick="toggleTypo()" title="Text Settings">T</button>
         </div>
         <h1 id="surah-title">Warsh Reader</h1>
     </header>
 
-    <!-- TYPOGRAPHY SETTINGS -->
-    <div id="typo-panel">
+    <!-- 1. SEARCH PANEL -->
+    <div id="search-panel" class="popover">
+        <h3 style="margin-top:0">Search Current Surah</h3>
+        <input type="text" id="search-input" placeholder="Type to search..." onkeyup="runSearch()" style="width:90%; margin-bottom:10px">
+        <div id="search-results" style="max-height:200px; overflow-y:auto; font-size:0.9rem"></div>
+    </div>
+
+    <!-- 2. BOOKMARKS PANEL -->
+    <div id="bm-panel" class="popover">
+        <h3 style="margin-top:0">Bookmarks</h3>
+        <div id="bm-list">No bookmarks yet.</div>
+    </div>
+
+    <!-- 3. TYPOGRAPHY PANEL -->
+    <div id="typo-panel" class="popover">
         <div class="typo-row">
             <span class="typo-label">Text Size</span>
-            <input type="range" min="20" max="70" value="32" oninput="setVar('--sz', this.value+'px')">
+            <input type="range" min="20" max="70" value="32" oninput="updateSetting('sz', this.value+'px')">
         </div>
         <div class="typo-row">
             <span class="typo-label">Line Height</span>
-            <input type="range" min="1.5" max="4.0" step="0.1" value="2.8" oninput="setVar('--lh', this.value)">
+            <input type="range" min="1.5" max="4.0" step="0.1" value="2.8" oninput="updateSetting('lh', this.value)">
         </div>
         <div class="typo-row">
             <span class="typo-label">Word Spacing</span>
-            <input type="range" min="0" max="20" value="0" oninput="setVar('--ws', this.value+'px')">
+            <input type="range" min="0" max="20" value="0" oninput="updateSetting('ws', this.value+'px')">
         </div>
         <div class="typo-row">
             <span class="typo-label">Content Width</span>
-            <input type="range" min="400" max="1200" value="800" oninput="setVar('--max-w', this.value+'px')">
+            <input type="range" min="400" max="1200" value="800" oninput="updateSetting('max-w', this.value+'px')">
         </div>
     </div>
 
     <div id="display">Select a Surah...</div>
 
     <div id="controls">
-        <!-- Row 1: Surah Nav & View Settings -->
+        <!-- Row 1: Nav -->
         <div class="row">
             <button onclick="navSurah(-1)" title="Prev Surah">«</button>
             <select id="surah-select" onchange="changeSurah(this.value)" style="width:160px"></select>
@@ -159,7 +180,6 @@
                 <input type="number" id="custom-chunk-input" min="1" max="286" placeholder="#" onchange="setCustomChunk(this.value)">
             </div>
 
-            <!-- PAGINATION ARROWS -->
             <div id="page-controls" class="page-nav hidden">
                 <button class="big-btn" onclick="changePage(-1)">‹</button>
                 <span id="page-info" style="font-size:0.9rem; min-width:60px; text-align:center">1-5</span>
@@ -167,9 +187,9 @@
             </div>
         </div>
 
-        <!-- Row 2: Audio & Playback -->
+        <!-- Row 2: Playback -->
         <div class="row">
-            <select id="reciter-select" style="width:160px">
+            <select id="reciter-select" style="width:160px" onchange="saveState()">
                 <option value="warsh/warsh_ibrahim_aldosary_128kbps">Ibrahim Al-Dosary</option>
                 <option value="warsh/warsh_yassin_al_jazaery_64kbps">Yassin Al-Jazaery</option>
                 <option value="warsh/warsh_Abdul_Basit_128kbps">Abdul Basit (Warsh)</option>
@@ -195,7 +215,7 @@
     </div>
 
     <script>
-    // --- 0. DATA ---
+    // --- 0. DATA & CONFIG ---
     const SURAH_NAMES = [
         "Al-Fatiha","Al-Baqarah","Al-Imran","An-Nisa","Al-Ma'idah","Al-An'am","Al-A'raf","Al-Anfal","At-Tawbah","Yunus",
         "Hud","Yusuf","Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha",
@@ -210,7 +230,7 @@
         "Al-Qari'ah","At-Takathur","Al-Asr","Al-Humazah","Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar","Al-Kafirun","An-Nasr",
         "Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"
     ];
-
+    
     // --- 1. TAJWEED ENGINE ---
     const SUKUN='\u0652', SHADDA='\u0651', FATHA='\u064E', DAMMA='\u064F', KASRA='\u0650';
     const DAGGER='\u0670', MADD_SIGN='\u0653', WARSH_DOT='\u06EC'; 
@@ -228,8 +248,7 @@
     function detect(t){
         const a=[];
         for(let i=0;i<t.length;i++){
-            const c=t[i];
-            if(!isLtr(c)) continue;
+            const c=t[i]; if(!isLtr(c)) continue;
             const n=nextL(t,i), p=prevL(t,i), rangeEnd=getEnd(t, i);
             const diacs=getDiac(t,i);
             const isSakin=has(t,i,SUKUN) || (!diacs.length && n && !has(t,i,SHADDA)); 
@@ -276,12 +295,13 @@
         if(open)h+='</span>'; return h;
     }
 
-    // --- 2. STATE ---
+    // --- 2. STATE & STORAGE ---
     let state = { surah: 1, chunkSize: 'all', offset: 1, data: null };
+    let bookmarks = [];
     let playing = false, stopReq = false;
     const aud = new Audio();
     
-    // Init Select
+    // Init
     const sel = document.getElementById('surah-select');
     SURAH_NAMES.forEach((n,i) => {
         let opt = document.createElement('option');
@@ -289,10 +309,55 @@
         sel.appendChild(opt);
     });
 
-    // --- 3. ACTIONS ---
-    async function changeSurah(id) {
-        state.surah = parseInt(id); state.offset = 1; 
+    // --- 3. LOGIC ---
+    
+    function init() {
+        // Load Saved State
+        const saved = JSON.parse(localStorage.getItem('warsh_state'));
+        if(saved) {
+            state.surah = saved.surah || 1;
+            state.chunkSize = saved.chunkSize || 'all';
+            state.offset = saved.offset || 1;
+            document.getElementById('reciter-select').value = saved.reciter || "warsh/warsh_ibrahim_aldosary_128kbps";
+            if(saved.theme === 'dark') document.body.classList.add('dark');
+            if(saved.css) {
+                Object.keys(saved.css).forEach(k => document.documentElement.style.setProperty(k, saved.css[k]));
+            }
+            // Update UI inputs to match loaded settings
+            document.getElementById('view-mode').value = state.chunkSize === 'all' || isNaN(state.chunkSize) ? 'all' : (state.chunkSize > 10 ? 'custom' : state.chunkSize);
+            if(state.chunkSize !== 'all') updateNavVisibility();
+        }
+
+        // Load Bookmarks
+        const bm = JSON.parse(localStorage.getItem('warsh_bookmarks'));
+        if(bm) bookmarks = bm;
+        renderBMList();
+
+        changeSurah(state.surah, true); // True = skip reset offset
+    }
+
+    function saveState() {
+        const s = {
+            surah: state.surah,
+            chunkSize: state.chunkSize,
+            offset: state.offset,
+            reciter: document.getElementById('reciter-select').value,
+            theme: document.body.classList.contains('dark') ? 'dark' : 'light',
+            css: {
+                '--sz': getComputedStyle(document.documentElement).getPropertyValue('--sz'),
+                '--lh': getComputedStyle(document.documentElement).getPropertyValue('--lh'),
+                '--ws': getComputedStyle(document.documentElement).getPropertyValue('--ws'),
+                '--max-w': getComputedStyle(document.documentElement).getPropertyValue('--max-w')
+            }
+        };
+        localStorage.setItem('warsh_state', JSON.stringify(s));
+    }
+
+    async function changeSurah(id, skipOffsetReset) {
+        state.surah = parseInt(id); 
+        if(!skipOffsetReset) state.offset = 1; 
         document.getElementById('surah-select').value = state.surah;
+        saveState();
         await loadData(); render();
     }
     
@@ -305,12 +370,12 @@
         const inp = document.getElementById('custom-chunk-input');
         if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } 
         else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); }
-        updateNavVisibility();
+        updateNavVisibility(); saveState();
     }
 
     function setCustomChunk(val) {
         let n = parseInt(val);
-        if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); }
+        if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); }
     }
 
     function updateNavVisibility() {
@@ -321,7 +386,7 @@
     function changePage(dir) {
         if(state.chunkSize === 'all') return;
         const next = state.offset + (dir * state.chunkSize);
-        if(next >= 1 && next <= state.data.verses.length) { state.offset = next; render(); }
+        if(next >= 1 && next <= state.data.verses.length) { state.offset = next; render(); saveState(); }
     }
 
     async function loadData() {
@@ -351,7 +416,13 @@
 
         chunk.forEach((txt, i) => {
             let n = startIdx + i + 1;
-            html += `<div class="verse" id="v${n}" onclick="pick(${n})">${apply(txt, detect(txt))} <span class="num">${n}</span></div>`;
+            let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n);
+            let starClass = isSaved ? 'bm-icon saved' : 'bm-icon';
+            
+            html += `<div class="verse" id="v${n}" onclick="pick(${n})">
+                ${apply(txt, detect(txt))} 
+                <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span>
+            </div>`;
         });
         
         div.innerHTML = html;
@@ -362,6 +433,73 @@
         document.getElementById('v_end').value = endIdx;
     }
 
+    // --- BOOKMARKS ---
+    function toggleBM(e, v) {
+        e.stopPropagation();
+        const existingIdx = bookmarks.findIndex(b => b.s === state.surah && b.v === v);
+        if(existingIdx >= 0) bookmarks.splice(existingIdx, 1);
+        else bookmarks.push({s: state.surah, v: v, name: state.data.name_en});
+        
+        localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks));
+        render(); renderBMList();
+    }
+
+    function renderBMList() {
+        const div = document.getElementById('bm-list');
+        if(bookmarks.length === 0) { div.innerHTML = "No bookmarks yet."; return; }
+        div.innerHTML = bookmarks.map((b, i) => `
+            <div class="pop-item" onclick="jumpTo(${b.s}, ${b.v})">
+                <span>${b.s}. ${b.name} (Ayah ${b.v})</span>
+                <span style="color:red" onclick="removeBM(event, ${i})">✕</span>
+            </div>
+        `).join('');
+    }
+
+    function removeBM(e, i) {
+        e.stopPropagation();
+        bookmarks.splice(i, 1);
+        localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks));
+        renderBMList(); render();
+    }
+
+    async function jumpTo(s, v) {
+        await changeSurah(s, true);
+        state.offset = v; // Simple logic: set offset to that verse so it's on the page
+        // If paginated, ensure we are on the right page
+        if (state.chunkSize !== 'all') {
+            const pageStart = Math.floor((v - 1) / state.chunkSize) * state.chunkSize + 1;
+            state.offset = pageStart;
+        }
+        await render();
+        setTimeout(() => pick(v), 300);
+        togglePanel('bm-panel'); // Close menu
+    }
+
+    // --- SEARCH ---
+    function runSearch() {
+        const q = document.getElementById('search-input').value.trim();
+        const resDiv = document.getElementById('search-results');
+        if(!q || !state.data) { resDiv.innerHTML = ""; return; }
+
+        let matches = [];
+        state.data.verses.forEach((txt, i) => {
+            if(txt.includes(q)) matches.push({v: i+1, txt: txt});
+        });
+
+        if(matches.length === 0) resDiv.innerHTML = "No matches in this Surah.";
+        else {
+            resDiv.innerHTML = matches.map(m => `
+                <div class="pop-item" onclick="jumpTo(${state.surah}, ${m.v}); togglePanel('search-panel')">
+                    <div>
+                        <strong>Ayah ${m.v}</strong><br>
+                        <span style="color:#666; font-size:0.8em">${m.txt.substring(0, 50)}...</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    // --- CORE ---
     function pick(n) { document.getElementById('v_start').value = n; hl(n); }
     function hl(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
 
@@ -391,7 +529,6 @@
                         aud.play().catch(resolve);
                     });
                 } catch(e){}
-                
                 if(!stopReq) await new Promise(r=>setTimeout(r, 200)); 
             }
             if(stopReq || !document.getElementById('loop-box').checked) break;
@@ -402,14 +539,24 @@
     }
 
     function stop() { stopReq=true; aud.pause(); document.getElementById('play-btn').innerText = "▶ PLAY"; }
-    function toggleTheme() { document.body.classList.toggle('dark'); }
-    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
     
-    function toggleTypo() { document.getElementById('typo-panel').classList.toggle('show'); }
-    function setVar(name, val) { document.documentElement.style.setProperty(name, val); }
-
-    // Init
-    changeSurah(1);
+    // UI Toggles
+    function togglePanel(id) {
+        document.querySelectorAll('.popover').forEach(p => {
+            if(p.id !== id) p.classList.remove('show');
+        });
+        document.getElementById(id).classList.toggle('show');
+    }
+    
+    function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
+    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
+    function updateSetting(prop, val) { 
+        document.documentElement.style.setProperty('--'+prop, val); 
+        saveState();
+    }
+    
+    // START
+    init();
     </script>
 </body>
 </html>
