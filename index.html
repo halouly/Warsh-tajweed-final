@@ -9,15 +9,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- TAJWEED COLORS --- */
-        .tj-ghunnah   { color: #16a34a !important; }
-        .tj-qalqalah  { color: #0284c7 !important; }
-        .tj-heavy     { color: #1e3a8a !important; font-weight: bold; }
-        .tj-light     { color: #06b6d4 !important; }
-        .tj-special   { color: #d97706 !important; font-weight: bold; }
-        .tj-silent    { color: #9ca3af !important; }
+        .tj-ghunnah   { color: #16a34a !important; } /* Green */
+        .tj-qalqalah  { color: #0284c7 !important; } /* Blue */
+        .tj-heavy     { color: #1e3a8a !important; font-weight: bold; } /* Dark Blue */
+        .tj-light     { color: #06b6d4 !important; } /* Cyan */
+        .tj-special   { color: #d97706 !important; font-weight: bold; } /* Orange */
+        .tj-silent    { color: #9ca3af !important; } /* Grey */
         .tj-mandatory { color: #800020 !important; font-weight: bold; } /* Burgundy */
         .tj-madd      { color: #dc2626 !important; } /* Red */
 
+        /* --- THEMES --- */
         :root { 
             --bg: #fffcf2; --text: #1a1a1a; --accent: #92400e; --panel: #ffffff; --border: #e5e5e5;
             --active-bg: #fef3c7; --active-border: #92400e;
@@ -27,6 +28,7 @@
             --bg: #1f2937; --text: #f3f4f6; --accent: #fbbf24; --panel: #111827; --border: #374151;
             --active-bg: #374151; --active-border: #fbbf24;
         }
+
         body { font-family: 'Amiri', serif; background: var(--bg); color: var(--text); margin:0; padding-bottom:180px; transition: 0.3s; }
         header { position: sticky; top: 0; z-index: 900; background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
@@ -88,7 +90,10 @@
     <div id="controls">
         <div class="row">
             <button onclick="navSurah(-1)">«</button>
-            <select id="surah-select" onchange="changeSurah(this.value)" style="width:160px"></select>
+            <select id="surah-select" onchange="changeSurah(this.value)" style="width:160px">
+                <!-- HARDCODED LIST TO ENSURE VISIBILITY -->
+                <option value="1">1. Al-Fatiha</option><option value="2">2. Al-Baqarah</option><option value="3">3. Al-Imran</option><option value="4">4. An-Nisa</option><option value="5">5. Al-Ma'idah</option><option value="6">6. Al-An'am</option><option value="7">7. Al-A'raf</option><option value="8">8. Al-Anfal</option><option value="9">9. At-Tawbah</option><option value="10">10. Yunus</option><option value="11">11. Hud</option><option value="12">12. Yusuf</option><option value="13">13. Ar-Ra'd</option><option value="14">14. Ibrahim</option><option value="15">15. Al-Hijr</option><option value="16">16. An-Nahl</option><option value="17">17. Al-Isra</option><option value="18">18. Al-Kahf</option><option value="19">19. Maryam</option><option value="20">20. Ta-Ha</option><option value="21">21. Al-Anbiya</option><option value="22">22. Al-Hajj</option><option value="23">23. Al-Mu'minun</option><option value="24">24. An-Nur</option><option value="25">25. Al-Furqan</option><option value="26">26. Ash-Shu'ara</option><option value="27">27. An-Naml</option><option value="28">28. Al-Qasas</option><option value="29">29. Al-Ankabut</option><option value="30">30. Ar-Rum</option><option value="31">31. Luqman</option><option value="32">32. As-Sajdah</option><option value="33">33. Al-Ahzab</option><option value="34">34. Saba</option><option value="35">35. Fatir</option><option value="36">36. Ya-Sin</option><option value="37">37. As-Saffat</option><option value="38">38. Sad</option><option value="39">39. Az-Zumar</option><option value="40">40. Ghafir</option><option value="41">41. Fussilat</option><option value="42">42. Ash-Shura</option><option value="43">43. Az-Zukhruf</option><option value="44">44. Ad-Dukhan</option><option value="45">45. Al-Jathiyah</option><option value="46">46. Al-Ahqaf</option><option value="47">47. Muhammad</option><option value="48">48. Al-Fath</option><option value="49">49. Al-Hujurat</option><option value="50">50. Qaf</option><option value="51">51. Adh-Dhariyat</option><option value="52">52. At-Tur</option><option value="53">53. An-Najm</option><option value="54">54. Al-Qamar</option><option value="55">55. Ar-Rahman</option><option value="56">56. Al-Waqi'ah</option><option value="57">57. Al-Hadid</option><option value="58">58. Al-Mujadila</option><option value="59">59. Al-Hashr</option><option value="60">60. Al-Mumtahanah</option><option value="61">61. As-Saff</option><option value="62">62. Al-Jumu'ah</option><option value="63">63. Al-Munafiqun</option><option value="64">64. At-Taghabun</option><option value="65">65. At-Talaq</option><option value="66">66. At-Tahrim</option><option value="67">67. Al-Mulk</option><option value="68">68. Al-Qalam</option><option value="69">69. Al-Haqqah</option><option value="70">70. Al-Ma'arij</option><option value="71">71. Nuh</option><option value="72">72. Al-Jinn</option><option value="73">73. Al-Muzzammil</option><option value="74">74. Al-Muddathir</option><option value="75">75. Al-Qiyamah</option><option value="76">76. Al-Insan</option><option value="77">77. Al-Mursalat</option><option value="78">78. An-Naba</option><option value="79">79. An-Nazi'at</option><option value="80">80. Abasa</option><option value="81">81. At-Takwir</option><option value="82">82. Al-Infitar</option><option value="83">83. Al-Mutaffifin</option><option value="84">84. Al-Inshiqaq</option><option value="85">85. Al-Buruj</option><option value="86">86. At-Tariq</option><option value="87">87. Al-A'la</option><option value="88">88. Al-Ghashiyah</option><option value="89">89. Al-Fajr</option><option value="90">90. Al-Balad</option><option value="91">91. Ash-Shams</option><option value="92">92. Al-Layl</option><option value="93">93. Ad-Duhaa</option><option value="94">94. Ash-Sharh</option><option value="95">95. At-Tin</option><option value="96">96. Al-Alaq</option><option value="97">97. Al-Qadr</option><option value="98">98. Al-Bayyinah</option><option value="99">99. Az-Zalzalah</option><option value="100">100. Al-Adiyat</option><option value="101">101. Al-Qari'ah</option><option value="102">102. At-Takathur</option><option value="103">103. Al-Asr</option><option value="104">104. Al-Humazah</option><option value="105">105. Al-Fil</option><option value="106">106. Quraysh</option><option value="107">107. Al-Ma'un</option><option value="108">108. Al-Kawthar</option><option value="109">109. Al-Kafirun</option><option value="110">110. An-Nasr</option><option value="111">111. Al-Masad</option><option value="112">112. Al-Ikhlas</option><option value="113">113. Al-Falaq</option><option value="114">114. An-Nas</option>
+            </select>
             <button onclick="navSurah(1)">»</button>
             <span style="opacity:0.5; margin:0 5px;">|</span>
             <div style="display:flex; align-items:center; gap:5px;">
@@ -125,13 +130,6 @@
     </div>
 
     <script>
-    const SURAH_NAMES = ["Al-Fatiha","Al-Baqarah","Al-Imran","An-Nisa","Al-Ma'idah","Al-An'am","Al-A'raf","Al-Anfal","At-Tawbah","Yunus","Hud","Yusuf","Ar-Ra'd","Ibrahim","Al-Hijr","An-Nahl","Al-Isra","Al-Kahf","Maryam","Ta-Ha","Al-Anbiya","Al-Hajj","Al-Mu'minun","An-Nur","Al-Furqan","Ash-Shu'ara","An-Naml","Al-Qasas","Al-Ankabut","Ar-Rum","Luqman","As-Sajdah","Al-Ahzab","Saba","Fatir","Ya-Sin","As-Saffat","Sad","Az-Zumar","Ghafir","Fussilat","Ash-Shura","Az-Zukhruf","Ad-Dukhan","Al-Jathiyah","Al-Ahqaf","Muhammad","Al-Fath","Al-Hujurat","Qaf","Adh-Dhariyat","At-Tur","An-Najm","Al-Qamar","Ar-Rahman","Al-Waqi'ah","Al-Hadid","Al-Mujadila","Al-Hashr","Al-Mumtahanah","As-Saff","Al-Jumu'ah","Al-Munafiqun","At-Taghabun","At-Talaq","At-Tahrim","Al-Mulk","Al-Qalam","Al-Haqqah","Al-Ma'arij","Nuh","Al-Jinn","Al-Muzzammil","Al-Muddathir","Al-Qiyamah","Al-Insan","Al-Mursalat","An-Naba","An-Nazi'at","Abasa","At-Takwir","Al-Infitar","Al-Mutaffifin","Al-Inshiqaq","Al-Buruj","At-Tariq","Al-A'la","Al-Ghashiyah","Al-Fajr","Al-Balad","Ash-Shams","Al-Layl","Ad-Duhaa","Ash-Sharh","At-Tin","Al-Alaq","Al-Qadr","Al-Bayyinah","Az-Zalzalah","Al-Adiyat","Al-Qari'ah","At-Takathur","Al-Asr","Al-Humazah","Al-Fil","Quraysh","Al-Ma'un","Al-Kawthar","Al-Kafirun","An-Nasr","Al-Masad","Al-Ikhlas","Al-Falaq","An-Nas"];
-
-    // Fill Dropdown Immediately
-    const sel = document.getElementById('surah-select');
-    sel.innerHTML = "";
-    SURAH_NAMES.forEach((n,i) => { let opt = document.createElement('option'); opt.value = i+1; opt.text = `${i+1}. ${n}`; sel.appendChild(opt); });
-
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 
     const SUKUN='\u0652', SHADDA='\u0651', FATHA='\u064E', DAMMA='\u064F', KASRA='\u0650';
@@ -160,7 +158,7 @@
 
             if (has(t, i, WARSH_DOT) || has(t, i, '\u065F')) rule='tj-special';
             
-            // --- FIX 1: EXPLICIT MADD SIGN (For Alif Lam Mim) ---
+            // --- FIX 1: Explicit MADD SIGN check (For Alif Lam Mim) ---
             else if (has(t, i, MADD_SIGN)) rule = 'tj-mandatory'; 
             
             else if((c==='ن'||c==='م') && isShadda) rule='tj-ghunnah';
@@ -179,10 +177,10 @@
                 }
             }
             else if(MADD.includes(c) && !hasVowel && !isShadda){
-                // --- FIX 2: IGNORE SILENT ALIF IN MADD LAZIM CHECK (For Tufsidu) ---
+                // --- FIX 2: Check for SILENT ALIF after Madd ---
                 if(n && HAMZA.includes(n.c)) rule='tj-mandatory';
                 else if(n && (has(t,n.i,SHADDA) || has(t,n.i,SUKUN))) {
-                    // Check if the "Sukun letter" is NOT an Alif. If it IS an Alif, it's silent, so ignore it.
+                    // Only apply Mandatory if the next letter is NOT a silent Alif
                     if (n.c !== 'ا') rule='tj-mandatory';
                 }
                 else if(!rule && p && HAMZA.includes(p.c)) rule='tj-madd';
@@ -285,4 +283,19 @@
 
     function toggleBM(e, v) { e.stopPropagation(); const existingIdx = bookmarks.findIndex(b => b.s === state.surah && b.v === v); if(existingIdx >= 0) bookmarks.splice(existingIdx, 1); else bookmarks.push({s: state.surah, v: v, name: state.data.name_en}); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); render(); renderBMList(); }
     function renderBMList() { const div = document.getElementById('bm-list'); if(bookmarks.length === 0) { div.innerHTML = "No bookmarks yet."; return; } div.innerHTML = bookmarks.map((b, i) => `<div class="pop-item" onclick="jumpTo(${b.s}, ${b.v})"><span>${b.s}. ${b.name} (${b.v})</span><span style="color:red" onclick="removeBM(event, ${i})">✕</span></div>`).join(''); }
-    function removeBM(e, i) { e.stopPropagation(); bookmarks.splice(i, 1); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); renderBM
+    function removeBM(e, i) { e.stopPropagation(); bookmarks.splice(i, 1); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); renderBMList(); render(); }
+    async function jumpTo(s, v) { await changeSurah(s, true); if (state.chunkSize !== 'all') { const pageStart = Math.floor((v - 1) / state.chunkSize) * state.chunkSize + 1; state.offset = pageStart; } else { state.offset = v; } await render(); setTimeout(() => pick(v), 300); togglePanel('bm-panel'); }
+    function pick(n) { document.getElementById('v_start').value = n; hl(n); }
+    function hl(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
+
+    async function play() { if(playing) return; playing=true; stopReq=false; const btn = document.getElementById('play-btn'); const reciter = document.getElementById('reciter-select').value; const sId = String(state.surah).padStart(3,'0'); const st = document.getElementById('status'); btn.innerText = "⏸ Playing"; while(true) { const start = parseInt(document.getElementById('v_start').value); const end = parseInt(document.getElementById('v_end').value); for(let a=start; a<=end; a++) { if(stopReq) break; hl(a); st.innerText = `Playing Ayah ${a} / ${end}`; aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`; try { await new Promise((resolve) => { aud.onended = resolve; aud.onerror = () => { console.error('Audio Err'); st.innerText="Err: Missing Audio"; resolve(); }; aud.play().catch(resolve); }); } catch(e){} if(!stopReq) await new Promise(r=>setTimeout(r, 200)); } if(stopReq || !document.getElementById('loop-box').checked) break; st.innerText = "Looping..."; await new Promise(r=>setTimeout(r, 500)); } playing=false; btn.innerText = "▶ PLAY"; st.innerText = "Ready"; }
+    function stop() { stopReq=true; aud.pause(); document.getElementById('play-btn').innerText = "▶ PLAY"; }
+    function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
+    function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
+    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
+    function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
+    
+    init();
+    </script>
+</body>
+</html>
