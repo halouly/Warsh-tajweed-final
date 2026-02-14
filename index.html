@@ -3,89 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warsh Reader Pro (Standalone)</title>
+    <title>Warsh Reader Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#92400e">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- TAJWEED COLORS (FIXED) --- */
+        /* --- TAJWEED COLORS --- */
         .tj-ghunnah   { color: #16a34a !important; } 
         .tj-qalqalah  { color: #0284c7 !important; } 
-        .tj-heavy     { color: #1e3a8a !important; font-weight: bold; }
-        .tj-light     { color: #06b6d4 !important; }
-        .tj-special   { color: #d97706 !important; font-weight: bold; } 
-        .tj-silent    { color: #9ca3af !important; }
-        .tj-mandatory { color: #800020 !important; font-weight: bold; }
-        .tj-madd      { color: #dc2626 !important; }
+        .tj-heavy     { color: #1e3a8a !important; font-weight: bold; } 
+        .tj-light     { color: #06b6d4 !important; } 
+        .tj-special   { color: #d97706 !important; font-weight: bold; } /* Orange (Jawaz) */
+        .tj-silent    { color: #9ca3af !important; } 
+        .tj-mandatory { color: #800020 !important; font-weight: bold; } 
+        .tj-madd      { color: #dc2626 !important; } 
 
-        /* --- UI STYLES --- */
-        :root { --bg: #fffcf2; --text: #1a1a1a; --accent: #92400e; --panel: #ffffff; --border: #e5e5e5; --active-bg: #fef3c7; --sz: 32px; --lh: 2.8; --ws: normal; --max-w: 800px; }
-        body.dark { --bg: #1f2937; --text: #f3f4f6; --accent: #fbbf24; --panel: #111827; --border: #374151; --active-bg: #374151; }
-        body { font-family: 'Amiri', serif; background: var(--bg); color: var(--text); margin:0; padding-bottom:180px; }
+        /* --- THEMES & UI --- */
+        :root { 
+            --bg: #fffcf2; --text: #1a1a1a; --accent: #92400e; --panel: #ffffff; --border: #e5e5e5;
+            --active-bg: #fef3c7; --active-border: #92400e;
+            --sz: 32px; --lh: 2.8; --ws: normal; --max-w: 800px;
+        }
+        body.dark {
+            --bg: #1f2937; --text: #f3f4f6; --accent: #fbbf24; --panel: #111827; --border: #374151;
+            --active-bg: #374151; --active-border: #fbbf24;
+        }
+
+        body { font-family: 'Amiri', serif; background: var(--bg); color: var(--text); margin:0; padding-bottom:180px; transition: 0.3s; }
         header { position: sticky; top: 0; z-index: 900; background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
+        .tools { display: flex; gap: 8px; }
+        .popover { display: none; position: absolute; top: 60px; right: 20px; background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 8px; z-index: 950; min-width: 300px; max-height: 500px; overflow-y: auto; }
+        .popover.show { display: block; }
+        html[dir="rtl"] .popover { right: auto; left: 20px; }
+        .pop-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; }
         #display { padding: 40px 20px; max-width: var(--max-w); margin: 0 auto; line-height: var(--lh); word-spacing: var(--ws); text-align: justify; }
-        .verse { display: inline; font-size: var(--sz); cursor: pointer; padding: 4px 0; border-bottom: 1px dashed var(--border); }
+        .verse { display: inline; font-size: var(--sz); cursor: pointer; padding: 4px 0; border-bottom: 1px dashed var(--border); transition: 0.2s; position: relative; }
         .verse.active { background: var(--active-bg); box-shadow: 0 0 0 3px var(--active-bg); border-radius: 6px; }
-        .num { font-size: 0.5em; color: var(--accent); border: 1px solid var(--accent); border-radius: 50%; padding: 0 6px; margin: 0 6px; display: inline-block; }
+        .num { font-size: 0.5em; color: var(--accent); border: 1px solid var(--accent); border-radius: 50%; padding: 0 6px; margin: 0 6px; vertical-align: middle; display: inline-block; }
+        .bm-icon { font-size: 0.6em; margin-left: 5px; color: #ccc; cursor: pointer; }
+        .bm-icon.saved { color: #f59e0b; }
         #controls { position: fixed; bottom: 0; left: 0; right: 0; background: var(--panel); border-top: 2px solid var(--accent); padding: 15px; z-index: 1000; direction: ltr; }
         .row { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
-        select, input, button { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+        select, input, button { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
         button.primary { background: var(--accent); color: #fff; border: none; }
+        .icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; color: var(--text); }
+        .big-btn { font-size: 1.5rem; padding: 0 15px; line-height: 1; }
+        .page-nav.hidden { display: none; }
+        #custom-chunk-input { width: 50px; display: none; text-align: center; }
+        #custom-chunk-input.show { display: inline-block; }
+        .typo-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
-        <h1>Warsh Reader</h1>
-        <button onclick="document.body.classList.toggle('dark')">🌗</button>
+        <div class="tools">
+            <button class="icon-btn" onclick="togglePanel('search-panel')" title="Search">🔍</button>
+            <button class="icon-btn" onclick="togglePanel('bm-panel')" title="Bookmarks">★</button>
+            <button class="icon-btn" onclick="togglePanel('typo-panel')" title="Text Settings">T</button>
+            <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌗</button>
+            <button class="icon-btn" onclick="toggleFullScreen()" title="Full Screen">⛶</button>
+        </div>
+        <h1 id="surah-title">Warsh Reader</h1>
     </header>
+
+    <div id="search-panel" class="popover">
+        <h3 style="margin-top:0">Search</h3>
+        <div style="display:flex; gap:5px; margin-bottom:10px;">
+            <input type="text" id="search-input" placeholder="Type word..." style="flex:1">
+            <button onclick="runGlobalSearch()">Go</button>
+        </div>
+        <div id="search-status" style="font-size:0.8rem; color:#666; margin-bottom:5px;"></div>
+        <div id="search-results" style="max-height:300px; overflow-y:auto;"></div>
+    </div>
+    <div id="bm-panel" class="popover"><h3 style="margin-top:0">Bookmarks</h3><div id="bm-list">No bookmarks yet.</div></div>
+    <div id="typo-panel" class="popover">
+        <div class="typo-row"><span class="typo-label">Text Size</span><input type="range" min="20" max="70" value="32" oninput="updateSetting('sz', this.value+'px')"></div>
+        <div class="typo-row"><span class="typo-label">Line Height</span><input type="range" min="1.5" max="4.0" step="0.1" value="2.8" oninput="updateSetting('lh', this.value)"></div>
+        <div class="typo-row"><span class="typo-label">Word Spacing</span><input type="range" min="0" max="20" value="0" oninput="updateSetting('ws', this.value+'px')"></div>
+        <div class="typo-row"><span class="typo-label">Content Width</span><input type="range" min="400" max="1200" value="800" oninput="updateSetting('max-w', this.value+'px')"></div>
+    </div>
 
     <div id="display">Select a Surah...</div>
 
     <div id="controls">
         <div class="row">
-            <select id="surah-select" onchange="loadSurah(this.value)">
-                 <option value="1">1. Al-Fatiha</option>
-                 <option value="2">2. Al-Baqarah (Demo)</option>
+            <button onclick="navSurah(-1)">«</button>
+            <select id="surah-select" onchange="changeSurah(this.value)" style="width:160px">
+                <option value="1">1. Al-Fatiha</option><option value="2">2. Al-Baqarah</option><option value="3">3. Al-Imran</option><option value="4">4. An-Nisa</option><option value="5">5. Al-Ma'idah</option><option value="6">6. Al-An'am</option><option value="7">7. Al-A'raf</option><option value="8">8. Al-Anfal</option><option value="9">9. At-Tawbah</option><option value="10">10. Yunus</option><option value="11">11. Hud</option><option value="12">12. Yusuf</option><option value="13">13. Ar-Ra'd</option><option value="14">14. Ibrahim</option><option value="15">15. Al-Hijr</option><option value="16">16. An-Nahl</option><option value="17">17. Al-Isra</option><option value="18">18. Al-Kahf</option><option value="19">19. Maryam</option><option value="20">20. Ta-Ha</option><option value="21">21. Al-Anbiya</option><option value="22">22. Al-Hajj</option><option value="23">23. Al-Mu'minun</option><option value="24">24. An-Nur</option><option value="25">25. Al-Furqan</option><option value="26">26. Ash-Shu'ara</option><option value="27">27. An-Naml</option><option value="28">28. Al-Qasas</option><option value="29">29. Al-Ankabut</option><option value="30">30. Ar-Rum</option><option value="31">31. Luqman</option><option value="32">32. As-Sajdah</option><option value="33">33. Al-Ahzab</option><option value="34">34. Saba</option><option value="35">35. Fatir</option><option value="36">36. Ya-Sin</option><option value="37">37. As-Saffat</option><option value="38">38. Sad</option><option value="39">39. Az-Zumar</option><option value="40">40. Ghafir</option><option value="41">41. Fussilat</option><option value="42">42. Ash-Shura</option><option value="43">43. Az-Zukhruf</option><option value="44">44. Ad-Dukhan</option><option value="45">45. Al-Jathiyah</option><option value="46">46. Al-Ahqaf</option><option value="47">47. Muhammad</option><option value="48">48. Al-Fath</option><option value="49">49. Al-Hujurat</option><option value="50">50. Qaf</option><option value="51">51. Adh-Dhariyat</option><option value="52">52. At-Tur</option><option value="53">53. An-Najm</option><option value="54">54. Al-Qamar</option><option value="55">55. Ar-Rahman</option><option value="56">56. Al-Waqi'ah</option><option value="57">57. Al-Hadid</option><option value="58">58. Al-Mujadila</option><option value="59">59. Al-Hashr</option><option value="60">60. Al-Mumtahanah</option><option value="61">61. As-Saff</option><option value="62">62. Al-Jumu'ah</option><option value="63">63. Al-Munafiqun</option><option value="64">64. At-Taghabun</option><option value="65">65. At-Talaq</option><option value="66">66. At-Tahrim</option><option value="67">67. Al-Mulk</option><option value="68">68. Al-Qalam</option><option value="69">69. Al-Haqqah</option><option value="70">70. Al-Ma'arij</option><option value="71">71. Nuh</option><option value="72">72. Al-Jinn</option><option value="73">73. Al-Muzzammil</option><option value="74">74. Al-Muddathir</option><option value="75">75. Al-Qiyamah</option><option value="76">76. Al-Insan</option><option value="77">77. Al-Mursalat</option><option value="78">78. An-Naba</option><option value="79">79. An-Nazi'at</option><option value="80">80. Abasa</option><option value="81">81. At-Takwir</option><option value="82">82. Al-Infitar</option><option value="83">83. Al-Mutaffifin</option><option value="84">84. Al-Inshiqaq</option><option value="85">85. Al-Buruj</option><option value="86">86. At-Tariq</option><option value="87">87. Al-A'la</option><option value="88">88. Al-Ghashiyah</option><option value="89">89. Al-Fajr</option><option value="90">90. Al-Balad</option><option value="91">91. Ash-Shams</option><option value="92">92. Al-Layl</option><option value="93">93. Ad-Duhaa</option><option value="94">94. Ash-Sharh</option><option value="95">95. At-Tin</option><option value="96">96. Al-Alaq</option><option value="97">97. Al-Qadr</option><option value="98">98. Al-Bayyinah</option><option value="99">99. Az-Zalzalah</option><option value="100">100. Al-Adiyat</option><option value="101">101. Al-Qari'ah</option><option value="102">102. At-Takathur</option><option value="103">103. Al-Asr</option><option value="104">104. Al-Humazah</option><option value="105">105. Al-Fil</option><option value="106">106. Quraysh</option><option value="107">107. Al-Ma'un</option><option value="108">108. Al-Kawthar</option><option value="109">109. Al-Kafirun</option><option value="110">110. An-Nasr</option><option value="111">111. Al-Masad</option><option value="112">112. Al-Ikhlas</option><option value="113">113. Al-Falaq</option><option value="114">114. An-Nas</option>
             </select>
+            <button onclick="navSurah(1)">»</button>
+            <div style="display:flex; align-items:center; gap:5px;">
+                <select id="view-mode" onchange="changeViewMode(this.value)" style="width:100px">
+                    <option value="all">All</option><option value="5">5</option><option value="10">10</option><option value="custom">#</option>
+                </select>
+                <input type="number" id="custom-chunk-input" min="1" max="286" placeholder="#" onchange="setCustomChunk(this.value)">
+            </div>
+            <div id="page-controls" class="page-nav hidden">
+                <button class="big-btn" onclick="changePage(-1)">‹</button>
+                <span id="page-info" style="font-size:0.9rem"></span>
+                <button class="big-btn" onclick="changePage(1)">›</button>
+            </div>
         </div>
         <div class="row">
-            <select id="reciter-select">
+            <select id="reciter-select" style="width:160px" onchange="saveState()">
                 <option value="warsh/warsh_ibrahim_aldosary_128kbps">Ibrahim Al-Dosary</option>
                 <option value="warsh/warsh_yassin_al_jazaery_64kbps">Yassin Al-Jazaery</option>
-                <option value="warsh/warsh_Abdul_Basit_128kbps">Abdul Basit</option>
+                <option value="warsh/warsh_Abdul_Basit_128kbps">Abdul Basit (Warsh)</option>
             </select>
-            <button class="primary" onclick="play()">▶ PLAY</button>
+            <input type="number" id="v_start" value="1" min="1" style="width:50px">
+            <input type="number" id="v_end" value="1" min="1" style="width:50px">
+            <label><input type="checkbox" id="loop-box"> Loop</label>
+            <button class="primary" onclick="play()" id="play-btn">▶ PLAY</button>
             <button onclick="stop()">⏹</button>
         </div>
-        <div id="status" style="text-align:center; font-size:0.8rem; color:#666">Ready</div>
+        <div id="status">Ready</div>
     </div>
 
     <script>
-    // --- 1. EMBEDDED DATA (NO FETCH NEEDED) ---
-    const QURAN_DATA = {
-        "1": {
-            "name": "Al-Fatiha",
-            "verses": [
-                "ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ",
-                "ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
-                "مَـٰلِكِ يَوْمِ ٱلدِّينِ",
-                "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
-                "ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ",
-                "صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّالِّينَ"
-            ]
-        },
-        "2": {
-            "name": "Al-Baqarah (Demo)",
-            "verses": [
-                "الٓمٓ",
-                "ذَٰلِكَ ٱلْكِتَـٰبُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ",
-                "ٱلَّذِينَ يُؤْمِنُونَ بِٱلْغَيْبِ وَيُقِيمُونَ ٱلصَّلَوٰةَ وَمِمَّا رَزَقْنَـٰهُمْ يُنفِقُونَ",
-                "وَٱلَّذِينَ يُؤْمِنُونَ بِمَآ أُنزِلَ إِلَيْكَ وَمَآ أُنزِلَ مِن قَبْلِكَ وَبِٱلْـَٔاخِرَةِ هُمْ يُوقِنُونَ",
-                "أُو۟لَـٰٓئِكَ عَلَىٰ هُدًى مِّن رَّبِّهِمْ ۖ وَأُو۟لَـٰٓئِكَ هُمُ ٱلْمُفْلِحُونَ"
-            ]
-        }
-    };
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 
-    // --- 2. TAJWEED RULES (FIXED & RESTORED) ---
     const SUKUN='\u0652', SHADDA='\u0651', FATHA='\u064E', DAMMA='\u064F', KASRA='\u0650';
     const DAGGER='\u0670', MADD_SIGN='\u0653', WARSH_DOT='\u06EC'; 
     const QALQ='قطبجد', IDGH_GH='ينمو', IDGH_NO='لر', IKHFA='تثجدذزسشصضطظفقك';
@@ -129,9 +166,16 @@
                 }
             }
             else if(MADD.includes(c) && !isShadda && (!hasVowel || c === '\u0622')){
-                // JAWAZ RULE (Corrected): Check if next letter is the LAST letter
-                const nn = n ? nextL(t, n.i) : null;
-                if (n && !nn && !has(t, n.i, SHADDA)) rule = 'tj-special'; 
+                // --- FIXED SAFE CHECK FOR MADD JAWAZ (Arid Lissukun) ---
+                // We just count how many letters are left in the verse.
+                let lettersLeft = 0;
+                for (let k = i + 1; k < t.length; k++) {
+                    if (isLtr(t[k])) lettersLeft++;
+                }
+
+                if (lettersLeft === 1) { 
+                    rule = 'tj-special'; // Only 1 letter left -> Madd Arid (Jawaz)
+                }
                 else if (c === '\u0622') rule='tj-madd';
                 else if(n && HAMZA.includes(n.c)) rule='tj-mandatory';
                 else if(n && (has(t,n.i,SHADDA) || has(t,n.i,SUKUN))) {
@@ -167,70 +211,89 @@
         return h;
     }
 
-    // --- 3. APP LOGIC ---
-    let currentSurah = 1;
-    let playing = false;
-    let stopReq = false;
+    let state = { surah: 1, chunkSize: 'all', offset: 1, data: null };
+    let bookmarks = [], fullQuranCache = null, playing = false, stopReq = false;
     const aud = new Audio();
 
-    function loadSurah(id) {
-        currentSurah = id;
-        const div = document.getElementById('display');
-        const data = QURAN_DATA[id];
-        
-        if (!data) {
-            div.innerHTML = "<br><b>FULL QURAN DATA NOT INCLUDED IN THIS DEMO FILE.</b><br>To get the full Quran, we must switch back to the GitHub version.";
-            return;
+    function init() {
+        const saved = JSON.parse(localStorage.getItem('warsh_state'));
+        if(saved) {
+            state.surah = saved.surah || 1; 
+            state.chunkSize = saved.chunkSize || 'all'; 
+            state.offset = saved.offset || 1;
+            document.getElementById('reciter-select').value = saved.reciter || "warsh/warsh_ibrahim_aldosary_128kbps";
+            if(saved.theme === 'dark') document.body.classList.add('dark');
+            if(saved.css) Object.keys(saved.css).forEach(k => document.documentElement.style.setProperty(k, saved.css[k]));
+            document.getElementById('view-mode').value = state.chunkSize === 'all' ? 'all' : (state.chunkSize > 10 ? 'custom' : state.chunkSize);
+            updateNavVisibility();
         }
-
-        let html = "";
-        if(id != 1 && id != 9) {
-             const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ";
-             html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${apply(bism, detect(bism))}</div>`;
-        }
-
-        data.verses.forEach((txt, i) => {
-            let n = i + 1;
-            html += `<div class="verse" id="v${n}" onclick="playAyah(${n})">${apply(txt, detect(txt))} <span class="num">${n}</span></div>`;
-        });
-        div.innerHTML = html;
-        document.getElementById('surah-title').innerText = data.name;
+        document.getElementById('surah-select').value = state.surah;
+        const bm = JSON.parse(localStorage.getItem('warsh_bookmarks')); if(bm) bookmarks = bm;
+        renderBMList(); 
+        changeSurah(state.surah, true);
     }
 
-    async function play() {
-        if(playing) return;
-        playing = true;
-        stopReq = false;
-        const reciter = document.getElementById('reciter-select').value;
-        const data = QURAN_DATA[currentSurah];
-        const sId = String(currentSurah).padStart(3, '0');
-
-        for(let i=0; i<data.verses.length; i++) {
-            if(stopReq) break;
-            const n = i + 1;
-            highlight(n);
-            document.getElementById('status').innerText = `Playing Ayah ${n}...`;
-            
-            aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(n).padStart(3, '0')}.mp3`;
-            
-            try {
-                await new Promise((resolve) => {
-                    aud.onended = resolve;
-                    aud.onerror = () => { console.log('Error'); resolve(); };
-                    aud.play().catch(e => { console.log(e); resolve(); });
-                });
-            } catch(e){}
-        }
-        playing = false;
-        document.getElementById('status').innerText = "Ready";
+    function saveState() {
+        localStorage.setItem('warsh_state', JSON.stringify({
+            surah: state.surah, chunkSize: state.chunkSize, offset: state.offset,
+            reciter: document.getElementById('reciter-select').value,
+            theme: document.body.classList.contains('dark') ? 'dark' : 'light',
+            css: {
+                '--sz': getComputedStyle(document.documentElement).getPropertyValue('--sz'),
+                '--lh': getComputedStyle(document.documentElement).getPropertyValue('--lh'),
+                '--ws': getComputedStyle(document.documentElement).getPropertyValue('--ws'),
+                '--max-w': getComputedStyle(document.documentElement).getPropertyValue('--max-w')
+            }
+        }));
     }
 
-    function stop() { stopReq = true; aud.pause(); playing = false; }
-    function highlight(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
-    function playAyah(n) { alert("Play button starts from beginning in this demo."); }
+    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
+    function navSurah(dir) { let next = state.surah + dir; if(next >= 1 && next <= 114) changeSurah(next); }
+    function changeViewMode(mode) { const inp = document.getElementById('custom-chunk-input'); if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); } updateNavVisibility(); saveState(); }
+    function setCustomChunk(val) { let n = parseInt(val); if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); } }
+    function updateNavVisibility() { const nav = document.getElementById('page-controls'); if(state.chunkSize === 'all') nav.classList.add('hidden'); else nav.classList.remove('hidden'); }
+    function changePage(dir) { if(state.chunkSize === 'all') return; const next = state.offset + (dir * state.chunkSize); if(next >= 1 && next <= state.data.verses.length) { state.offset = next; render(); saveState(); } }
 
-    // Init
-    loadSurah(1);
+    async function loadData() {
+        document.getElementById('status').innerText = "Loading data...";
+        try { const res = await fetch(`data/${state.surah}.json`); if(!res.ok) throw new Error("File not found"); state.data = await res.json(); document.getElementById('surah-title').innerText = `${state.surah}. ${state.data.name_ar} (${state.data.name_en})`; document.getElementById('status').innerText = "Ready"; } catch(e) { document.getElementById('display').innerHTML = `<div style="color:red;text-align:center">Error: ${e.message}</div>`; }
+    }
+
+    function render() {
+        if(!state.data) return;
+        const div = document.getElementById('display'); let html = "";
+        if (state.surah != 1 && state.surah != 9 && state.offset === 1) { const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${apply(bism, detect(bism))}</div>`; }
+        let startIdx = state.offset - 1; let endIdx = state.chunkSize === 'all' ? state.data.verses.length : Math.min(startIdx + state.chunkSize, state.data.verses.length); const chunk = state.data.verses.slice(startIdx, endIdx);
+        chunk.forEach((txt, i) => { let n = startIdx + i + 1; let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); let starClass = isSaved ? 'bm-icon saved' : 'bm-icon'; html += `<div class="verse" id="v${n}" onclick="pick(${n})">${apply(txt, detect(txt))} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span></div>`; });
+        div.innerHTML = html; window.scrollTo({ top: 0, behavior: 'smooth' });
+        if(state.chunkSize !== 'all') document.getElementById('page-info').innerText = `${state.offset}-${endIdx}`; document.getElementById('v_start').value = state.offset; document.getElementById('v_end').value = endIdx;
+    }
+
+    async function runGlobalSearch() {
+        const q = document.getElementById('search-input').value.trim(); const resDiv = document.getElementById('search-results'); const stat = document.getElementById('search-status');
+        if(!q) return; resDiv.innerHTML = ""; stat.innerText = "Indexing entire Quran...";
+        if (!fullQuranCache) { try { fullQuranCache = []; const promises = []; for(let i=1; i<=114; i++) promises.push(fetch(`data/${i}.json`).then(r => r.json())); fullQuranCache = await Promise.all(promises); } catch(e) { stat.innerText = "Error loading Quran data."; return; } }
+        stat.innerText = "Searching..."; let results = [];
+        fullQuranCache.forEach((surahData, sIdx) => { surahData.verses.forEach((txt, vIdx) => { if (txt.includes(q)) { results.push({ s: sIdx + 1, v: vIdx + 1, name: surahData.name_en, txt: txt }); } }); });
+        stat.innerText = `Found ${results.length} matches.`;
+        if (results.length === 0) resDiv.innerHTML = "<div class='pop-item'>No matches found.</div>"; else { resDiv.innerHTML = results.map(r => `<div class="pop-item" onclick="jumpTo(${r.s}, ${r.v}); togglePanel('search-panel')"><div><strong>${r.s}. ${r.name} (${r.v})</strong><br><span style="color:#666; font-size:0.8em">${r.txt.substring(0, 60)}...</span></div></div>`).join(''); }
+    }
+
+    function toggleBM(e, v) { e.stopPropagation(); const existingIdx = bookmarks.findIndex(b => b.s === state.surah && b.v === v); if(existingIdx >= 0) bookmarks.splice(existingIdx, 1); else bookmarks.push({s: state.surah, v: v, name: state.data.name_en}); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); render(); renderBMList(); }
+    function renderBMList() { const div = document.getElementById('bm-list'); if(bookmarks.length === 0) { div.innerHTML = "No bookmarks yet."; return; } div.innerHTML = bookmarks.map((b, i) => `<div class="pop-item" onclick="jumpTo(${b.s}, ${b.v})"><span>${b.s}. ${b.name} (${b.v})</span><span style="color:red" onclick="removeBM(event, ${i})">✕</span></div>`).join(''); }
+    function removeBM(e, i) { e.stopPropagation(); bookmarks.splice(i, 1); localStorage.setItem('warsh_bookmarks', JSON.stringify(bookmarks)); renderBMList(); render(); }
+    async function jumpTo(s, v) { await changeSurah(s, true); if (state.chunkSize !== 'all') { const pageStart = Math.floor((v - 1) / state.chunkSize) * state.chunkSize + 1; state.offset = pageStart; } else { state.offset = v; } await render(); setTimeout(() => pick(v), 300); togglePanel('bm-panel'); }
+    function pick(n) { document.getElementById('v_start').value = n; hl(n); }
+    function hl(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
+
+    async function play() { if(playing) return; playing=true; stopReq=false; const btn = document.getElementById('play-btn'); const reciter = document.getElementById('reciter-select').value; const sId = String(state.surah).padStart(3,'0'); const st = document.getElementById('status'); btn.innerText = "⏸ Playing"; while(true) { const start = parseInt(document.getElementById('v_start').value); const end = parseInt(document.getElementById('v_end').value); for(let a=start; a<=end; a++) { if(stopReq) break; hl(a); st.innerText = `Playing Ayah ${a} / ${end}`; aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`; try { await new Promise((resolve) => { aud.onended = resolve; aud.onerror = () => { console.error('Audio Err'); st.innerText="Err: Missing Audio"; resolve(); }; aud.play().catch(resolve); }); } catch(e){} if(!stopReq) await new Promise(r=>setTimeout(r, 200)); } if(stopReq || !document.getElementById('loop-box').checked) break; st.innerText = "Looping..."; await new Promise(r=>setTimeout(r, 500)); } playing=false; btn.innerText = "▶ PLAY"; st.innerText = "Ready"; }
+    function stop() { stopReq=true; aud.pause(); document.getElementById('play-btn').innerText = "▶ PLAY"; }
+    function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
+    function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
+    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
+    function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
+    
+    init();
     </script>
 </body>
 </html>
