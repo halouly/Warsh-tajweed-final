@@ -1,0 +1,13 @@
+{
+  "rules": [
+    { "id": "ghunnah", "name": "Ghunnah", "nameAr": "غنة", "description": "Nasal sound (noon/meem with shadda)", "color": "#16a34a", "defaultColor": "#16a34a", "bold": false },
+    { "id": "qalqalah", "name": "Qalqalah", "nameAr": "قلقة", "description": "Bouncing sound (ق ط ب ج د)", "color": "#0284c7", "defaultColor": "#0284c7", "bold": false },
+    { "id": "heavy", "name": "Heavy Letters", "nameAr": "تفخيم", "description": "Heavy pronunciation", "color": "#1e3a8a", "defaultColor": "#1e3a8a", "bold": true },
+    { "id": "light", "name": "Light Letters", "nameAr": "ترقيق", "description": "Light pronunciation", "color": "#06b6d4", "defaultColor": "#06b6d4", "bold": false },
+    { "id": "special", "name": "Madd Jawaz", "nameAr": "مد جائز", "description": "Permissible elongation", "color": "#d97706", "defaultColor": "#d97706", "bold": true },
+    { "id": "silent", "name": "Silent", "nameAr": "ساكن", "description": "Silent letters", "color": "#9ca3af", "defaultColor": "#9ca3af", "bold": false },
+    { "id": "mandatory", "name": "Madd Wajib", "nameAr": "مد واجب", "description": "Mandatory elongation", "color": "#800020", "defaultColor": "#800020", "bold": true },
+    { "id": "madd", "name": "Madd Mutlaq", "nameAr": "مد مطلق", "description": "Absolute elongation", "color": "#dc2626", "defaultColor": "#dc2626", "bold": false }
+  ],
+  "overrides": []
+}
