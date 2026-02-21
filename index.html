@@ -8,15 +8,15 @@
     <meta name="theme-color" content="#92400e">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- TAJWEED COLORS (will be overridden by config) --- */
+        /* --- TAJWEED COLORS (defaults, overridden by dynamic CSS) --- */
         .tj-ghunnah   { color: #16a34a !important; } 
         .tj-qalqalah  { color: #0284c7 !important; } 
         .tj-heavy     { color: #1e3a8a !important; font-weight: bold; } 
-        .tj-light     { color: #06b6d4 !important; } 
-        .tj-special   { color: #d97706 !important; font-weight: bold; }
-        .tj-silent    { color: #9ca3af !important; } 
-        .tj-mandatory { color: #800020 !important; font-weight: bold; } 
+        .tj-ra-heavy  { color: #1e3a8a !important; font-weight: bold; } 
+        .tj-ra-light  { color: #06b6d4 !important; } 
         .tj-madd      { color: #dc2626 !important; } 
+        .tj-silent    { color: #9ca3af !important; } 
+        .tj-special   { color: #d97706 !important; font-weight: bold; }
 
         /* --- THEMES & UI --- */
         :root { 
@@ -253,7 +253,7 @@
         </div>
         <div style="display:flex; gap:10px;">
             <button onclick="saveLetterColor()" style="flex:1; background:#22c55e; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">Save</button>
-            <button onclick="removeLetterOverride()" style="background:#f3f4f6; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">Reset</button>
+            <button onclick="removeLetterOverrideUI()" style="background:#f3f4f6; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">Reset</button>
             <button onclick="closeLetterPopup()" style="background:#f3f4f6; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">Cancel</button>
         </div>
     </div>
@@ -273,9 +273,9 @@
         const badge = document.getElementById('dev-badge');
         const banner = document.getElementById('dev-banner');
         const panelBtn = document.getElementById('dev-panel-btn');
-        const isDev = WarshEngine.isDevMode();
+        const isDev = isDevMode();
         
-        WarshEngine.setDevMode(!isDev);
+        setDevMode(!isDev);
         
         if (!isDev) {
             badge.classList.add('active');
@@ -311,36 +311,40 @@
     }
 
     function renderRulesList() {
-        const rules = WarshEngine.getRules();
+        const rules = getRules();
         const html = rules.map(r => `
             <div class="rule-card">
                 <div class="rule-card-header">
                     <span><strong>${r.name}</strong> (${r.nameAr})</span>
+                    <span style="font-family:monospace; font-size:0.8rem; color:#666;">${r.id}</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <div class="color-preview" style="background:${r.color}"></div>
-                    <input type="color" value="${r.color}" onchange="updateRuleColor('${r.id}', this.value)" class="color-input">
-                    <input type="text" value="${r.color}" onchange="updateRuleColor('${r.id}', this.value)" style="flex:1">
+                    <input type="color" value="${r.color}" onchange="updateRuleColorUI('${r.id}', this.value)" class="color-input">
+                    <input type="text" value="${r.color}" onchange="updateRuleColorUI('${r.id}', this.value)" style="flex:1">
                 </div>
             </div>
         `).join('');
         document.getElementById('rules-list').innerHTML = html;
     }
 
-    function updateRuleColor(ruleId, color) {
-        WarshEngine.updateRuleColor(ruleId, color);
+    function updateRuleColorUI(ruleId, color) {
+        updateRuleColor(ruleId, color);
         renderRulesList();
         render();
+        // Inject dynamic CSS
+        injectDynamicCSS();
     }
 
     function resetAllRules() {
-        WarshEngine.resetRules();
+        resetRules();
         renderRulesList();
         render();
+        injectDynamicCSS();
     }
 
     function renderOverrideList() {
-        const overrides = WarshEngine.getOverrides();
+        const overrides = getOverrides();
         const list = document.getElementById('override-list');
         
         if (overrides.length === 0) {
@@ -356,38 +360,38 @@
                         Surah ${o.surah}, Verse ${o.verse}, Position ${o.charIndex}
                     </div>
                 </div>
-                <button onclick="removeOverride(${i})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1rem;">✕</button>
+                <button onclick="removeOverrideUI(${i})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1rem;">✕</button>
             </div>
         `).join('');
         
         document.getElementById('override-total').textContent = overrides.length;
     }
 
-    function removeOverride(index) {
-        const overrides = WarshEngine.getOverrides();
+    function removeOverrideUI(index) {
+        const overrides = getOverrides();
         const o = overrides[index];
-        WarshEngine.removeLetterOverride(o.surah, o.verse, o.charIndex);
+        removeLetterOverride(o.surah, o.verse, o.charIndex);
         renderOverrideList();
         render();
         updateOverrideCount();
     }
 
     function clearAllOverrides() {
-        WarshEngine.clearAllOverrides();
+        clearAllOverrides();
         renderOverrideList();
         render();
         updateOverrideCount();
     }
 
     function updateOverrideCount() {
-        const count = WarshEngine.getOverrides().length;
+        const count = getOverrides().length;
         const el = document.getElementById('override-count');
         el.textContent = count > 0 ? `| ${count} overrides` : '';
     }
 
     // Letter click handler
     document.addEventListener('click', function(e) {
-        if (!WarshEngine.isDevMode()) return;
+        if (!isDevMode()) return;
         
         const letterUnit = e.target.closest('.letter-unit');
         if (!letterUnit) return;
@@ -403,46 +407,32 @@
         };
         
         // Find current override
-        const overrides = WarshEngine.getOverrides();
+        const overrides = getOverrides();
         const existing = overrides.find(o => 
             o.surah === selectedLetter.surah && 
             o.verse === selectedLetter.verse && 
             o.charIndex === selectedLetter.index
         );
         
-        // Find current rule color
-        const rules = WarshEngine.getRules();
-        const verseText = state.data.verses[selectedLetter.verse - 1];
-        const anns = WarshEngine.detect(verseText);
+        // Get current style from the element
+        const computedStyle = window.getComputedStyle(letterUnit);
+        const currentColor = existing ? existing.color : (computedStyle.color || '#000000');
+        const currentBold = existing ? existing.bold : (computedStyle.fontWeight === 'bold');
         
-        let currentColor = '#000000';
-        let currentBold = false;
-        
-        // Find letter position in annotations
-        let letterPos = 0;
-        for (let i = 0; i < verseText.length; i++) {
-            if (verseText[i] !== ' ' && !isDiac(verseText[i])) {
-                if (letterPos === selectedLetter.index) {
-                    const ann = anns.find(a => i >= a.s && i < a.e);
-                    if (ann) {
-                        const rule = rules.find(r => r.id === ann.cls);
-                        if (rule) {
-                            currentColor = rule.color;
-                            currentBold = rule.bold || false;
-                        }
-                    }
-                    break;
-                }
-                letterPos++;
-                while (i + 1 < verseText.length && isDiac(verseText[i + 1])) i++;
+        // Convert RGB to hex if needed
+        let hexColor = currentColor;
+        if (currentColor.startsWith('rgb')) {
+            const rgb = currentColor.match(/\d+/g);
+            if (rgb) {
+                hexColor = '#' + rgb.slice(0,3).map(x => parseInt(x).toString(16).padStart(2,'0')).join('');
             }
         }
         
         document.getElementById('letter-preview').textContent = selectedLetter.letter;
-        document.getElementById('letter-preview').style.color = existing ? existing.color : currentColor;
-        document.getElementById('letter-color').value = existing ? existing.color : currentColor;
-        document.getElementById('letter-color-text').value = existing ? existing.color : currentColor;
-        document.getElementById('letter-bold').checked = existing ? existing.bold : currentBold;
+        document.getElementById('letter-preview').style.color = hexColor;
+        document.getElementById('letter-color').value = hexColor;
+        document.getElementById('letter-color-text').value = hexColor;
+        document.getElementById('letter-bold').checked = currentBold;
         document.getElementById('letter-popup').classList.add('show');
     });
 
@@ -452,7 +442,7 @@
         const color = document.getElementById('letter-color-text').value || document.getElementById('letter-color').value;
         const bold = document.getElementById('letter-bold').checked;
         
-        WarshEngine.setLetterOverride(
+        setLetterOverride(
             selectedLetter.surah,
             selectedLetter.verse,
             selectedLetter.index,
@@ -467,10 +457,10 @@
         updateOverrideCount();
     }
 
-    function removeLetterOverride() {
+    function removeLetterOverrideUI() {
         if (!selectedLetter) return;
         
-        WarshEngine.removeLetterOverride(
+        removeLetterOverride(
             selectedLetter.surah,
             selectedLetter.verse,
             selectedLetter.index
@@ -514,7 +504,7 @@
         status.innerHTML = 'Saving...';
         
         try {
-            const config = WarshEngine.getConfig();
+            const config = getConfig();
             const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))));
             
             // Get existing file SHA
@@ -567,7 +557,7 @@
 
     // Export config
     function exportConfig() {
-        const config = WarshEngine.getConfig();
+        const config = getConfig();
         const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -606,6 +596,9 @@
         }
         
         updateOverrideCount();
+        
+        // Inject dynamic CSS for custom colors
+        injectDynamicCSS();
     }
 
     function saveState() {
@@ -637,11 +630,24 @@
     function render() {
         if(!state.data) return;
         const div = document.getElementById('display'); let html = "";
-        if (state.surah != 1 && state.surah != 9 && state.offset === 1) { const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${WarshEngine.renderVerse(bism, 0)}</div>`; }
-        let startIdx = state.offset - 1; let endIdx = state.chunkSize === 'all' ? state.data.verses.length : Math.min(startIdx + state.chunkSize, state.data.verses.length); const chunk = state.data.verses.slice(startIdx, endIdx);
-        chunk.forEach((txt, i) => { let n = startIdx + i + 1; let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); let starClass = isSaved ? 'bm-icon saved' : 'bm-icon'; html += `<div class="verse" id="v${n}" onclick="pick(${n})">${WarshEngine.renderVerse(txt, state.surah, n)} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span></div>`; });
-        div.innerHTML = html; window.scrollTo({ top: 0, behavior: 'smooth' });
-        if(state.chunkSize !== 'all') document.getElementById('page-info').innerText = `${state.offset}-${endIdx}`; document.getElementById('v_start').value = state.offset; document.getElementById('v_end').value = endIdx;
+        if (state.surah != 1 && state.surah != 9 && state.offset === 1) { 
+            const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; 
+            html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${renderVerse(bism, 0, 0)}</div>`; 
+        }
+        let startIdx = state.offset - 1; 
+        let endIdx = state.chunkSize === 'all' ? state.data.verses.length : Math.min(startIdx + state.chunkSize, state.data.verses.length); 
+        const chunk = state.data.verses.slice(startIdx, endIdx);
+        chunk.forEach((txt, i) => { 
+            let n = startIdx + i + 1; 
+            let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); 
+            let starClass = isSaved ? 'bm-icon saved' : 'bm-icon'; 
+            html += `<div class="verse" id="v${n}" onclick="pick(${n})">${renderVerse(txt, state.surah, n)} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span></div>`; 
+        });
+        div.innerHTML = html; 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if(state.chunkSize !== 'all') document.getElementById('page-info').innerText = `${state.offset}-${endIdx}`; 
+        document.getElementById('v_start').value = state.offset; 
+        document.getElementById('v_end').value = endIdx;
     }
 
     async function runGlobalSearch() {
