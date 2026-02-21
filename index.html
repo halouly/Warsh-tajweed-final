@@ -8,12 +8,12 @@
     <meta name="theme-color" content="#92400e">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- TAJWEED COLORS --- */
+        /* --- TAJWEED COLORS (will be overridden by config) --- */
         .tj-ghunnah   { color: #16a34a !important; } 
         .tj-qalqalah  { color: #0284c7 !important; } 
         .tj-heavy     { color: #1e3a8a !important; font-weight: bold; } 
         .tj-light     { color: #06b6d4 !important; } 
-        .tj-special   { color: #d97706 !important; font-weight: bold; } /* Orange (Jawaz) */
+        .tj-special   { color: #d97706 !important; font-weight: bold; }
         .tj-silent    { color: #9ca3af !important; } 
         .tj-mandatory { color: #800020 !important; font-weight: bold; } 
         .tj-madd      { color: #dc2626 !important; } 
@@ -38,7 +38,7 @@
         html[dir="rtl"] .popover { right: auto; left: 20px; }
         .pop-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; }
         #display { padding: 40px 20px; max-width: var(--max-w); margin: 0 auto; line-height: var(--lh); word-spacing: var(--ws); text-align: justify; }
-        .verse { display: inline; font-size: var(--sz); cursor: pointer; padding: 4px 0; border-bottom: 1px dashed var(--border); transition: 0.2s; position: relative; }
+        .verse { display: inline; font-size: var(--sz); padding: 4px 0; border-bottom: 1px dashed var(--border); transition: 0.2s; position: relative; }
         .verse.active { background: var(--active-bg); box-shadow: 0 0 0 3px var(--active-bg); border-radius: 6px; }
         .num { font-size: 0.5em; color: var(--accent); border: 1px solid var(--accent); border-radius: 50%; padding: 0 6px; margin: 0 6px; vertical-align: middle; display: inline-block; }
         .bm-icon { font-size: 0.6em; margin-left: 5px; color: #ccc; cursor: pointer; }
@@ -53,6 +53,38 @@
         #custom-chunk-input { width: 50px; display: none; text-align: center; }
         #custom-chunk-input.show { display: inline-block; }
         .typo-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
+        
+        /* Dev Mode Styles */
+        .dev-badge { background: #8b5cf6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
+        .dev-badge.active { background: #22c55e; }
+        .dev-banner { background: rgba(139, 92, 246, 0.1); border-bottom: 1px solid rgba(139, 92, 246, 0.3); padding: 8px; text-align: center; font-size: 0.85rem; }
+        .letter-unit:hover { outline: 2px solid #8b5cf6; outline-offset: 1px; }
+        
+        /* Dev Panel Modal */
+        .modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); z-index: 2000; }
+        .modal-overlay.show { display: flex; align-items: center; justify-content: center; }
+        .modal { background: var(--panel); border-radius: 12px; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        .modal-tabs { display: flex; border-bottom: 1px solid var(--border); }
+        .modal-tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; }
+        .modal-tab.active { border-bottom-color: var(--accent); color: var(--accent); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .rule-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .rule-card-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .color-preview { width: 40px; height: 40px; border-radius: 6px; border: 1px solid var(--border); }
+        .color-input { width: 60px; height: 40px; cursor: pointer; }
+        
+        /* Letter Editor Popup */
+        .letter-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border-radius: 12px; padding: 20px; z-index: 3000; min-width: 280px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .letter-popup.show { display: block; }
+        .letter-preview { font-size: 4rem; text-align: center; margin: 15px 0; }
+        
+        /* Override List */
+        .override-item { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--border); }
+        .override-letter { font-size: 1.5rem; min-width: 40px; }
     </style>
 </head>
 <body>
@@ -65,7 +97,17 @@
             <button class="icon-btn" onclick="toggleFullScreen()" title="Full Screen">⛶</button>
         </div>
         <h1 id="surah-title">Warsh Reader</h1>
+        <div class="tools">
+            <span id="dev-badge" class="dev-badge" onclick="toggleDevMode()">Dev Mode</span>
+            <button class="icon-btn" id="dev-panel-btn" style="display:none" onclick="openDevPanel()">🎨</button>
+        </div>
     </header>
+
+    <!-- Dev Mode Banner -->
+    <div id="dev-banner" class="dev-banner" style="display:none">
+        🎨 Dev Mode Active - Click on any letter to change its color
+        <span id="override-count"></span>
+    </div>
 
     <div id="search-panel" class="popover">
         <h3 style="margin-top:0">Search</h3>
@@ -120,101 +162,422 @@
         <div id="status">Ready</div>
     </div>
 
+    <!-- Dev Panel Modal -->
+    <div id="dev-modal-overlay" class="modal-overlay">
+        <div class="modal" style="width: 700px;">
+            <div class="modal-header">
+                <h3>🎨 Developer Mode - Color Editor</h3>
+                <button onclick="closeDevPanel()" style="font-size:1.5rem; background:none; border:none; cursor:pointer;">×</button>
+            </div>
+            <div class="modal-tabs">
+                <div class="modal-tab active" onclick="showDevTab('overrides')">Letter Overrides</div>
+                <div class="modal-tab" onclick="showDevTab('rules')">Rule Colors</div>
+                <div class="modal-tab" onclick="showDevTab('github')">GitHub</div>
+            </div>
+            <div class="modal-body">
+                <!-- Overrides Tab -->
+                <div id="tab-overrides" class="tab-content active">
+                    <p style="margin-top:0; color:#666;">Click on any letter in the verses to change its color individually.</p>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span>Active Overrides: <strong id="override-total">0</strong></span>
+                        <button onclick="clearAllOverrides()" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Clear All</button>
+                    </div>
+                    <div id="override-list" style="max-height:300px; overflow-y:auto;"></div>
+                </div>
+                
+                <!-- Rules Tab -->
+                <div id="tab-rules" class="tab-content">
+                    <div id="rules-list"></div>
+                    <div style="margin-top:15px; display:flex; gap:10px;">
+                        <button onclick="resetAllRules()">Reset to Defaults</button>
+                        <button onclick="exportConfig()">Export JSON</button>
+                    </div>
+                </div>
+                
+                <!-- GitHub Tab -->
+                <div id="tab-github" class="tab-content">
+                    <p style="margin-top:0">Save your color configuration to GitHub.</p>
+                    <div style="background:#f3f4f6; padding:10px; border-radius:6px; font-family:monospace; font-size:0.8rem; margin-bottom:15px;">
+📁 your-repo/
+├── 📁 data/
+├── 📄 engine.js
+├── 📄 index.html
+├── 📄 tajweed-config.json  ← Saved here
+                    </div>
+                    <div style="display:grid; gap:10px;">
+                        <div>
+                            <label>Personal Access Token</label>
+                            <input type="password" id="gh-token" placeholder="ghp_xxx..." style="width:100%">
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div>
+                                <label>Owner (username)</label>
+                                <input type="text" id="gh-owner" placeholder="your-username" style="width:100%">
+                            </div>
+                            <div>
+                                <label>Repo Name</label>
+                                <input type="text" id="gh-repo" placeholder="your-repo" style="width:100%">
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div>
+                                <label>Branch</label>
+                                <input type="text" id="gh-branch" value="main" style="width:100%">
+                            </div>
+                            <div>
+                                <label>File Path</label>
+                                <input type="text" id="gh-path" value="tajweed-config.json" style="width:100%">
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="saveToGitHub()" style="width:100%; margin-top:15px; padding:10px; background:#22c55e; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                        Save to GitHub
+                    </button>
+                    <div id="gh-status" style="margin-top:10px; text-align:center;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Letter Color Popup -->
+    <div id="letter-popup" class="letter-popup">
+        <h4 style="margin-top:0">Edit Letter Color</h4>
+        <div class="letter-preview" id="letter-preview">ب</div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <label>Color:</label>
+            <input type="color" id="letter-color" style="width:50px; height:40px; cursor:pointer;">
+            <input type="text" id="letter-color-text" style="flex:1" placeholder="#ff0000">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label><input type="checkbox" id="letter-bold"> Bold</label>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="saveLetterColor()" style="flex:1; background:#22c55e; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">Save</button>
+            <button onclick="removeLetterOverride()" style="background:#f3f4f6; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">Reset</button>
+            <button onclick="closeLetterPopup()" style="background:#f3f4f6; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <script src="engine.js"></script>
     <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 
-    const SUKUN='\u0652', SHADDA='\u0651', FATHA='\u064E', DAMMA='\u064F', KASRA='\u0650';
-    const DAGGER='\u0670', MADD_SIGN='\u0653', WARSH_DOT='\u06EC'; 
-    const QALQ='قطبجد', IDGH_GH='ينمو', IDGH_NO='لر', IKHFA='تثجدذزسشصضطظفقك';
-    const MADD='اوى'+DAGGER+'\u06E5'+'\u06E6'+'\u0622', HAMZA='ءأإؤئ'; 
-    const HEAVY_LAM_TRIGGERS = 'صطظ'; 
-
-    function isDiac(c){const x=c.charCodeAt(0); return (x>=0x064B && x<=0x065F) || x===0x0670 || (x>=0x06D6 && x<=0x06ED && x!==0x06E5 && x!==0x06E6);}
-    function isLtr(c){const x=c.charCodeAt(0); return !isDiac(c) && x>=0x0600 && x<=0x06FF;}
-    function getDiac(t,i){let d=[]; for(let j=i+1;j<t.length&&isDiac(t[j]);j++)d.push(t[j]); return d;}
-    function has(t,i,c){return getDiac(t,i).includes(c);}
-    function getEnd(t, i){let j=i+1; while(j<t.length&&isDiac(t[j]))j++; return j;}
-    function nextL(t,i){for(let j=i+1;j<t.length;j++)if(isLtr(t[j]))return{c:t[j],i:j}; return null;}
-    function prevL(t,i){for(let j=i-1;j>=0;j--)if(isLtr(t[j]))return{c:t[j],i:j}; return null;}
-
-    function detect(t){
-        const a=[];
-        for(let i=0;i<t.length;i++){
-            const c=t[i]; if(!isLtr(c)) continue;
-            const n=nextL(t,i), p=prevL(t,i), rangeEnd=getEnd(t, i);
-            const diacs=getDiac(t,i);
-            const isSakin=has(t,i,SUKUN) || (!diacs.length && n && !has(t,i,SHADDA)); 
-            const hasVowel=has(t,i,FATHA) || has(t,i,DAMMA) || has(t,i,KASRA);
-            const isShadda=has(t,i,SHADDA);
-            let rule=null;
-
-            if (has(t, i, MADD_SIGN)) rule = 'tj-mandatory'; 
-            else if (has(t, i, WARSH_DOT) || has(t, i, '\u065F')) rule='tj-special';
-            else if((c==='ن'||c==='م') && isShadda) rule='tj-ghunnah';
-            else if(c==='ن' && isSakin && n){
-                if(IDGH_GH.includes(n.c) || n.c==='ب' || IKHFA.includes(n.c)) rule='tj-ghunnah';
-                else if(IDGH_NO.includes(n.c)) rule='tj-silent';
-            }
-            else if(c==='م' && isSakin && n && n.c==='ب') rule='tj-ghunnah';
-            else if(QALQ.includes(c) && (has(t,i,SUKUN) || (!hasVowel && !n))) rule='tj-qalqalah';
-            else if(c==='ل' && has(t,i,FATHA) && p && HEAVY_LAM_TRIGGERS.includes(p.c) && (has(t,p.i,FATHA)||has(t,p.i,SUKUN)||!getDiac(t,p.i).length)) rule='tj-heavy';
-            else if(c==='ر'){
-                if(has(t,i,FATHA) || has(t,i,DAMMA)) rule='tj-heavy';
-                if(has(t,i,KASRA)) rule='tj-light'; 
-                else if((has(t,i,FATHA) || has(t,i,DAMMA)) && p){
-                    if(has(t,p.i,KASRA) || (p.c==='ي' && (has(t,p.i,SUKUN)||!getDiac(t,p.i).length))) rule='tj-light';
-                }
-            }
-            else if(MADD.includes(c) && !isShadda && (!hasVowel || c === '\u0622')){
-                // --- FIXED SAFE CHECK FOR MADD JAWAZ (Arid Lissukun) ---
-                // We just count how many letters are left in the verse.
-                let lettersLeft = 0;
-                for (let k = i + 1; k < t.length; k++) {
-                    if (isLtr(t[k])) lettersLeft++;
-                }
-
-                if (lettersLeft === 1) { 
-                    rule = 'tj-special'; // Only 1 letter left -> Madd Arid (Jawaz)
-                }
-                else if (c === '\u0622') rule='tj-madd';
-                else if(n && HAMZA.includes(n.c)) rule='tj-mandatory';
-                else if(n && (has(t,n.i,SHADDA) || has(t,n.i,SUKUN))) {
-                    if (n.c !== 'ا') rule='tj-mandatory';
-                }
-                else if(!rule && p && HAMZA.includes(p.c)) rule='tj-madd';
-            }
-            else if(c==='ل' && isSakin && n && has(t,n.i,SHADDA)) rule='tj-silent';
-            if(rule) a.push({s:i, e:rangeEnd, cls:rule});
-        }
-        return a;
-    }
-
-    function apply(t, ann){
-        const NO_LEFT_JOIN = "اأإآٱدذرزوؤةى"; 
-        const m = new Map(); for(const x of ann) for(let i=x.s; i<x.e; i++) m.set(i, x);
-        let h = '', cls = null;
-        for(let i=0; i<t.length; i++){
-            const x = m.get(i);
-            const nc = x ? x.cls : null;
-            const c = t[i];
-            const prevC = (i > 0) ? t[i-1] : null;
-            const nextC = (i < t.length-1) ? t[i+1] : null;
-            let prefix = "", suffix = "";
-            if(nc) {
-                if(prevC && !NO_LEFT_JOIN.includes(prevC) && prevC !== ' ' && !isDiac(prevC)) prefix = "&zwj;";
-                if(!NO_LEFT_JOIN.includes(c) && nextC && nextC !== ' ' && !isDiac(nextC)) suffix = "&zwj;";
-            }
-            if(nc !== cls){ if(cls) h += '</span>'; if(nc) h += `<span class="${nc}">`; cls = nc; }
-            h += prefix + c + suffix;
-        }
-        if(cls) h += '</span>'; 
-        return h;
-    }
-
+    // State
     let state = { surah: 1, chunkSize: 'all', offset: 1, data: null };
     let bookmarks = [], fullQuranCache = null, playing = false, stopReq = false;
     const aud = new Audio();
+    let selectedLetter = null;
 
+    // Dev Mode Functions
+    function toggleDevMode() {
+        const badge = document.getElementById('dev-badge');
+        const banner = document.getElementById('dev-banner');
+        const panelBtn = document.getElementById('dev-panel-btn');
+        const isDev = WarshEngine.isDevMode();
+        
+        WarshEngine.setDevMode(!isDev);
+        
+        if (!isDev) {
+            badge.classList.add('active');
+            badge.textContent = 'Dev Mode ON';
+            banner.style.display = 'block';
+            panelBtn.style.display = 'inline-block';
+        } else {
+            badge.classList.remove('active');
+            badge.textContent = 'Dev Mode';
+            banner.style.display = 'none';
+            panelBtn.style.display = 'none';
+        }
+        
+        render();
+        updateOverrideCount();
+    }
+
+    function openDevPanel() {
+        document.getElementById('dev-modal-overlay').classList.add('show');
+        renderRulesList();
+        renderOverrideList();
+    }
+
+    function closeDevPanel() {
+        document.getElementById('dev-modal-overlay').classList.remove('show');
+    }
+
+    function showDevTab(tabName) {
+        document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    function renderRulesList() {
+        const rules = WarshEngine.getRules();
+        const html = rules.map(r => `
+            <div class="rule-card">
+                <div class="rule-card-header">
+                    <span><strong>${r.name}</strong> (${r.nameAr})</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="color-preview" style="background:${r.color}"></div>
+                    <input type="color" value="${r.color}" onchange="updateRuleColor('${r.id}', this.value)" class="color-input">
+                    <input type="text" value="${r.color}" onchange="updateRuleColor('${r.id}', this.value)" style="flex:1">
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('rules-list').innerHTML = html;
+    }
+
+    function updateRuleColor(ruleId, color) {
+        WarshEngine.updateRuleColor(ruleId, color);
+        renderRulesList();
+        render();
+    }
+
+    function resetAllRules() {
+        WarshEngine.resetRules();
+        renderRulesList();
+        render();
+    }
+
+    function renderOverrideList() {
+        const overrides = WarshEngine.getOverrides();
+        const list = document.getElementById('override-list');
+        
+        if (overrides.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">No letter overrides yet. Click on letters to add.</div>';
+            return;
+        }
+        
+        list.innerHTML = overrides.map((o, i) => `
+            <div class="override-item">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="override-letter" style="color:${o.color}">${o.letter}</span>
+                    <div style="font-size:0.8rem; color:#666;">
+                        Surah ${o.surah}, Verse ${o.verse}, Position ${o.charIndex}
+                    </div>
+                </div>
+                <button onclick="removeOverride(${i})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1rem;">✕</button>
+            </div>
+        `).join('');
+        
+        document.getElementById('override-total').textContent = overrides.length;
+    }
+
+    function removeOverride(index) {
+        const overrides = WarshEngine.getOverrides();
+        const o = overrides[index];
+        WarshEngine.removeLetterOverride(o.surah, o.verse, o.charIndex);
+        renderOverrideList();
+        render();
+        updateOverrideCount();
+    }
+
+    function clearAllOverrides() {
+        WarshEngine.clearAllOverrides();
+        renderOverrideList();
+        render();
+        updateOverrideCount();
+    }
+
+    function updateOverrideCount() {
+        const count = WarshEngine.getOverrides().length;
+        const el = document.getElementById('override-count');
+        el.textContent = count > 0 ? `| ${count} overrides` : '';
+    }
+
+    // Letter click handler
+    document.addEventListener('click', function(e) {
+        if (!WarshEngine.isDevMode()) return;
+        
+        const letterUnit = e.target.closest('.letter-unit');
+        if (!letterUnit) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        selectedLetter = {
+            index: parseInt(letterUnit.dataset.letterIndex),
+            surah: parseInt(letterUnit.dataset.surah),
+            verse: parseInt(letterUnit.dataset.verse),
+            letter: letterUnit.dataset.letter
+        };
+        
+        // Find current override
+        const overrides = WarshEngine.getOverrides();
+        const existing = overrides.find(o => 
+            o.surah === selectedLetter.surah && 
+            o.verse === selectedLetter.verse && 
+            o.charIndex === selectedLetter.index
+        );
+        
+        // Find current rule color
+        const rules = WarshEngine.getRules();
+        const verseText = state.data.verses[selectedLetter.verse - 1];
+        const anns = WarshEngine.detect(verseText);
+        
+        let currentColor = '#000000';
+        let currentBold = false;
+        
+        // Find letter position in annotations
+        let letterPos = 0;
+        for (let i = 0; i < verseText.length; i++) {
+            if (verseText[i] !== ' ' && !isDiac(verseText[i])) {
+                if (letterPos === selectedLetter.index) {
+                    const ann = anns.find(a => i >= a.s && i < a.e);
+                    if (ann) {
+                        const rule = rules.find(r => r.id === ann.cls);
+                        if (rule) {
+                            currentColor = rule.color;
+                            currentBold = rule.bold || false;
+                        }
+                    }
+                    break;
+                }
+                letterPos++;
+                while (i + 1 < verseText.length && isDiac(verseText[i + 1])) i++;
+            }
+        }
+        
+        document.getElementById('letter-preview').textContent = selectedLetter.letter;
+        document.getElementById('letter-preview').style.color = existing ? existing.color : currentColor;
+        document.getElementById('letter-color').value = existing ? existing.color : currentColor;
+        document.getElementById('letter-color-text').value = existing ? existing.color : currentColor;
+        document.getElementById('letter-bold').checked = existing ? existing.bold : currentBold;
+        document.getElementById('letter-popup').classList.add('show');
+    });
+
+    function saveLetterColor() {
+        if (!selectedLetter) return;
+        
+        const color = document.getElementById('letter-color-text').value || document.getElementById('letter-color').value;
+        const bold = document.getElementById('letter-bold').checked;
+        
+        WarshEngine.setLetterOverride(
+            selectedLetter.surah,
+            selectedLetter.verse,
+            selectedLetter.index,
+            selectedLetter.letter,
+            color,
+            bold
+        );
+        
+        closeLetterPopup();
+        render();
+        renderOverrideList();
+        updateOverrideCount();
+    }
+
+    function removeLetterOverride() {
+        if (!selectedLetter) return;
+        
+        WarshEngine.removeLetterOverride(
+            selectedLetter.surah,
+            selectedLetter.verse,
+            selectedLetter.index
+        );
+        
+        closeLetterPopup();
+        render();
+        renderOverrideList();
+        updateOverrideCount();
+    }
+
+    function closeLetterPopup() {
+        document.getElementById('letter-popup').classList.remove('show');
+        selectedLetter = null;
+    }
+
+    // Sync color input with text input
+    document.getElementById('letter-color').addEventListener('input', function() {
+        document.getElementById('letter-color-text').value = this.value;
+    });
+    document.getElementById('letter-color-text').addEventListener('input', function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+            document.getElementById('letter-color').value = this.value;
+        }
+    });
+
+    // GitHub Save
+    async function saveToGitHub() {
+        const token = document.getElementById('gh-token').value;
+        const owner = document.getElementById('gh-owner').value;
+        const repo = document.getElementById('gh-repo').value;
+        const branch = document.getElementById('gh-branch').value || 'main';
+        const path = document.getElementById('gh-path').value || 'tajweed-config.json';
+        const status = document.getElementById('gh-status');
+        
+        if (!token || !owner || !repo) {
+            status.innerHTML = '<span style="color:#ef4444">Please fill in all fields</span>';
+            return;
+        }
+        
+        status.innerHTML = 'Saving...';
+        
+        try {
+            const config = WarshEngine.getConfig();
+            const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))));
+            
+            // Get existing file SHA
+            let sha = null;
+            try {
+                const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github+json',
+                        'X-GitHub-Api-Version': '2022-11-28'
+                    }
+                });
+                if (getRes.ok) {
+                    const data = await getRes.json();
+                    sha = data.sha;
+                }
+            } catch(e) {}
+            
+            const body = {
+                message: `Update tajweed config - ${new Date().toISOString()}`,
+                content: content,
+                branch: branch
+            };
+            if (sha) body.sha = sha;
+            
+            const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Failed to save');
+            }
+            
+            status.innerHTML = '<span style="color:#22c55e">✓ Saved successfully!</span>';
+            
+            // Save GitHub config
+            localStorage.setItem('warsh_github_config', JSON.stringify({ token, owner, repo, branch, path }));
+        } catch(e) {
+            status.innerHTML = `<span style="color:#ef4444">Error: ${e.message}</span>`;
+        }
+    }
+
+    // Export config
+    function exportConfig() {
+        const config = WarshEngine.getConfig();
+        const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tajweed-config.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // Original app functions
     function init() {
         const saved = JSON.parse(localStorage.getItem('warsh_state'));
         if(saved) {
@@ -231,6 +594,18 @@
         const bm = JSON.parse(localStorage.getItem('warsh_bookmarks')); if(bm) bookmarks = bm;
         renderBMList(); 
         changeSurah(state.surah, true);
+        
+        // Load GitHub config
+        const ghConfig = JSON.parse(localStorage.getItem('warsh_github_config'));
+        if (ghConfig) {
+            document.getElementById('gh-token').value = ghConfig.token || '';
+            document.getElementById('gh-owner').value = ghConfig.owner || '';
+            document.getElementById('gh-repo').value = ghConfig.repo || '';
+            document.getElementById('gh-branch').value = ghConfig.branch || 'main';
+            document.getElementById('gh-path').value = ghConfig.path || 'tajweed-config.json';
+        }
+        
+        updateOverrideCount();
     }
 
     function saveState() {
@@ -262,9 +637,9 @@
     function render() {
         if(!state.data) return;
         const div = document.getElementById('display'); let html = "";
-        if (state.surah != 1 && state.surah != 9 && state.offset === 1) { const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${apply(bism, detect(bism))}</div>`; }
+        if (state.surah != 1 && state.surah != 9 && state.offset === 1) { const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${WarshEngine.renderVerse(bism, 0)}</div>`; }
         let startIdx = state.offset - 1; let endIdx = state.chunkSize === 'all' ? state.data.verses.length : Math.min(startIdx + state.chunkSize, state.data.verses.length); const chunk = state.data.verses.slice(startIdx, endIdx);
-        chunk.forEach((txt, i) => { let n = startIdx + i + 1; let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); let starClass = isSaved ? 'bm-icon saved' : 'bm-icon'; html += `<div class="verse" id="v${n}" onclick="pick(${n})">${apply(txt, detect(txt))} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span></div>`; });
+        chunk.forEach((txt, i) => { let n = startIdx + i + 1; let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); let starClass = isSaved ? 'bm-icon saved' : 'bm-icon'; html += `<div class="verse" id="v${n}" onclick="pick(${n})">${WarshEngine.renderVerse(txt, state.surah, n)} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span></div>`; });
         div.innerHTML = html; window.scrollTo({ top: 0, behavior: 'smooth' });
         if(state.chunkSize !== 'all') document.getElementById('page-info').innerText = `${state.offset}-${endIdx}`; document.getElementById('v_start').value = state.offset; document.getElementById('v_end').value = endIdx;
     }
@@ -292,7 +667,7 @@
     function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
     function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
     function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
-    
+
     init();
     </script>
 </body>
