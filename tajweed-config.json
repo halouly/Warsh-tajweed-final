@@ -65,5 +65,38 @@
       "bold": true
     }
   ],
-  "overrides": []
+  "overrides": [
+    {
+      "surah": 2,
+      "verse": 1,
+      "charIndex": 2,
+      "letter": "م",
+      "color": "#dc2626",
+      "bold": true
+    },
+    {
+      "surah": 2,
+      "verse": 1,
+      "charIndex": 1,
+      "letter": "ل",
+      "color": "#dc2626",
+      "bold": true
+    },
+    {
+      "surah": 2,
+      "verse": 4,
+      "charIndex": 16,
+      "letter": "ن",
+      "color": "#16a34a",
+      "bold": false
+    },
+    {
+      "surah": 2,
+      "verse": 4,
+      "charIndex": 27,
+      "letter": "ن",
+      "color": "#16a34a",
+      "bold": false
+    }
+  ]
 }
