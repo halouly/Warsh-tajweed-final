@@ -47,7 +47,7 @@
       "color": "#b50d0d",
       "defaultColor": "#dc2626",
       "bold": true,
-      "letters": "آ وٓ لَٓ  يَٰٓ ۦٓ أٓ لَٰٓ ئِ ۥٓ"
+      "letters": "آ وٓ لَٓ مِّٓۖ يَٰٓ ۦٓ أٓ لَٰٓ ئِ ۥٓ"
     },
     {
       "id": "tj-silent",
@@ -94,7 +94,7 @@
       "id": "tj-ghunnah",
       "name": "Ghunnah",
       "nameAr": "غنة",
-      "letters": "نم",
+      "letters": "مَّ ن",
       "triggers": [
         "shadda",
         "noonSakinah",
@@ -138,7 +138,7 @@
       "id": "tj-madd",
       "name": "Madd",
       "nameAr": "مد",
-      "letters": "آ وٓ لَٓ يَٰٓ ۦٓ أٓ لَٰٓ ئِ ۥٓ",
+      "letters": "آ وٓ لَٓ مِّٓۖ يَٰٓ ۦٓ أٓ لَٰٓ ئِ ۥٓ",
       "triggers": [
         "beforeHamza",
         "beforeSukun"
