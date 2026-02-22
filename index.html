@@ -170,13 +170,22 @@
                 <button onclick="closeDevPanel()" style="font-size:1.5rem; background:none; border:none; cursor:pointer;">×</button>
             </div>
             <div class="modal-tabs">
-                <div class="modal-tab active" onclick="showDevTab('overrides')">Letter Overrides</div>
-                <div class="modal-tab" onclick="showDevTab('rules')">Rule Colors</div>
-                <div class="modal-tab" onclick="showDevTab('github')">GitHub</div>
+            <div class="modal-tab active" onclick="showDevTab('conditions')">Conditions</div>
+            <div class="modal-tab" onclick="showDevTab('overrides')">Overrides</div>
+            <div class="modal-tab" onclick="showDevTab('rules')">Colors</div>
+            <div class="modal-tab" onclick="showDevTab('github')">GitHub</div>
             </div>
             <div class="modal-body">
-                <!-- Overrides Tab -->
-                <div id="tab-overrides" class="tab-content active">
+            <div id="tab-conditions" class="tab-content active">
+            <p style="margin-top:0;color:#666;">Edit detection conditions for each rule.</p>
+            <div id="conditions-list"></div>
+            <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+            <h4>Letter Sets</h4>
+            <div id="sets-list"></div>
+            </div>
+            <button onclick="resetAllConditions()" style="background:#ef4444;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;">Reset All</button>
+            </div>
+            <div id="tab-overrides" class="tab-content">
                     <p style="margin-top:0; color:#666;">Click on any letter in the verses to change its color individually.</p>
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                         <span>Active Overrides: <strong id="override-total">0</strong></span>
@@ -294,10 +303,12 @@
     }
 
     function openDevPanel() {
-        document.getElementById('dev-modal-overlay').classList.add('show');
-        renderRulesList();
-        renderOverrideList();
-    }
+    document.getElementById('dev-modal-overlay').classList.add('show');
+    renderConditionsList();
+    renderSetsList();
+    renderRulesList();
+    renderOverrideList();
+}
 
     function closeDevPanel() {
         document.getElementById('dev-modal-overlay').classList.remove('show');
@@ -693,7 +704,136 @@ function deleteRuleUI(ruleId) {
         a.click();
         URL.revokeObjectURL(url);
     }
+// Conditions Editor
+function renderConditionsList() {
+    const conditions = getConditions();
+    const triggerOptions = getTriggerOptions();
+    const rules = getRules();
+    
+    const conditionKeys = ['qalqalah', 'ghunnah', 'heavy', 'raHeavy', 'raLight', 'madd', 'silent', 'special'];
+    
+    let html = '';
+    conditionKeys.forEach(key => {
+        const cond = conditions[key];
+        const rule = rules.find(r => r.id === cond.id);
+        const color = rule ? rule.color : '#666';
+        const triggers = triggerOptions[key] || [];
+        
+        html += `
+        <div class="condition-card" id="cond-card-${key}" style="border:1px solid var(--border); border-radius:8px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; background:var(--bg); cursor:pointer; border-bottom:1px solid var(--border);" onclick="toggleConditionCard('${key}')">
+                <div>
+                    <span style="display:inline-block; width:12px; height:12px; background:${color}; border-radius:50%; margin-left:8px;"></span>
+                    <strong>${cond.name}</strong> 
+                    <span style="color:#666; font-size:0.85rem;">(${cond.nameAr})</span>
+                </div>
+                <span id="toggle-${key}">▼</span>
+            </div>
+            <div id="cond-body-${key}" style="padding:15px; display:none;">
+                <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+                    <label style="min-width:80px; font-weight:bold;">Letters:</label>
+                    <input type="text" value="${cond.letters}" 
+                        onchange="updateConditionLetters('${key}', this.value)"
+                        style="flex:1; direction:rtl; font-family:'Amiri',serif; font-size:1.2rem; padding:8px; border:1px solid var(--border); border-radius:6px;">
+                </div>
+                
+                ${triggers.length > 0 ? `
+                <div style="margin-top:12px;">
+                    <label style="font-weight:bold; margin-bottom:8px; display:block;">Triggers:</label>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:8px;">
+                        ${triggers.map(t => `
+                            <div class="trigger-item ${cond.triggers.includes(t.id) ? 'active' : ''}" 
+                                 onclick="toggleTrigger('${key}', '${t.id}')"
+                                 style="display:flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--border); border-radius:6px; cursor:pointer; ${cond.triggers.includes(t.id) ? 'background:var(--active-bg); border-color:var(--accent);' : ''}">
+                                <span style="width:18px; height:18px; border:2px solid var(--border); border-radius:4px; display:flex; align-items:center; justify-content:center; ${cond.triggers.includes(t.id) ? 'background:var(--accent); border-color:var(--accent);' : ''}">${cond.triggers.includes(t.id) ? '<span style="color:white; font-size:12px;">✓</span>' : ''}</span>
+                                <span>${t.label}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        </div>`;
+    });
+    
+    document.getElementById('conditions-list').innerHTML = html;
+}
 
+function toggleConditionCard(key) {
+    const body = document.getElementById('cond-body-' + key);
+    const toggle = document.getElementById('toggle-' + key);
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        toggle.textContent = '▲';
+    } else {
+        body.style.display = 'none';
+        toggle.textContent = '▼';
+    }
+}
+
+function updateConditionLetters(key, value) {
+    updateCondition(key, { letters: value });
+    render();
+}
+
+function toggleTrigger(condKey, triggerId) {
+    const conditions = getConditions();
+    const cond = conditions[condKey];
+    if (!cond) return;
+    
+    let triggers = [...cond.triggers];
+    const idx = triggers.indexOf(triggerId);
+    
+    if (idx >= 0) {
+        triggers.splice(idx, 1);
+    } else {
+        triggers.push(triggerId);
+    }
+    
+    updateCondition(condKey, { triggers });
+    renderConditionsList();
+    render();
+}
+
+function renderSetsList() {
+    const sets = getSets();
+    
+    const setLabels = {
+        idghamWithGhunnah: 'Idgham with Ghunnah (ينمو)',
+        idghamNoGhunnah: 'Idgham no Ghunnah (لر)',
+        ikhfa: 'Ikhfa Letters',
+        lamShamsiyya: 'Lam Shamsiyya Letters',
+        hamzaLetters: 'Hamza Forms'
+    };
+    
+    let html = '';
+    Object.keys(sets).forEach(key => {
+        html += `
+        <div style="display:flex; align-items:center; gap:15px; padding:10px; border:1px solid var(--border); border-radius:6px; margin-bottom:8px;">
+            <label style="min-width:160px; font-weight:bold; font-size:0.9rem;">${setLabels[key] || key}</label>
+            <input type="text" value="${sets[key]}" 
+                onchange="updateSetUI('${key}', this.value)"
+                style="flex:1; direction:rtl; font-family:'Amiri',serif; font-size:1.2rem; padding:8px; border:1px solid var(--border); border-radius:6px;">
+        </div>`;
+    });
+    
+    document.getElementById('sets-list').innerHTML = html;
+}
+
+function updateSetUI(key, value) {
+    updateSet(key, value);
+    render();
+}
+
+function resetAllConditions() {
+    if (confirm('Reset all conditions and letter sets to defaults?')) {
+        resetConditions();
+        resetSets();
+        renderConditionsList();
+        renderSetsList();
+        render();
+    }
+}
     // Original app functions
     function init() {
         const saved = JSON.parse(localStorage.getItem('warsh_state'));
