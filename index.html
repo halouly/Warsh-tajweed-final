@@ -44,7 +44,7 @@
         .bm-icon.saved { color: #f59e0b; }
         #controls { position: fixed; bottom: 0; left: 0; right: 0; background: var(--panel); border-top: 2px solid var(--accent); padding: 15px; z-index: 1000; direction: ltr; }
         .row { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
-        select, input, button { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+        select, input, button { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; cursor: pointer; }
         button.primary { background: var(--accent); color: #fff; border: none; }
         .icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; color: var(--text); }
         .big-btn { font-size: 1.5rem; padding: 0 15px; line-height: 1; }
@@ -57,7 +57,8 @@
         .dev-badge { background: #8b5cf6; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
         .dev-badge.active { background: #22c55e; }
         .dev-banner { background: rgba(139, 92, 246, 0.1); border-bottom: 1px solid rgba(139, 92, 246, 0.3); padding: 8px; text-align: center; font-size: 0.85rem; }
-        .letter-unit:hover { outline: 2px solid #8b5cf6; outline-offset: 1px; }
+        .letter-unit:hover { outline: 2px solid #8b5cf6; outline-offset: 1px; cursor: pointer; }
+        .letter-unit.has-exception { outline: 2px dashed #ef4444; outline-offset: 1px; }
         
         /* Modal */
         .modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); z-index: 2000; }
@@ -65,7 +66,7 @@
         .modal { background: var(--panel); border-radius: 12px; max-width: 800px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
         .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
-        .modal-tabs { display: flex; border-bottom: 1px solid var(--border); }
+        .modal-tabs { display: flex; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
         .modal-tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; }
         .modal-tab.active { border-bottom-color: var(--accent); color: var(--accent); }
         .tab-content { display: none; }
@@ -75,24 +76,33 @@
         .color-preview { width: 40px; height: 40px; border-radius: 6px; border: 1px solid var(--border); }
         .color-input { width: 60px; height: 40px; cursor: pointer; }
         
-        /* Letter Editor Popup - ENHANCED */
-        .letter-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border-radius: 12px; padding: 20px; z-index: 3000; min-width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        /* Letter Editor Popup */
+        .letter-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border-radius: 12px; padding: 20px; z-index: 3000; min-width: 350px; max-width: 90vw; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
         .letter-popup.show { display: block; }
         .letter-preview { font-size: 4rem; text-align: center; margin: 15px 0; }
         
-        .rule-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; }
-        .rule-toggle.disabled { opacity: 0.5; background: #fee2e2; }
-        .rule-color-dot { width: 16px; height: 16px; border-radius: 50%; margin-right: 8px; }
-        .toggle-switch { position: relative; width: 48px; height: 24px; }
+        .rule-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; background: var(--bg); }
+        .rule-toggle.excluded { opacity: 0.5; background: #fee2e2; border-color: #fecaca; }
+        .rule-toggle.active-rule { background: #dcfce7; border-color: #bbf7d0; }
+        .rule-color-dot { width: 20px; height: 20px; border-radius: 50%; margin-right: 10px; display: inline-block; flex-shrink: 0; }
+        .rule-name { display: flex; align-items: center; flex: 1; }
+        .toggle-switch { position: relative; width: 48px; height: 24px; flex-shrink: 0; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 24px; }
         .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
         input:checked + .toggle-slider { background-color: #22c55e; }
         input:checked + .toggle-slider:before { transform: translateX(24px); }
         
-        .section-label { font-size: 0.85rem; color: #666; margin: 15px 0 8px 0; font-weight: bold; }
+        .section-label { font-size: 0.9rem; color: #666; margin: 15px 0 10px 0; font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
         .btn-row { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-row button { flex: 1; }
+        .btn-row button { flex: 1; padding: 10px; border-radius: 6px; cursor: pointer; }
+        
+        .exception-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; background: var(--bg); }
+        .exception-item:hover { background: var(--active-bg); }
+        
+        .status-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+        .status-active { background: #22c55e; color: white; }
+        .status-excluded { background: #ef4444; color: white; }
     </style>
 </head>
 <body>
@@ -112,7 +122,7 @@
     </header>
 
     <div id="dev-banner" class="dev-banner" style="display:none">
-        🎨 Dev Mode Active - Click on any letter to manage rule exceptions
+        🎨 Dev Mode Active - Click any letter to manage rule exceptions
         <span id="exception-count"></span>
     </div>
 
@@ -171,63 +181,58 @@
 
     <!-- Dev Panel Modal -->
     <div id="dev-modal-overlay" class="modal-overlay">
-        <div class="modal" style="width: 700px;">
+        <div class="modal" style="width: 750px;">
             <div class="modal-header">
-                <h3>🎨 Developer Mode</h3>
+                <h3>🎨 Developer Mode - Rule Management</h3>
                 <button onclick="closeDevPanel()" style="font-size:1.5rem; background:none; border:none; cursor:pointer;">×</button>
             </div>
             <div class="modal-tabs">
                 <div class="modal-tab active" onclick="showDevTab('exceptions')">Exceptions</div>
-                <div class="modal-tab" onclick="showDevTab('rules')">Colors</div>
-                <div class="modal-tab" onclick="showDevTab('settings')">Settings</div>
-                <div class="modal-tab" onclick="showDevTab('github')">GitHub</div>
+                <div class="modal-tab" onclick="showDevTab('rules')">Rule Colors</div>
+                <div class="modal-tab" onclick="showDevTab('sets')">Letter Sets</div>
+                <div class="modal-tab" onclick="showDevTab('export')">Export/Import</div>
             </div>
             <div class="modal-body">
                 <!-- Exceptions Tab -->
                 <div id="tab-exceptions" class="tab-content active">
                     <p style="margin-top:0; color:#666;">
-                        Rule exceptions let you disable specific tajweed rules at individual letter positions.
-                        Click on any letter in the verses to manage its exceptions.
+                        <strong>How it works:</strong> Click on any letter in the verses above to manage which rules apply to that specific letter. 
+                        Toggle OFF to exclude a rule from coloring that letter.
                     </p>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                        <span>Total Exceptions: <strong id="exception-total">0</strong></span>
-                        <button onclick="clearAllExceptionsUI()" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Clear All</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding:10px; background:var(--bg); border-radius:6px;">
+                        <span>Total Exceptions: <strong id="exception-total" style="color:var(--accent);">0</strong></span>
+                        <button onclick="clearAllExceptionsUI()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Clear All Exceptions</button>
                     </div>
-                    <div id="exception-list" style="max-height:400px; overflow-y:auto;"></div>
+                    <div id="exception-list" style="max-height:350px; overflow-y:auto;"></div>
                 </div>
                 
-                <!-- Colors Tab -->
+                <!-- Rule Colors Tab -->
                 <div id="tab-rules" class="tab-content">
+                    <p style="margin-top:0; color:#666;">Customize the color for each tajweed rule.</p>
                     <div id="rules-list"></div>
                     <div style="margin-top:15px;">
-                        <button onclick="resetAllColorsUI()">Reset Colors</button>
-                        <button onclick="exportConfig()" style="margin-left:10px;">Export JSON</button>
+                        <button onclick="resetAllColorsUI()" style="background:#f3f4f6; border:1px solid var(--border); padding:8px 16px; border-radius:6px; cursor:pointer;">Reset to Defaults</button>
                     </div>
                 </div>
                 
-                <!-- Settings Tab -->
-                <div id="tab-settings" class="tab-content">
-                    <h4 style="margin-top:0">Letter Sets</h4>
+                <!-- Letter Sets Tab -->
+                <div id="tab-sets" class="tab-content">
+                    <p style="margin-top:0; color:#666;">Modify the letter sets used for tajweed detection.</p>
                     <div id="sets-list"></div>
-                    <button onclick="resetAllSettingsUI()" style="margin-top:15px; background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Reset All Settings</button>
+                    <button onclick="resetAllSetsUI()" style="margin-top:15px; background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Reset Letter Sets</button>
                 </div>
                 
-                <!-- GitHub Tab -->
-                <div id="tab-github" class="tab-content">
-                    <p style="margin-top:0">Save your configuration to GitHub.</p>
-                    <div style="display:grid; gap:10px;">
-                        <div><label>Personal Access Token</label><input type="password" id="gh-token" placeholder="ghp_xxx..." style="width:100%"></div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                            <div><label>Owner</label><input type="text" id="gh-owner" placeholder="username" style="width:100%"></div>
-                            <div><label>Repo</label><input type="text" id="gh-repo" placeholder="repo" style="width:100%"></div>
-                        </div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                            <div><label>Branch</label><input type="text" id="gh-branch" value="main" style="width:100%"></div>
-                            <div><label>Path</label><input type="text" id="gh-path" value="tajweed-config.json" style="width:100%"></div>
-                        </div>
+                <!-- Export Tab -->
+                <div id="tab-export" class="tab-content">
+                    <p style="margin-top:0; color:#666;">Export or import your configuration.</p>
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <button onclick="exportConfig()" style="flex:1; padding:15px; background:#22c55e; color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem;">📥 Export JSON</button>
+                        <label style="flex:1; padding:15px; background:#3b82f6; color:white; border:none; border-radius:6px; cursor:pointer; font-size:1rem; text-align:center; display:block;">
+                            📤 Import JSON
+                            <input type="file" accept=".json" onchange="importConfig(event)" style="display:none;">
+                        </label>
                     </div>
-                    <button onclick="saveToGitHub()" style="width:100%; margin-top:15px; padding:10px; background:#22c55e; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Save to GitHub</button>
-                    <div id="gh-status" style="margin-top:10px; text-align:center;"></div>
+                    <div id="import-status" style="text-align:center;"></div>
                 </div>
             </div>
         </div>
@@ -235,26 +240,27 @@
 
     <!-- Letter Editor Popup -->
     <div id="letter-popup" class="letter-popup">
-        <h4 style="margin-top:0; text-align:center;">Edit Letter</h4>
-        <div class="letter-preview" id="letter-preview">ب</div>
-        <div style="text-align:center; font-size:0.85rem; color:#666; margin-bottom:15px;">
-            Surah <span id="popup-surah">1</span>, Verse <span id="popup-verse">1</span>, Position <span id="popup-pos">0</span>
+        <div style="text-align:center;">
+            <div class="letter-preview" id="letter-preview">ب</div>
+            <div style="font-size:0.85rem; color:#666;">
+                Surah <strong id="popup-surah">1</strong>, Verse <strong id="popup-verse">1</strong>, Position <strong id="popup-pos">0</strong>
+            </div>
         </div>
         
-        <div class="section-label">Applied Rules (toggle to exclude)</div>
-        <div id="rule-toggles"></div>
+        <div class="section-label">🚫 Rule Exceptions (toggle to exclude)</div>
+        <div id="rule-toggles" style="max-height:250px; overflow-y:auto;"></div>
         
-        <div class="section-label">Custom Color Override</div>
+        <div class="section-label">🎨 Custom Color Override</div>
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-            <input type="color" id="letter-color" style="width:50px; height:40px; cursor:pointer;">
-            <input type="text" id="letter-color-text" style="flex:1" placeholder="#ff0000">
-            <label><input type="checkbox" id="letter-bold"> Bold</label>
+            <input type="color" id="letter-color" style="width:50px; height:40px; cursor:pointer; border:none;">
+            <input type="text" id="letter-color-text" style="flex:1; padding:8px; border:1px solid var(--border); border-radius:6px;" placeholder="#ff0000">
+            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="letter-bold"> Bold</label>
         </div>
         
         <div class="btn-row">
-            <button onclick="saveLetterColor()" style="background:#22c55e; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer;">Save Override</button>
-            <button onclick="resetLetterUI()" style="background:#f3f4f6; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">Reset</button>
-            <button onclick="closeLetterPopup()" style="background:#f3f4f6; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">Cancel</button>
+            <button onclick="saveLetterColor()" style="background:#22c55e; color:white; border:none;">Save Override</button>
+            <button onclick="resetLetterUI()" style="background:#f59e0b; color:white; border:none;">Reset All</button>
+            <button onclick="closeLetterPopup()" style="background:#e5e7eb; color:#1a1a1a; border:none;">Cancel</button>
         </div>
     </div>
 
@@ -313,27 +319,34 @@
     function renderExceptionList() {
         const exceptions = getRuleExceptions();
         const list = document.getElementById('exception-list');
+        const rules = getRules();
         
         if (exceptions.length === 0) {
-            list.innerHTML = '<div style="text-align:center; color:#999; padding:40px;">No exceptions yet. Click on letters in the verses to add.</div>';
+            list.innerHTML = `
+                <div style="text-align:center; padding:40px; color:#999;">
+                    <div style="font-size:3rem; margin-bottom:10px;">📭</div>
+                    <div>No exceptions yet.</div>
+                    <div style="font-size:0.85rem; margin-top:5px;">Click on letters in the verses to add rule exceptions.</div>
+                </div>
+            `;
             document.getElementById('exception-total').textContent = '0';
             return;
         }
         
-        const rules = getRules();
         list.innerHTML = exceptions.map((e, i) => {
             const rule = rules.find(r => r.id === e.ruleId);
-            const ruleName = rule ? `${rule.name} (${rule.nameAr})` : e.ruleId;
+            const ruleName = rule ? `${rule.name}` : e.ruleId;
+            const ruleNameAr = rule ? rule.nameAr : '';
             return `
-                <div class="rule-toggle">
-                    <div style="display:flex; align-items:center;">
-                        <span class="rule-color-dot" style="background:${rule ? rule.color : '#666'}"></span>
+                <div class="exception-item">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.5rem; color:${rule ? rule.color : '#666'}">${e.letter}</span>
                         <div>
-                            <div style="font-size:1.2rem">${e.letter}</div>
-                            <div style="font-size:0.75rem; color:#666;">${ruleName} - S${e.surah}:V${e.verse}:P${e.charIndex}</div>
+                            <div style="font-weight:bold;">${ruleName} <span style="font-weight:normal; color:#666;">(${ruleNameAr})</span></div>
+                            <div style="font-size:0.75rem; color:#666;">Surah ${e.surah}, Verse ${e.verse}, Position ${e.charIndex}</div>
                         </div>
                     </div>
-                    <button onclick="removeExceptionUI(${i})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.2rem;">✕</button>
+                    <button onclick="removeExceptionUI(${i})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.2rem; padding:5px;">✕</button>
                 </div>
             `;
         }).join('');
@@ -350,7 +363,7 @@
     }
 
     function clearAllExceptionsUI() {
-        if (confirm('Clear all rule exceptions?')) {
+        if (confirm('Clear all rule exceptions? This will restore default rule application to all letters.')) {
             clearAllRuleExceptions();
             renderExceptionList();
             render();
@@ -369,13 +382,13 @@
         const rules = getRules();
         const html = rules.map(r => `
             <div class="rule-card">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="color-preview" style="background:${r.color}"></div>
-                    <input type="color" value="${r.color}" onchange="updateRuleColorUI('${r.id}', this.value)" class="color-input">
-                    <input type="text" value="${r.color}" onchange="updateRuleColorUI('${r.id}', this.value)" style="flex:1">
-                    <label><input type="checkbox" ${r.bold ? 'checked' : ''} onchange="updateRuleBoldUI('${r.id}', this.checked)"> Bold</label>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="color-preview" style="background:${r.color}; flex-shrink:0;"></div>
+                    <input type="color" value="${r.color}" onchange="updateRuleColorUI('${r.id}', this.value)" class="color-input" style="flex-shrink:0;">
+                    <input type="text" value="${r.color}" onchange="updateRuleColorUI('${r.id}', this.value)" style="flex:1; font-family:monospace;">
+                    <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" ${r.bold ? 'checked' : ''} onchange="updateRuleBoldUI('${r.id}', this.checked)"> Bold</label>
                 </div>
-                <div style="margin-top:8px; font-weight:bold;">${r.name} (${r.nameAr})</div>
+                <div style="margin-top:10px; font-weight:bold; font-size:1.1rem;">${r.name} <span style="font-weight:normal; color:#666;">${r.nameAr}</span></div>
             </div>
         `).join('');
         document.getElementById('rules-list').innerHTML = html;
@@ -396,26 +409,38 @@
     }
 
     function resetAllColorsUI() {
-        resetRules();
-        renderRulesList();
-        render();
-        injectDynamicCSS();
+        if (confirm('Reset all rule colors to defaults?')) {
+            resetRules();
+            renderRulesList();
+            render();
+            injectDynamicCSS();
+        }
     }
 
     // Sets List
     function renderSetsList() {
         const sets = getSets();
         const labels = {
-            idghamWithGhunnah: 'Idgham with Ghunnah (ينمو)',
-            idghamNoGhunnah: 'Idgham no Ghunnah (لر)',
+            idghamWithGhunnah: 'Idgham with Ghunnah',
+            idghamNoGhunnah: 'Idgham without Ghunnah',
             ikhfa: 'Ikhfa Letters',
-            lamShamsiyya: 'Lam Shamsiyya Letters',
+            lamShamsiyya: 'Lam Shamsiyya',
             hamzaLetters: 'Hamza Forms'
         };
+        const defaults = {
+            idghamWithGhunnah: 'ينمو',
+            idghamNoGhunnah: 'لر',
+            ikhfa: 'تثجدذزسشصضطظفقك',
+            lamShamsiyya: 'تثدذرزسشصضطظلن',
+            hamzaLetters: 'ءأإؤئ'
+        };
         const html = Object.keys(sets).map(key => `
-            <div style="display:flex; align-items:center; gap:15px; padding:10px; border:1px solid var(--border); border-radius:6px; margin-bottom:8px;">
-                <label style="min-width:160px; font-weight:bold; font-size:0.9rem;">${labels[key] || key}</label>
-                <input type="text" value="${sets[key]}" onchange="updateSetUI('${key}', this.value)" style="flex:1; direction:rtl; font-family:'Amiri',serif; font-size:1.2rem; padding:8px; border:1px solid var(--border); border-radius:6px;">
+            <div style="padding:12px; border:1px solid var(--border); border-radius:6px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <label style="font-weight:bold;">${labels[key] || key}</label>
+                    <span style="font-size:0.8rem; color:#666;">Default: ${defaults[key]}</span>
+                </div>
+                <input type="text" value="${sets[key]}" onchange="updateSetUI('${key}', this.value)" style="width:100%; direction:rtl; font-family:'Amiri',serif; font-size:1.3rem; padding:10px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box;">
             </div>
         `).join('');
         document.getElementById('sets-list').innerHTML = html;
@@ -426,10 +451,12 @@
         render();
     }
 
-    function resetAllSettingsUI() {
-        resetSets();
-        renderSetsList();
-        render();
+    function resetAllSetsUI() {
+        if (confirm('Reset all letter sets to defaults?')) {
+            resetSets();
+            renderSetsList();
+            render();
+        }
     }
 
     // Letter Click Handler
@@ -477,7 +504,7 @@
                 const rgb = currentColor.match(/\d+/g);
                 if (rgb) hexColor = '#' + rgb.slice(0,3).map(x => parseInt(x).toString(16).padStart(2,'0')).join('');
             }
-            document.getElementById('letter-bold').checked = computedStyle.fontWeight === 'bold';
+            document.getElementById('letter-bold').checked = computedStyle.fontWeight === 'bold' || computedStyle.fontWeight >= 600;
         }
         
         document.getElementById('letter-preview').style.color = hexColor;
@@ -502,26 +529,44 @@
         );
         const exceptionIds = positionExceptions.map(e => e.ruleId);
         
-        // Determine which rules COULD apply to this letter
-        const applicableRules = rules.filter(r => {
-            if (r.id === 'tj-heavy') return 'صضطظق'.includes(selectedLetter.letter);
-            if (r.id === 'tj-qalqalah') return 'قطبجد'.includes(selectedLetter.letter);
-            if (r.id === 'tj-ghunnah') return 'نم'.includes(selectedLetter.letter);
-            if (r.id === 'tj-madd') return 'اوىي'.includes(selectedLetter.letter);
-            if (r.id === 'tj-ra-heavy' || r.id === 'tj-ra-light') return selectedLetter.letter === 'ر';
-            if (r.id === 'tj-silent') return 'لنم'.includes(selectedLetter.letter);
+        // All potential rules that COULD apply to this letter type
+        const potentialRules = rules.filter(r => {
+            const letter = selectedLetter.letter;
+            if (r.id === 'tj-heavy') return 'صضطظق'.includes(letter);
+            if (r.id === 'tj-qalqalah') return 'قطبجد'.includes(letter);
+            if (r.id === 'tj-ghunnah') return 'نم'.includes(letter);
+            if (r.id === 'tj-madd') return 'اوىي'.includes(letter);
+            if (r.id === 'tj-ra-heavy' || r.id === 'tj-ra-light') return letter === 'ر';
+            if (r.id === 'tj-silent') return 'لنم'.includes(letter);
             return false;
         });
         
-        const html = applicableRules.map(r => {
+        if (potentialRules.length === 0) {
+            document.getElementById('rule-toggles').innerHTML = `
+                <div style="text-align:center; padding:20px; color:#999;">
+                    <div>No tajweed rules apply to this letter (${selectedLetter.letter})</div>
+                </div>
+            `;
+            return;
+        }
+        
+        const html = potentialRules.map(r => {
             const isExcepted = exceptionIds.includes(r.id);
             const isCurrentlyApplied = selectedLetter.appliedRule === r.id;
+            
+            let classes = 'rule-toggle';
+            if (isExcepted) classes += ' excluded';
+            else if (isCurrentlyApplied) classes += ' active-rule';
+            
             return `
-                <div class="rule-toggle ${isExcepted ? 'disabled' : ''}">
-                    <div style="display:flex; align-items:center;">
-                        <span class="rule-color-dot" style="background:${r.color}"></span>
-                        <span>${r.name} (${r.nameAr})</span>
-                        ${isCurrentlyApplied ? '<span style="background:#22c55e;color:white;padding:2px 6px;border-radius:4px;font-size:0.7rem;margin-left:8px;">ACTIVE</span>' : ''}
+                <div class="${classes}">
+                    <div class="rule-name">
+                        <span class="rule-color-dot" style="background:${r.color};"></span>
+                        <div>
+                            <div>${r.name} <span style="color:#666; font-size:0.85rem;">${r.nameAr}</span></div>
+                            ${isCurrentlyApplied ? '<span class="status-badge status-active">APPLIED</span>' : ''}
+                            ${isExcepted ? '<span class="status-badge status-excluded">EXCLUDED</span>' : ''}
+                        </div>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" ${!isExcepted ? 'checked' : ''} onchange="toggleRuleException('${r.id}', this.checked)">
@@ -531,23 +576,33 @@
             `;
         }).join('');
         
-        document.getElementById('rule-toggles').innerHTML = html || '<div style="text-align:center; color:#999; padding:20px;">No rules apply to this letter</div>';
+        document.getElementById('rule-toggles').innerHTML = html;
     }
 
     function toggleRuleException(ruleId, enabled) {
         if (!selectedLetter) return;
         
         if (enabled) {
-            // Remove exception
+            // Remove exception - allow rule to apply
             removeRuleException(ruleId, selectedLetter.surah, selectedLetter.verse, selectedLetter.index);
         } else {
-            // Add exception
+            // Add exception - prevent rule from applying
             addRuleException(ruleId, selectedLetter.surah, selectedLetter.verse, selectedLetter.index, selectedLetter.letter);
         }
         
-        renderRuleToggles();
+        // Re-render to update UI
         render();
-        updateExceptionCount();
+        
+        // Update the selected letter data after re-render
+        setTimeout(() => {
+            const letterUnit = document.querySelector(`[data-letter-index="${selectedLetter.index}"][data-surah="${selectedLetter.surah}"][data-verse="${selectedLetter.verse}"]`);
+            if (letterUnit) {
+                selectedLetter.appliedRule = letterUnit.dataset.rule || null;
+                selectedLetter.exceptions = (letterUnit.dataset.exceptions || '').split(',').filter(x => x);
+            }
+            renderRuleToggles();
+            updateExceptionCount();
+        }, 50);
     }
 
     function saveLetterColor() {
@@ -598,55 +653,7 @@
         }
     });
 
-    // GitHub
-    async function saveToGitHub() {
-        const token = document.getElementById('gh-token').value;
-        const owner = document.getElementById('gh-owner').value;
-        const repo = document.getElementById('gh-repo').value;
-        const branch = document.getElementById('gh-branch').value || 'main';
-        const path = document.getElementById('gh-path').value || 'tajweed-config.json';
-        const status = document.getElementById('gh-status');
-        
-        if (!token || !owner || !repo) {
-            status.innerHTML = '<span style="color:#ef4444">Please fill in all fields</span>';
-            return;
-        }
-        
-        status.innerHTML = 'Saving...';
-        
-        try {
-            const config = getConfig();
-            const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))));
-            
-            let sha = null;
-            const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
-            const getRes = await fetch(getUrl, {
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Warsh-Reader-App' }
-            });
-            
-            if (getRes.ok) {
-                const data = await getRes.json();
-                sha = data.sha;
-            }
-            
-            const body = { message: `Update tajweed config - ${new Date().toISOString()}`, content: content, branch: branch };
-            if (sha) body.sha = sha;
-            
-            const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-                method: 'PUT',
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'Warsh-Reader-App', 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            
-            if (!putRes.ok) throw new Error('Failed to save');
-            
-            status.innerHTML = '<span style="color:#22c55e">✓ Saved successfully!</span>';
-            localStorage.setItem('warsh_github_config', JSON.stringify({ token, owner, repo, branch, path }));
-        } catch(e) {
-            status.innerHTML = `<span style="color:#ef4444">Error: ${e.message}</span>`;
-        }
-    }
-
+    // Export/Import
     function exportConfig() {
         const config = getConfig();
         const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
@@ -654,6 +661,31 @@
         a.href = URL.createObjectURL(blob);
         a.download = 'tajweed-config.json';
         a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    function importConfig(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const config = JSON.parse(e.target.result);
+                setConfig(config);
+                renderRulesList();
+                renderSetsList();
+                renderExceptionList();
+                render();
+                injectDynamicCSS();
+                updateExceptionCount();
+                document.getElementById('import-status').innerHTML = '<span style="color:#22c55e">✓ Configuration imported successfully!</span>';
+            } catch(err) {
+                document.getElementById('import-status').innerHTML = '<span style="color:#ef4444">Error: Invalid JSON file</span>';
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
     }
 
     // App Functions
@@ -673,16 +705,6 @@
         const bm = JSON.parse(localStorage.getItem('warsh_bookmarks')); if(bm) bookmarks = bm;
         renderBMList(); 
         changeSurah(state.surah, true);
-        
-        const ghConfig = JSON.parse(localStorage.getItem('warsh_github_config'));
-        if (ghConfig) {
-            document.getElementById('gh-token').value = ghConfig.token || '';
-            document.getElementById('gh-owner').value = ghConfig.owner || '';
-            document.getElementById('gh-repo').value = ghConfig.repo || '';
-            document.getElementById('gh-branch').value = ghConfig.branch || 'main';
-            document.getElementById('gh-path').value = ghConfig.path || 'tajweed-config.json';
-        }
-        
         updateExceptionCount();
         injectDynamicCSS();
     }
@@ -760,24 +782,7 @@
     function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
     function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
 
-    async function loadConfigFromServer() {
-        try {
-            const res = await fetch('tajweed-config.json?t=' + Date.now());
-            if (res.ok) {
-                const config = await res.json();
-                setConfig(config);
-                console.log('Loaded config from server');
-                injectDynamicCSS();
-                if (state.data) render();
-                updateExceptionCount();
-            }
-        } catch(e) {
-            console.log('No server config, using localStorage');
-        }
-    }
-
     init();
-    loadConfigFromServer();
     </script>
 </body>
 </html>
