@@ -246,14 +246,38 @@ function detect(t) {
     }
 
     // ===== MADD =====
-    if (MADD_LETTERS.includes(c)) {
-      if (n && HAMZA.includes(n.c)) {
-        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
-      } else if (n && (has(t, n.i, SUKUN) || has(t, n.i, SHADDA))) {
-        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
-      }
-    }
+    // ===== MADD - Based on Madd sign (ٓ) and vowel patterns =====
+const maddSign = '\u0653'; // ٓ
+const superAlif = '\u0670'; // ٰ
 
+// Check if this letter has Madd sign
+const diacs = getDiac(t, i);
+const hasMaddSign = diacs.includes(maddSign);
+const hasSuperAlif = diacs.includes(superAlif);
+
+if (hasMaddSign) {
+  // Any letter with Madd sign ٓ is Madd
+  a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
+} else if (c === 'ا' || c === 'و' || c === 'ي' || c === 'ى') {
+  // Traditional Madd letters - check conditions
+  const maddTriggers = tajweedConditions.madd ? tajweedConditions.madd.triggers : ['beforeHamza', 'beforeSukun'];
+  const hamzaSet = tajweedSets.hamzaLetters || 'ءأإؤئ';
+  
+  let isMadd = false;
+  if (maddTriggers.includes('beforeHamza') && n && hamzaSet.includes(n.c)) {
+    isMadd = true;
+  }
+  if (maddTriggers.includes('beforeSukun') && n && (has(t, n.i, SUKUN) || has(t, n.i, SHADDA))) {
+    isMadd = true;
+  }
+  if (hasSuperAlif) {
+    // Alif Khanjaria (ٰ) also indicates Madd
+    isMadd = true;
+  }
+  if (isMadd) {
+    a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
+  }
+}
     // ===== RA RULES =====
     if (c === 'ر') {
       if (has(t, i, FATHA) || has(t, i, DAMMA) || hasAny(t, i, [TANWEEN_FATH, TANWEEN_DAMM])) {
