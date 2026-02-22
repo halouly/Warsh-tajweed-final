@@ -71,7 +71,7 @@
       "verse": 1,
       "charIndex": 1,
       "letter": "ل",
-      "color": "#dc2626",
+      "color": "#b50d0d",
       "bold": true
     },
     {
@@ -79,7 +79,7 @@
       "verse": 1,
       "charIndex": 2,
       "letter": "م",
-      "color": "#dc2626",
+      "color": "#b50d0d",
       "bold": true
     }
   ]
