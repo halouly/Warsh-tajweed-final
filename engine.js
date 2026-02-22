@@ -6,22 +6,20 @@ const SHADDA = '\u0651';
 const FATHA = '\u064E';
 const DAMMA = '\u064F';
 const KASRA = '\u0650';
-const TANWEEN_FATH = '\u064B';  // Double fatha (tanween)
-const TANWEEN_DAMM = '\u064C';  // Double damma (tanween)
-const TANWEEN_KASR = '\u064D';  // Double kasra (tanween)
+const TANWEEN_FATH = '\u064B';
+const TANWEEN_DAMM = '\u064C';
+const TANWEEN_KASR = '\u064D';
 const TANWEEN = [TANWEEN_FATH, TANWEEN_DAMM, TANWEEN_KASR];
 const ALIF_KHANJARIA = '\u0670';
 const HAMZA = 'ءأإؤئ';
 const MADD_SIGN = '\u0653';
 const WARSH_DOT = '\u06EC';
-const SMALL_YA = '\u06E5';
-const SMALL_WAW = '\u06E6';
 
 // Rule Sets
 const QALQ = 'قطبجد';
-const IDGH_GH = 'ينمو';  // Idgham with ghunnah
-const IDGH_NO = 'لر';     // Idgham without ghunnah
-const IKHFA = 'تثجدذزسشصضطظفقك';  // Ikhfa letters
+const IDGH_GH = 'ينمو';
+const IDGH_NO = 'لر';
+const IKHFA = 'تثجدذزسشصضطظفقك';
 const MADD_LETTERS = 'اوىي' + ALIF_KHANJARIA;
 const HEAVY_LETTERS = 'صضطظق';
 const LAM_SHAMSIYYA = 'تثدذرزسشصضطظلن';
@@ -38,31 +36,41 @@ const DEFAULT_RULES = [
   { id: 'tj-special', name: 'Special', nameAr: 'خاص', color: '#d97706', defaultColor: '#d97706', bold: true }
 ];
 
-// State Management
+// State
 let tajweedRules = [...DEFAULT_RULES];
 let letterOverrides = [];
 let devMode = false;
 
-// 2. Helpers
-function isLtr(c) { return c >= '\u0600' && c <= '\u06FF'; }
-
+// 2. Helpers - FIXED!
 function isDiac(c) {
   const x = c.charCodeAt(0);
-  return (x >= 0x064B && x <= 0x065F) || x === 0x0670 || (x >= 0x06D6 && x <= 0x06ED && x !== 0x06E5 && x !== 0x06E6);
+  return (x >= 0x064B && x <= 0x065F) || x === 0x0670 || (x >= 0x06D6 && x <= 0x06ED);
+}
+
+function isLtr(c) {
+  // Check if it's an Arabic letter (NOT a diacritic)
+  const x = c.charCodeAt(0);
+  if (x < 0x0600 || x > 0x06FF) return false;
+  if (isDiac(c)) return false;
+  // Arabic letter ranges
+  return (x >= 0x0621 && x <= 0x063A) || (x >= 0x0641 && x <= 0x064A) ||
+         (x >= 0x0671 && x <= 0x06D3) || (x >= 0x06EE && x <= 0x06FF);
 }
 
 function getDiac(t, i) {
   let diacs = [];
   for (let j = i + 1; j < t.length; j++) {
-    if (isLtr(t[j])) break;
-    diacs.push(t[j]);
+    if (isDiac(t[j])) {
+      diacs.push(t[j]);
+    } else if (isLtr(t[j])) {
+      break;
+    }
   }
   return diacs;
 }
 
 function has(t, i, c) {
-  const d = getDiac(t, i);
-  return d.includes(c);
+  return getDiac(t, i).includes(c);
 }
 
 function hasAny(t, i, chars) {
@@ -95,19 +103,15 @@ function getEnd(t, i) {
   return j;
 }
 
-// Check if letter has tanween
 function hasTanween(t, i) {
-  const d = getDiac(t, i);
-  return d.some(x => TANWEEN.includes(x));
+  return getDiac(t, i).some(x => TANWEEN.includes(x));
 }
 
-// Get tanween type
 function getTanween(t, i) {
-  const d = getDiac(t, i);
-  return d.find(x => TANWEEN.includes(x));
+  return getDiac(t, i).find(x => TANWEEN.includes(x));
 }
 
-// 3. Detection Function (Complete Tajweed Rules)
+// 3. Detection Function
 function detect(t) {
   const a = [];
   
@@ -120,139 +124,95 @@ function detect(t) {
     const end = endW(t, i);
     const diacs = getDiac(t, i);
 
-    // ============ QALQALAH ============
-    // Letters: ق ط ب ج د
-    // Conditions: with sukun, or at end of word (pausing), or with shadda
+    // ===== QALQALAH: ق ط ب ج د =====
     if (QALQ.includes(c)) {
       if (has(t, i, SUKUN) || has(t, i, SHADDA)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-qalqalah' });
       } else if (end) {
-        // End of word - qalqalah when pausing
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-qalqalah' });
       }
     }
 
-    // ============ NOON SAKINAH ============
+    // ===== NOON SAKINAH =====
     if (c === 'ن' && (has(t, i, SUKUN) || end) && n && !has(t, i, SHADDA)) {
-      // Idgham with ghunnah (ينمو)
       if (IDGH_GH.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
         a.push({ s: n.i, e: getEnd(t, n.i), cls: 'tj-ghunnah' });
-      }
-      // Idgham without ghunnah (لر)
-      else if (IDGH_NO.includes(n.c)) {
+      } else if (IDGH_NO.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
-      }
-      // Iqlab (ب)
-      else if (n.c === 'ب') {
+      } else if (n.c === 'ب') {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
-      }
-      // Ikhfa (other letters)
-      else if (IKHFA.includes(n.c)) {
+      } else if (IKHFA.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
       }
     }
 
-    // ============ TANWEEN ============
+    // ===== TANWEEN =====
     const tw = getTanween(t, i);
     if (tw && n) {
-      // Idgham with ghunnah
       if (IDGH_GH.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
-      }
-      // Iqlab
-      else if (n.c === 'ب') {
+      } else if (n.c === 'ب') {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
-      }
-      // Ikhfa
-      else if (IKHFA.includes(n.c)) {
+      } else if (IKHFA.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
       }
     }
 
-    // ============ MEEM SAKINAH ============
+    // ===== MEEM SAKINAH =====
     if (c === 'م' && (has(t, i, SUKUN) || end) && n) {
-      // Idgham shafawi (م after م)
       if (n.c === 'م') {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
         a.push({ s: n.i, e: getEnd(t, n.i), cls: 'tj-ghunnah' });
-      }
-      // Ikhfa shafawi (ب after م)
-      else if (n.c === 'ب') {
+      } else if (n.c === 'ب') {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
       }
     }
 
-    // ============ GHUNNAH MUSHADDA ============
-    // Meem or Noon with shadda
+    // ===== GHUNNAH MUSHADDA =====
     if ((c === 'م' || c === 'ن') && has(t, i, SHADDA)) {
       a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
     }
 
-    // ============ LAM SHAMSIYYAH ============
+    // ===== LAM SHAMSIYYAH =====
     if (c === 'ل' && p && (p.c === 'ا' || p.c === '\u0671') && n && LAM_SHAMSIYYA.includes(n.c)) {
       a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
     }
 
-    // ============ MADD (Prolongation) ============
+    // ===== MADD =====
     if (MADD_LETTERS.includes(c)) {
-      // Madd Wajib: followed by hamza
       if (n && HAMZA.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
-      }
-      // Madd Jawaz: followed by sukun (original or temporary)
-      else if (n && (has(t, n.i, SUKUN) || has(t, n.i, SHADDA))) {
+      } else if (n && (has(t, n.i, SUKUN) || has(t, n.i, SHADDA))) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
-      }
-      // Madd at end of word (pausing)
-      else if (end && p) {
-        // Check if preceded by hamza (Madd Wajib)
-        if (HAMZA.includes(p.c)) {
-          a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
-        }
       }
     }
 
-    // ============ RA RULES ============
+    // ===== RA RULES =====
     if (c === 'ر') {
-      // Ra with fatha or damma - always heavy
       if (has(t, i, FATHA) || has(t, i, DAMMA) || hasAny(t, i, [TANWEEN_FATH, TANWEEN_DAMM])) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
-      }
-      // Ra with kasra - always light
-      else if (has(t, i, KASRA) || has(t, i, TANWEEN_KASR)) {
+      } else if (has(t, i, KASRA) || has(t, i, TANWEEN_KASR)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-light' });
-      }
-      // Ra with sukun
-      else if (has(t, i, SUKUN) || end) {
-        // Check the vowel before it
+      } else if (has(t, i, SUKUN) || end) {
         if (p) {
           const pDiacs = getDiac(t, p.i);
-          // Preceded by fatha or damma = heavy
           if (pDiacs.includes(FATHA) || pDiacs.includes(DAMMA)) {
             a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
-          }
-          // Preceded by kasra = light
-          else if (pDiacs.includes(KASRA)) {
+          } else if (pDiacs.includes(KASRA)) {
             a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-light' });
-          }
-          // Default: heavy (most common in Warsh)
-          else {
+          } else {
             a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
           }
         } else {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
         }
-      }
-      // Ra with shadda - heavy
-      else if (has(t, i, SHADDA)) {
+      } else if (has(t, i, SHADDA)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
       }
     }
 
-    // ============ HEAVY LETTERS (ص ض ط ظ) - Always Heavy ============
-    // Note: ق is in QALQ and gets its own rule, but it's also heavy
-    // We mark ص ض ط ظ as heavy if not already marked
+    // ===== HEAVY LETTERS: ص ض ط ظ =====
     const HEAVY_ONLY = 'صضطظ';
     if (HEAVY_ONLY.includes(c)) {
       const alreadyMarked = a.some(r => i >= r.s && i < r.e);
@@ -261,7 +221,7 @@ function detect(t) {
       }
     }
 
-    // ============ QAF - Also heavy ============
+    // ===== QAF - Also heavy =====
     if (c === 'ق') {
       const alreadyMarked = a.some(r => i >= r.s && i < r.e);
       if (!alreadyMarked) {
@@ -273,7 +233,7 @@ function detect(t) {
   return a;
 }
 
-// 4. APPLY FUNCTION (Original - uses CSS classes)
+// 4. APPLY (Original CSS class version)
 function apply(text, rules) {
   if (!rules || rules.length === 0) return text;
   let charClasses = new Array(text.length).fill(null);
@@ -300,11 +260,10 @@ function apply(text, rules) {
   return out;
 }
 
-// 5. Apply with inline styles (for Dev Mode color overrides)
+// 5. Apply with inline styles
 function applyWithColors(text, rules, surahNum, verseNum, editMode) {
   if (!rules || rules.length === 0) return text;
   
-  // Build class map for each character
   let charClasses = new Array(text.length).fill(null);
   rules.forEach(r => {
     for (let i = r.s; i < r.e; i++) {
@@ -312,24 +271,13 @@ function applyWithColors(text, rules, surahNum, verseNum, editMode) {
     }
   });
 
-  // Get overrides for this verse
   const overrideMap = new Map();
   letterOverrides.filter(o => o.surah === surahNum && o.verse === verseNum).forEach(o => {
     overrideMap.set(o.charIndex, o);
   });
 
-  // Build letter index map
   let letterIndex = 0;
-  let charToLetterIndex = new Map();
-  for (let i = 0; i < text.length; i++) {
-    if (isLtr(text[i])) {
-      charToLetterIndex.set(i, letterIndex);
-      letterIndex++;
-    }
-  }
-
   let out = '';
-  letterIndex = 0;
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
@@ -371,7 +319,7 @@ function applyWithColors(text, rules, surahNum, verseNum, editMode) {
   return out;
 }
 
-// 6. Render function (main entry point)
+// 6. Render function
 function renderVerse(text, surahNum, verseNum) {
   const annotations = detect(text);
   if (devMode) {
@@ -434,7 +382,7 @@ function clearAllOverrides() {
   saveConfig();
 }
 
-// 10. Dev Mode Toggle
+// 10. Dev Mode
 function setDevMode(enabled) {
   devMode = enabled;
 }
@@ -454,7 +402,6 @@ function setConfig(config) {
   saveConfig();
 }
 
-// 12. Getters
 function getRules() {
   return tajweedRules;
 }
@@ -463,7 +410,7 @@ function getOverrides() {
   return letterOverrides;
 }
 
-// 13. Dynamic CSS
+// 12. Dynamic CSS
 function generateDynamicCSS() {
   let css = '';
   tajweedRules.forEach(rule => {
@@ -503,5 +450,5 @@ window.getOverrides = getOverrides;
 window.injectDynamicCSS = injectDynamicCSS;
 window.generateDynamicCSS = generateDynamicCSS;
 
-// Auto-load on script load
+// Auto-load
 loadConfig();
