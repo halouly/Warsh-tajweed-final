@@ -1,69 +1,13 @@
 {
   "rules": [
-    {
-      "id": "tj-ghunnah",
-      "name": "Ghunnah",
-      "nameAr": "غنة",
-      "color": "#16a34a",
-      "defaultColor": "#16a34a",
-      "bold": false
-    },
-    {
-      "id": "tj-qalqalah",
-      "name": "Qalqalah",
-      "nameAr": "قلقة",
-      "color": "#0284c7",
-      "defaultColor": "#0284c7",
-      "bold": false
-    },
-    {
-      "id": "tj-heavy",
-      "name": "Heavy Letters",
-      "nameAr": "تفخيم",
-      "color": "#1e3a8a",
-      "defaultColor": "#1e3a8a",
-      "bold": true
-    },
-    {
-      "id": "tj-ra-heavy",
-      "name": "Ra Heavy",
-      "nameAr": "ر تفخيم",
-      "color": "#1e3a8a",
-      "defaultColor": "#1e3a8a",
-      "bold": true
-    },
-    {
-      "id": "tj-ra-light",
-      "name": "Ra Light",
-      "nameAr": "ر ترقيق",
-      "color": "#06b6d4",
-      "defaultColor": "#06b6d4",
-      "bold": false
-    },
-    {
-      "id": "tj-madd",
-      "name": "Madd",
-      "nameAr": "مد",
-      "color": "#dc2626",
-      "defaultColor": "#dc2626",
-      "bold": false
-    },
-    {
-      "id": "tj-silent",
-      "name": "Silent",
-      "nameAr": "ساكن",
-      "color": "#9ca3af",
-      "defaultColor": "#9ca3af",
-      "bold": false
-    },
-    {
-      "id": "tj-special",
-      "name": "Special",
-      "nameAr": "خاص",
-      "color": "#d97706",
-      "defaultColor": "#d97706",
-      "bold": true
-    }
+    { "id": "tj-ghunnah", "name": "Ghunnah", "nameAr": "غنة", "color": "#16a34a", "defaultColor": "#16a34a", "bold": false },
+    { "id": "tj-qalqalah", "name": "Qalqalah", "nameAr": "قلقة", "color": "#0284c7", "defaultColor": "#0284c7", "bold": false },
+    { "id": "tj-heavy", "name": "Heavy Letters", "nameAr": "تفخيم", "color": "#1e3a8a", "defaultColor": "#1e3a8a", "bold": true },
+    { "id": "tj-ra-heavy", "name": "Ra Heavy", "nameAr": "ر تفخيم", "color": "#1e3a8a", "defaultColor": "#1e3a8a", "bold": true },
+    { "id": "tj-ra-light", "name": "Ra Light", "nameAr": "ر ترقيق", "color": "#06b6d4", "defaultColor": "#06b6d4", "bold": false },
+    { "id": "tj-madd", "name": "Madd", "nameAr": "مد", "color": "#dc2626", "defaultColor": "#dc2626", "bold": false },
+    { "id": "tj-silent", "name": "Silent", "nameAr": "ساكن", "color": "#9ca3af", "defaultColor": "#9ca3af", "bold": false },
+    { "id": "tj-special", "name": "Special", "nameAr": "خاص", "color": "#d97706", "defaultColor": "#d97706", "bold": true }
   ],
   "overrides": []
 }
