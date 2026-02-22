@@ -516,6 +516,11 @@ window.getRules = getRules;
 window.getOverrides = getOverrides;
 window.injectDynamicCSS = injectDynamicCSS;
 window.generateDynamicCSS = generateDynamicCSS;
-
+window.updateRuleLetters = updateRuleLetters;
+window.updateRuleProperty = updateRuleProperty;
+window.addNewRule = addNewRule;
+window.deleteRule = deleteRule;
+window.addCustomPosition = addCustomPosition;
+window.removeCustomPosition = removeCustomPosition;
 // Auto-load
 loadConfig();
