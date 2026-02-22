@@ -46,7 +46,7 @@
       "nameAr": "مد",
       "color": "#b50d0d",
       "defaultColor": "#dc2626",
-      "bold": false
+      "bold": true
     },
     {
       "id": "tj-silent",
