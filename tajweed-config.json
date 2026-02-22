@@ -65,5 +65,22 @@
       "bold": true
     }
   ],
-  "overrides": []
+  "overrides": [
+    {
+      "surah": 2,
+      "verse": 1,
+      "charIndex": 1,
+      "letter": "ل",
+      "color": "#b50d0d",
+      "bold": true
+    },
+    {
+      "surah": 2,
+      "verse": 1,
+      "charIndex": 2,
+      "letter": "م",
+      "color": "#b50d0d",
+      "bold": true
+    }
+  ]
 }
