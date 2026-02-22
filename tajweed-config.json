@@ -47,7 +47,7 @@
       "color": "#b50d0d",
       "defaultColor": "#dc2626",
       "bold": true,
-      "letters": ""
+      "letters": "آ وٓ يَٰٓ ۦٓ أٓ  ۥٓ"
     },
     {
       "id": "tj-silent",
@@ -138,7 +138,7 @@
       "id": "tj-madd",
       "name": "Madd",
       "nameAr": "مد",
-      "letters": "آ وٓ يَٰٓ ۦٓ أٓ  ۥٓ",
+      "letters": "",
       "triggers": [
         "beforeHamza",
         "beforeSukun"
