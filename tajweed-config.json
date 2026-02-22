@@ -76,22 +76,94 @@
       "customPositions": []
     }
   ],
-  "overrides": [
-    {
-      "surah": 2,
-      "verse": 1,
-      "charIndex": 1,
-      "letter": "ل",
-      "color": "#b50d0d",
-      "bold": true
+  "overrides": [],
+  "conditions": {
+    "qalqalah": {
+      "id": "tj-qalqalah",
+      "name": "Qalqalah",
+      "nameAr": "قلقة",
+      "letters": "قطبجد",
+      "triggers": [
+        "sukun",
+        "shadda",
+        "wordEnd"
+      ]
     },
-    {
-      "surah": 2,
-      "verse": 1,
-      "charIndex": 2,
-      "letter": "م",
-      "color": "#b50d0d",
-      "bold": true
+    "ghunnah": {
+      "id": "tj-ghunnah",
+      "name": "Ghunnah",
+      "nameAr": "غنة",
+      "letters": "نم",
+      "triggers": [
+        "shadda",
+        "noonSakinah",
+        "meemSakinah",
+        "tanween"
+      ]
+    },
+    "heavy": {
+      "id": "tj-heavy",
+      "name": "Heavy Letters",
+      "nameAr": "تفخيم",
+      "letters": "صضطظق",
+      "triggers": [
+        "always"
+      ]
+    },
+    "raHeavy": {
+      "id": "tj-ra-heavy",
+      "name": "Ra Heavy",
+      "nameAr": "ر تفخيم",
+      "letters": "ر",
+      "triggers": [
+        "fatha",
+        "damma",
+        "tanweenFathDamm",
+        "sukunAfterHeavy"
+      ]
+    },
+    "raLight": {
+      "id": "tj-ra-light",
+      "name": "Ra Light",
+      "nameAr": "ر ترقيق",
+      "letters": "ر",
+      "triggers": [
+        "kasra",
+        "tanweenKasr",
+        "sukunAfterLight"
+      ]
+    },
+    "madd": {
+      "id": "tj-madd",
+      "name": "Madd",
+      "nameAr": "مد",
+      "letters": "آ وٓ لَٓ مِّٓۖ يَٰٓ ۦٓ أٓ لَٰٓ ئِ",
+      "triggers": []
+    },
+    "silent": {
+      "id": "tj-silent",
+      "name": "Silent",
+      "nameAr": "ساكن",
+      "letters": "لنم",
+      "triggers": [
+        "lamShamsiyya",
+        "idghamNoGhunnah",
+        "idghamWithGhunnah"
+      ]
+    },
+    "special": {
+      "id": "tj-special",
+      "name": "Special",
+      "nameAr": "خاص",
+      "letters": "",
+      "triggers": []
     }
-  ]
+  },
+  "sets": {
+    "idghamWithGhunnah": "ينمو",
+    "idghamNoGhunnah": "لر",
+    "ikhfa": "تثجدذزسشصضطظفقك",
+    "lamShamsiyya": "تثدذرزسشصضطظلن",
+    "hamzaLetters": "ءأإؤئ"
+  }
 }
