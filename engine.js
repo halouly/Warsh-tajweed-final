@@ -275,7 +275,16 @@ function applyWithColors(text, rules, surahNum, verseNum, editMode) {
   letterOverrides.filter(o => o.surah === surahNum && o.verse === verseNum).forEach(o => {
     overrideMap.set(o.charIndex, o);
   });
-
+   // Add custom rule positions
+  tajweedRules.filter(r => r.customPositions && r.customPositions.length > 0).forEach(rule => {
+    rule.customPositions.filter(p => p.surah === surahNum && p.verse === verseNum).forEach(p => {
+        overrideMap.set(p.charIndex, {
+            color: rule.color,
+            bold: rule.bold,
+            ruleId: rule.id
+        });
+    });
+});
   let letterIndex = 0;
   let out = '';
 
