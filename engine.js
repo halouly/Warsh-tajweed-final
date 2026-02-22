@@ -445,7 +445,14 @@ function updateRuleProperty(ruleId, prop, value) {
     saveConfig();
   }
 }
-
+function updateRulePattern(ruleId, patternName, enabled) {
+  const rule = tajweedRules.find(r => r.id === ruleId);
+  if (rule) {
+    if (!rule.patterns) rule.patterns = {};
+    rule.patterns[patternName] = enabled;
+    saveConfig();
+  }
+}
 function addNewRule(name, nameAr, color) {
   const id = 'tj-custom-' + Date.now();
   const newRule = {
@@ -516,6 +523,7 @@ window.getRules = getRules;
 window.getOverrides = getOverrides;
 window.injectDynamicCSS = injectDynamicCSS;
 window.generateDynamicCSS = generateDynamicCSS;
+window.updateRulePattern = updateRulePattern;
 
 // Auto-load
 loadConfig();
