@@ -63,6 +63,17 @@
       "color": "#d97706",
       "defaultColor": "#d97706",
       "bold": true
+    },
+    {
+      "id": "tj-custom-1771730096110",
+      "name": "Ikhfaa",
+      "nameAr": "اخفاء",
+      "color": "#a5a1a1",
+      "defaultColor": "#a5a1a1",
+      "bold": false,
+      "type": "custom",
+      "letters": "ىٗ",
+      "customPositions": []
     }
   ],
   "overrides": [
