@@ -139,10 +139,7 @@
       "name": "Madd",
       "nameAr": "مد",
       "letters": "",
-      "triggers": [
-        "beforeHamza",
-        "beforeSukun"
-      ]
+      "triggers": []
     },
     "silent": {
       "id": "tj-silent",
