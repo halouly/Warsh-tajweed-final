@@ -15,7 +15,7 @@ const HAMZA = 'ءأإؤئ';
 const MADD_SIGN = '\u0653';
 const WARSH_DOT = '\u06EC';
 
-// Default Rule Sets (these are now FALLBACKS - dynamic values are used when available)
+// Default Rule Sets (fallbacks)
 const QALQ_DEFAULT = 'قطبجد';
 const IDGH_GH_DEFAULT = 'ينمو';
 const IDGH_NO_DEFAULT = 'لر';
@@ -26,15 +26,28 @@ const LAM_SHAMSIYYA_DEFAULT = 'تثدذرزسشصضطظلن';
 
 // Default Color Configuration
 const DEFAULT_RULES = [
-  { id: 'tj-ghunnah', name: 'Ghunnah', nameAr: 'غنة', color: '#16a34a', defaultColor: '#16a34a', bold: false },
-  { id: 'tj-qalqalah', name: 'Qalqalah', nameAr: 'قلقة', color: '#0284c7', defaultColor: '#0284c7', bold: false },
+  { id: 'tj-ghunnah', name: 'Ghunnah', nameAr: 'غنة', color: '#16a34a', defaultColor: '#16a34a', bold: false,
+    patterns: { noonShadda: true, meemShadda: true, ikhfa: true, iqlab: true, idghamGhunnah: true, meemSakinah: true }
+  },
+  { id: 'tj-qalqalah', name: 'Qalqalah', nameAr: 'قلقة', color: '#0284c7', defaultColor: '#0284c7', bold: false,
+    patterns: { withSukun: true, withShadda: true, atEnd: true }
+  },
   { id: 'tj-heavy', name: 'Heavy Letters', nameAr: 'تفخيم', color: '#1e3a8a', defaultColor: '#1e3a8a', bold: true },
-  { id: 'tj-ra-heavy', name: 'Ra Heavy', nameAr: 'ر تفخيم', color: '#1e3a8a', defaultColor: '#1e3a8a', bold: true },
-  { id: 'tj-ra-light', name: 'Ra Light', nameAr: 'ر ترقيق', color: '#06b6d4', defaultColor: '#06b6d4', bold: false },
-  { id: 'tj-madd', name: 'Madd', nameAr: 'مد', color: '#dc2626', defaultColor: '#dc2626', bold: false },
-  { id: 'tj-silent', name: 'Silent', nameAr: 'ساكن', color: '#9ca3af', defaultColor: '#9ca3af', bold: false },
+  { id: 'tj-ra-heavy', name: 'Ra Heavy', nameAr: 'ر تفخيم', color: '#1e3a8a', defaultColor: '#1e3a8a', bold: true,
+    patterns: { withFatha: true, withDamma: true, sukunAfterFatha: true, sukunAfterDamma: true, withShadda: true }
+  },
+  { id: 'tj-ra-light', name: 'Ra Light', nameAr: 'ر ترقيق', color: '#06b6d4', defaultColor: '#06b6d4', bold: false,
+    patterns: { withKasra: true, sukunAfterKasra: true }
+  },
+  { id: 'tj-madd', name: 'Madd', nameAr: 'مد', color: '#dc2626', defaultColor: '#dc2626', bold: false,
+    patterns: { beforeHamza: true, beforeSukun: true, beforeShadda: true }
+  },
+  { id: 'tj-silent', name: 'Silent', nameAr: 'ساكن', color: '#9ca3af', defaultColor: '#9ca3af', bold: false,
+    patterns: { lamShamsiyya: true, idghamNoGhunnah: true, noonIdgham: true, meemIdgham: true }
+  },
   { id: 'tj-special', name: 'Special', nameAr: 'خاص', color: '#d97706', defaultColor: '#d97706', bold: true }
 ];
+
 const DEFAULT_CONDITIONS = {
   qalqalah: {
     id: 'tj-qalqalah',
@@ -101,16 +114,24 @@ const DEFAULT_SETS = {
   lamShamsiyya: 'تثدذرزسشصضطظلن',
   hamzaLetters: 'ءأإؤئ'
 };
+
 // State
-let tajweedRules = [...DEFAULT_RULES];
+let tajweedRules = JSON.parse(JSON.stringify(DEFAULT_RULES));
 let letterOverrides = [];
 let devMode = false;
 let tajweedConditions = JSON.parse(JSON.stringify(DEFAULT_CONDITIONS));
 let tajweedSets = JSON.parse(JSON.stringify(DEFAULT_SETS));
 
-// === DYNAMIC VALUE GETTERS ===
-// These functions return the current dynamic values from tajweedConditions and tajweedSets
+// === HELPER: Check if a pattern is enabled for a rule ===
+function isPatternEnabled(ruleId, patternId) {
+  const rule = tajweedRules.find(r => r.id === ruleId);
+  if (!rule) return true; // Default to enabled if rule not found
+  if (!rule.patterns) return true; // Default to enabled if no patterns defined
+  // Return the pattern value, defaulting to true if not explicitly set
+  return rule.patterns[patternId] !== false;
+}
 
+// === DYNAMIC VALUE GETTERS ===
 function getQalqLetters() {
   return tajweedConditions.qalqalah?.letters || QALQ_DEFAULT;
 }
@@ -151,25 +172,16 @@ function getHamzaLetters() {
   return tajweedSets.hamzaLetters || HAMZA;
 }
 
-// Check if a trigger is enabled for a condition
-function isTriggerEnabled(conditionKey, triggerId) {
-  const cond = tajweedConditions[conditionKey];
-  if (!cond || !cond.triggers) return false;
-  return cond.triggers.includes(triggerId);
-}
-
-// 2. Helpers - FIXED!
+// 2. Helpers
 function isDiac(c) {
   const x = c.charCodeAt(0);
   return (x >= 0x064B && x <= 0x065F) || x === 0x0670 || (x >= 0x06D6 && x <= 0x06ED);
 }
 
 function isLtr(c) {
-  // Check if it's an Arabic letter (NOT a diacritic)
   const x = c.charCodeAt(0);
   if (x < 0x0600 || x > 0x06FF) return false;
   if (isDiac(c)) return false;
-  // Arabic letter ranges
   return (x >= 0x0621 && x <= 0x063A) || (x >= 0x0641 && x <= 0x064A) ||
          (x >= 0x0671 && x <= 0x06D3) || (x >= 0x06EE && x <= 0x06FF);
 }
@@ -228,7 +240,7 @@ function getTanween(t, i) {
   return getDiac(t, i).find(x => TANWEEN.includes(x));
 }
 
-// 3. Detection Function - NOW USES DYNAMIC VALUES!
+// 3. Detection Function - Uses rule.patterns for granular control
 function detect(t) {
   const a = [];
   
@@ -242,44 +254,6 @@ function detect(t) {
   const HEAVY_LETTERS = getHeavyLetters();
   const HAMZA_DYNAMIC = getHamzaLetters();
   
-  // Get trigger states for each condition
-  const qalqalahTriggers = {
-    sukun: isTriggerEnabled('qalqalah', 'sukun'),
-    shadda: isTriggerEnabled('qalqalah', 'shadda'),
-    wordEnd: isTriggerEnabled('qalqalah', 'wordEnd')
-  };
-  
-  const ghunnahTriggers = {
-    shadda: isTriggerEnabled('ghunnah', 'shadda'),
-    noonSakinah: isTriggerEnabled('ghunnah', 'noonSakinah'),
-    meemSakinah: isTriggerEnabled('ghunnah', 'meemSakinah'),
-    tanween: isTriggerEnabled('ghunnah', 'tanween')
-  };
-  
-  const maddTriggers = {
-    beforeHamza: isTriggerEnabled('madd', 'beforeHamza'),
-    beforeSukun: isTriggerEnabled('madd', 'beforeSukun')
-  };
-  
-  const silentTriggers = {
-    lamShamsiyya: isTriggerEnabled('silent', 'lamShamsiyya'),
-    idghamNoGhunnah: isTriggerEnabled('silent', 'idghamNoGhunnah'),
-    idghamWithGhunnah: isTriggerEnabled('silent', 'idghamWithGhunnah')
-  };
-  
-  const raHeavyTriggers = {
-    fatha: isTriggerEnabled('raHeavy', 'fatha'),
-    damma: isTriggerEnabled('raHeavy', 'damma'),
-    tanweenFathDamm: isTriggerEnabled('raHeavy', 'tanweenFathDamm'),
-    sukunAfterHeavy: isTriggerEnabled('raHeavy', 'sukunAfterHeavy')
-  };
-  
-  const raLightTriggers = {
-    kasra: isTriggerEnabled('raLight', 'kasra'),
-    tanweenKasr: isTriggerEnabled('raLight', 'tanweenKasr'),
-    sukunAfterLight: isTriggerEnabled('raLight', 'sukunAfterLight')
-  };
-  
   for (let i = 0; i < t.length; i++) {
     const c = t[i];
     if (!isLtr(c)) continue;
@@ -289,17 +263,17 @@ function detect(t) {
     const end = endW(t, i);
     const diacs = getDiac(t, i);
 
-    // ===== QALQALAH: Uses dynamic letters and triggers =====
+    // ===== QALQALAH: Uses rule.patterns =====
     if (QALQ.includes(c)) {
       let isQalqalah = false;
       
-      if (qalqalahTriggers.sukun && has(t, i, SUKUN)) {
+      if (has(t, i, SUKUN) && isPatternEnabled('tj-qalqalah', 'withSukun')) {
         isQalqalah = true;
       }
-      if (qalqalahTriggers.shadda && has(t, i, SHADDA)) {
+      if (has(t, i, SHADDA) && isPatternEnabled('tj-qalqalah', 'withShadda')) {
         isQalqalah = true;
       }
-      if (qalqalahTriggers.wordEnd && end) {
+      if (end && isPatternEnabled('tj-qalqalah', 'atEnd')) {
         isQalqalah = true;
       }
       
@@ -308,43 +282,47 @@ function detect(t) {
       }
     }
 
-    // ===== NOON SAKINAH - Uses dynamic sets =====
+    // ===== NOON SAKINAH =====
     if (c === 'ن' && (has(t, i, SUKUN) || end) && n && !has(t, i, SHADDA)) {
       if (IDGH_GH.includes(n.c)) {
-        if (silentTriggers.idghamWithGhunnah) {
+        // Idgham with Ghunnah (ن + ينمو)
+        if (isPatternEnabled('tj-silent', 'noonIdgham')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
         }
-        if (ghunnahTriggers.noonSakinah) {
+        if (isPatternEnabled('tj-ghunnah', 'idghamGhunnah')) {
           a.push({ s: n.i, e: getEnd(t, n.i), cls: 'tj-ghunnah' });
         }
       } else if (IDGH_NO.includes(n.c)) {
-        if (silentTriggers.idghamNoGhunnah) {
+        // Idgham without Ghunnah (ن + لر)
+        if (isPatternEnabled('tj-silent', 'idghamNoGhunnah')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
         }
       } else if (n.c === 'ب') {
-        if (ghunnahTriggers.noonSakinah) {
+        // Iqlab (ن + ب)
+        if (isPatternEnabled('tj-ghunnah', 'iqlab')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
         }
       } else if (IKHFA.includes(n.c)) {
-        if (ghunnahTriggers.noonSakinah) {
+        // Ikhfa
+        if (isPatternEnabled('tj-ghunnah', 'ikhfa')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
         }
       }
     }
 
-    // ===== TANWEEN - Uses dynamic sets =====
+    // ===== TANWEEN =====
     const tw = getTanween(t, i);
     if (tw && n) {
       if (IDGH_GH.includes(n.c)) {
-        if (ghunnahTriggers.tanween) {
+        if (isPatternEnabled('tj-ghunnah', 'idghamGhunnah')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
         }
       } else if (n.c === 'ب') {
-        if (ghunnahTriggers.tanween) {
+        if (isPatternEnabled('tj-ghunnah', 'iqlab')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
         }
       } else if (IKHFA.includes(n.c)) {
-        if (ghunnahTriggers.tanween) {
+        if (isPatternEnabled('tj-ghunnah', 'ikhfa')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
         }
       }
@@ -353,41 +331,51 @@ function detect(t) {
     // ===== MEEM SAKINAH =====
     if (c === 'م' && (has(t, i, SUKUN) || end) && n) {
       if (n.c === 'م') {
-        if (silentTriggers.idghamWithGhunnah) {
+        // Idgham of two meems
+        if (isPatternEnabled('tj-silent', 'meemIdgham')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
         }
-        if (ghunnahTriggers.meemSakinah) {
+        if (isPatternEnabled('tj-ghunnah', 'meemShadda')) {
           a.push({ s: n.i, e: getEnd(t, n.i), cls: 'tj-ghunnah' });
         }
       } else if (n.c === 'ب') {
-        if (ghunnahTriggers.meemSakinah) {
+        // Meem before ba (ikhfa)
+        if (isPatternEnabled('tj-ghunnah', 'meemSakinah')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
         }
       }
     }
 
-    // ===== GHUNNAH MUSHADDA - Uses dynamic triggers =====
-    if ((c === 'م' || c === 'ن') && has(t, i, SHADDA)) {
-      if (ghunnahTriggers.shadda) {
+    // ===== GHUNNAH MUSHADDA (نّ or مّ) =====
+    if (c === 'ن' && has(t, i, SHADDA)) {
+      if (isPatternEnabled('tj-ghunnah', 'noonShadda')) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
+      }
+    }
+    if (c === 'م' && has(t, i, SHADDA)) {
+      if (isPatternEnabled('tj-ghunnah', 'meemShadda')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
       }
     }
 
-    // ===== LAM SHAMSIYYAH - Uses dynamic letters and triggers =====
+    // ===== LAM SHAMSIYYAH =====
     if (c === 'ل' && p && (p.c === 'ا' || p.c === '\u0671') && n && LAM_SHAMSIYYA.includes(n.c)) {
-      if (silentTriggers.lamShamsiyya) {
+      if (isPatternEnabled('tj-silent', 'lamShamsiyya')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
       }
     }
 
-    // ===== MADD - Uses dynamic letters and triggers =====
+    // ===== MADD =====
     if (MADD_LETTERS.includes(c)) {
       let isMadd = false;
       
-      if (n && HAMZA_DYNAMIC.includes(n.c) && maddTriggers.beforeHamza) {
+      if (n && HAMZA_DYNAMIC.includes(n.c) && isPatternEnabled('tj-madd', 'beforeHamza')) {
         isMadd = true;
       }
-      if (n && (has(t, n.i, SUKUN) || has(t, n.i, SHADDA)) && maddTriggers.beforeSukun) {
+      if (n && has(t, n.i, SUKUN) && isPatternEnabled('tj-madd', 'beforeSukun')) {
+        isMadd = true;
+      }
+      if (n && has(t, n.i, SHADDA) && isPatternEnabled('tj-madd', 'beforeShadda')) {
         isMadd = true;
       }
       
@@ -396,57 +384,63 @@ function detect(t) {
       }
     }
 
-    // ===== RA RULES - Uses dynamic triggers =====
+    // ===== RA RULES =====
     if (c === 'ر') {
       let isHeavy = false;
       let isLight = false;
       
       // With Fatha
-      if (has(t, i, FATHA) && raHeavyTriggers.fatha) {
+      if (has(t, i, FATHA) && isPatternEnabled('tj-ra-heavy', 'withFatha')) {
         isHeavy = true;
       }
       // With Damma
-      if (has(t, i, DAMMA) && raHeavyTriggers.damma) {
+      if (has(t, i, DAMMA) && isPatternEnabled('tj-ra-heavy', 'withDamma')) {
         isHeavy = true;
       }
-      // With Tanween Fath/Damm
-      if (hasAny(t, i, [TANWEEN_FATH, TANWEEN_DAMM]) && raHeavyTriggers.tanweenFathDamm) {
-        isHeavy = true;
+      // With Tanween Fath/Damm (treated same as fatha/damma for heavy)
+      if (hasAny(t, i, [TANWEEN_FATH, TANWEEN_DAMM])) {
+        if (isPatternEnabled('tj-ra-heavy', 'withFatha') || isPatternEnabled('tj-ra-heavy', 'withDamma')) {
+          isHeavy = true;
+        }
       }
       // With Kasra
-      if (has(t, i, KASRA) && raLightTriggers.kasra) {
+      if (has(t, i, KASRA) && isPatternEnabled('tj-ra-light', 'withKasra')) {
         isLight = true;
       }
       // With Tanween Kasr
-      if (has(t, i, TANWEEN_KASR) && raLightTriggers.tanweenKasr) {
+      if (has(t, i, TANWEEN_KASR) && isPatternEnabled('tj-ra-light', 'withKasra')) {
         isLight = true;
       }
       // With Sukun or at word end
       if (has(t, i, SUKUN) || end) {
         if (p) {
           const pDiacs = getDiac(t, p.i);
-          if (pDiacs.includes(FATHA) || pDiacs.includes(DAMMA)) {
-            if (raHeavyTriggers.sukunAfterHeavy) {
+          if (pDiacs.includes(FATHA)) {
+            if (isPatternEnabled('tj-ra-heavy', 'sukunAfterFatha')) {
+              isHeavy = true;
+            }
+          } else if (pDiacs.includes(DAMMA)) {
+            if (isPatternEnabled('tj-ra-heavy', 'sukunAfterDamma')) {
               isHeavy = true;
             }
           } else if (pDiacs.includes(KASRA)) {
-            if (raLightTriggers.sukunAfterLight) {
+            if (isPatternEnabled('tj-ra-light', 'sukunAfterKasra')) {
               isLight = true;
             }
           } else {
-            // Default to heavy if no preceding vowel info
-            if (raHeavyTriggers.sukunAfterHeavy) {
+            // Default to heavy if no preceding vowel
+            if (isPatternEnabled('tj-ra-heavy', 'sukunAfterFatha')) {
               isHeavy = true;
             }
           }
         } else {
-          if (raHeavyTriggers.sukunAfterHeavy) {
+          if (isPatternEnabled('tj-ra-heavy', 'sukunAfterFatha')) {
             isHeavy = true;
           }
         }
       }
-      // With Shadda
-      if (has(t, i, SHADDA)) {
+      // With Shadda - always heavy
+      if (has(t, i, SHADDA) && isPatternEnabled('tj-ra-heavy', 'withShadda')) {
         isHeavy = true;
       }
       
@@ -458,8 +452,8 @@ function detect(t) {
       }
     }
 
-    // ===== HEAVY LETTERS: Uses dynamic letters =====
-    const HEAVY_ONLY = HEAVY_LETTERS.replace('ق', ''); // Qaf handled separately
+    // ===== HEAVY LETTERS =====
+    const HEAVY_ONLY = HEAVY_LETTERS.replace('ق', '');
     if (HEAVY_ONLY.includes(c)) {
       const alreadyMarked = a.some(r => i >= r.s && i < r.e);
       if (!alreadyMarked) {
@@ -579,7 +573,23 @@ function renderVerse(text, surahNum, verseNum) {
 function loadConfig() {
   try {
     const savedRules = localStorage.getItem('warsh_tajweed_rules');
-    if (savedRules) tajweedRules = JSON.parse(savedRules);
+    if (savedRules) {
+      const parsedRules = JSON.parse(savedRules);
+      // Merge with defaults to ensure all patterns exist
+      tajweedRules = DEFAULT_RULES.map(defaultRule => {
+        const savedRule = parsedRules.find(r => r.id === defaultRule.id);
+        if (savedRule) {
+          return { ...defaultRule, ...savedRule, patterns: { ...defaultRule.patterns, ...savedRule.patterns } };
+        }
+        return defaultRule;
+      });
+      // Add any custom rules
+      parsedRules.forEach(r => {
+        if (r.id.startsWith('tj-custom-') && !tajweedRules.find(rule => rule.id === r.id)) {
+          tajweedRules.push(r);
+        }
+      });
+    }
     
     const savedOverrides = localStorage.getItem('warsh_letter_overrides');
     if (savedOverrides) letterOverrides = JSON.parse(savedOverrides);
@@ -611,7 +621,7 @@ function updateRuleColor(ruleId, color) {
 }
 
 function resetRules() {
-  tajweedRules = DEFAULT_RULES.map(r => ({ ...r, color: r.defaultColor }));
+  tajweedRules = JSON.parse(JSON.stringify(DEFAULT_RULES));
   saveConfig();
 }
 
@@ -635,6 +645,7 @@ function clearAllOverrides() {
   letterOverrides = [];
   saveConfig();
 }
+
 // Condition Management
 function getConditions() {
   return tajweedConditions;
@@ -715,6 +726,7 @@ function getTriggerOptions() {
     special: []
   };
 }
+
 // 10. Dev Mode
 function setDevMode(enabled) {
   devMode = enabled;
@@ -768,7 +780,8 @@ function injectDynamicCSS() {
   }
   styleEl.textContent = generateDynamicCSS();
 }
-// === NEW: Rule editing functions ===
+
+// === Rule editing functions ===
 
 function updateRuleLetters(ruleId, letters) {
   const rule = tajweedRules.find(r => r.id === ruleId);
@@ -785,6 +798,7 @@ function updateRuleProperty(ruleId, prop, value) {
     saveConfig();
   }
 }
+
 function updateRulePattern(ruleId, patternName, enabled) {
   const rule = tajweedRules.find(r => r.id === ruleId);
   if (rule) {
@@ -793,6 +807,7 @@ function updateRulePattern(ruleId, patternName, enabled) {
     saveConfig();
   }
 }
+
 function addNewRule(name, nameAr, color) {
   const id = 'tj-custom-' + Date.now();
   const newRule = {
@@ -843,6 +858,7 @@ function removeCustomPosition(ruleId, surah, verse, charIndex) {
     saveConfig();
   }
 }
+
 // Exports
 window.detect = detect;
 window.apply = apply;
@@ -864,6 +880,7 @@ window.getOverrides = getOverrides;
 window.injectDynamicCSS = injectDynamicCSS;
 window.generateDynamicCSS = generateDynamicCSS;
 window.updateRulePattern = updateRulePattern;
+window.isPatternEnabled = isPatternEnabled;
 window.getConditions = getConditions;
 window.setConditions = setConditions;
 window.updateCondition = updateCondition;
