@@ -1,4 +1,4 @@
-// --- WARSH ENGINE (Enhanced with Developer Mode + Rule Exceptions) ---
+// --- WARSH ENGINE (Dev Mode with Rule Exceptions) ---
 
 // 1. Constants
 const SUKUN = '\u0652';
@@ -12,10 +12,8 @@ const TANWEEN_KASR = '\u064D';
 const TANWEEN = [TANWEEN_FATH, TANWEEN_DAMM, TANWEEN_KASR];
 const ALIF_KHANJARIA = '\u0670';
 const HAMZA = 'ءأإؤئ';
-const MADD_SIGN = '\u0653';
-const WARSH_DOT = '\u06EC';
 
-// Default Rule Sets (fallbacks)
+// Default Rule Sets
 const QALQ_DEFAULT = 'قطبجد';
 const IDGH_GH_DEFAULT = 'ينمو';
 const IDGH_NO_DEFAULT = 'لر';
@@ -24,7 +22,7 @@ const MADD_LETTERS_DEFAULT = 'اوىي' + ALIF_KHANJARIA;
 const HEAVY_LETTERS_DEFAULT = 'صضطظق';
 const LAM_SHAMSIYYA_DEFAULT = 'تثدذرزسشصضطظلن';
 
-// Default Color Configuration with detection patterns
+// Default Color Configuration
 const DEFAULT_RULES = [
   { id: 'tj-ghunnah', name: 'Ghunnah', nameAr: 'غنة', color: '#16a34a', defaultColor: '#16a34a', bold: false },
   { id: 'tj-qalqalah', name: 'Qalqalah', nameAr: 'قلقة', color: '#0284c7', defaultColor: '#0284c7', bold: false },
@@ -36,14 +34,6 @@ const DEFAULT_RULES = [
   { id: 'tj-special', name: 'Special', nameAr: 'خاص', color: '#d97706', defaultColor: '#d97706', bold: true }
 ];
 
-const DEFAULT_CONDITIONS = {
-  qalqalah: { id: 'tj-qalqalah', name: 'Qalqalah', nameAr: 'قلقة', letters: 'قطبجد' },
-  ghunnah: { id: 'tj-ghunnah', name: 'Ghunnah', nameAr: 'غنة', letters: 'نم' },
-  heavy: { id: 'tj-heavy', name: 'Heavy Letters', nameAr: 'تفخيم', letters: 'صضطظق' },
-  madd: { id: 'tj-madd', name: 'Madd', nameAr: 'مد', letters: 'اوىي\u0670' },
-  silent: { id: 'tj-silent', name: 'Silent', nameAr: 'ساكن', letters: 'لنم' }
-};
-
 const DEFAULT_SETS = {
   idghamWithGhunnah: 'ينمو',
   idghamNoGhunnah: 'لر',
@@ -52,25 +42,31 @@ const DEFAULT_SETS = {
   hamzaLetters: 'ءأإؤئ'
 };
 
-// State
-let tajweedRules = JSON.parse(JSON.stringify(DEFAULT_RULES));
-let letterOverrides = [];      // Color overrides for specific letters
-let ruleExceptions = [];       // NEW: Rule exclusions for specific positions
+// State - Initialize with defaults
+let tajweedRules = [];
+let letterOverrides = [];
+let ruleExceptions = [];
 let devMode = false;
-let tajweedConditions = JSON.parse(JSON.stringify(DEFAULT_CONDITIONS));
-let tajweedSets = JSON.parse(JSON.stringify(DEFAULT_SETS));
+let tajweedSets = {};
+
+// Initialize state immediately
+function initState() {
+  tajweedRules = JSON.parse(JSON.stringify(DEFAULT_RULES));
+  tajweedSets = JSON.parse(JSON.stringify(DEFAULT_SETS));
+}
+initState();
 
 // === DYNAMIC VALUE GETTERS ===
 function getQalqLetters() {
-  return tajweedConditions.qalqalah?.letters || QALQ_DEFAULT;
+  return QALQ_DEFAULT;
 }
 
 function getHeavyLetters() {
-  return tajweedConditions.heavy?.letters || HEAVY_LETTERS_DEFAULT;
+  return HEAVY_LETTERS_DEFAULT;
 }
 
 function getMaddLetters() {
-  return tajweedConditions.madd?.letters || MADD_LETTERS_DEFAULT;
+  return MADD_LETTERS_DEFAULT;
 }
 
 function getIdghamWithGhunnah() {
@@ -93,8 +89,7 @@ function getHamzaLetters() {
   return tajweedSets.hamzaLetters || HAMZA;
 }
 
-// === EXCEPTION CHECKING ===
-// Check if a rule is excepted (disabled) at a specific position
+// === EXCEPTION MANAGEMENT ===
 function isRuleExcepted(ruleId, surah, verse, charIndex) {
   return ruleExceptions.some(e => 
     e.ruleId === ruleId && 
@@ -104,14 +99,6 @@ function isRuleExcepted(ruleId, surah, verse, charIndex) {
   );
 }
 
-// Get all rules that are applied to a specific position
-function getAppliedRules(surah, verse, charIndex) {
-  return ruleExceptions.filter(e => 
-    e.surah === surah && e.verse === verse && e.charIndex === charIndex
-  ).map(e => e.ruleId);
-}
-
-// Add a rule exception
 function addRuleException(ruleId, surah, verse, charIndex, letter) {
   const exists = ruleExceptions.some(e => 
     e.ruleId === ruleId && e.surah === surah && e.verse === verse && e.charIndex === charIndex
@@ -122,29 +109,27 @@ function addRuleException(ruleId, surah, verse, charIndex, letter) {
   }
 }
 
-// Remove a rule exception
 function removeRuleException(ruleId, surah, verse, charIndex) {
+  const before = ruleExceptions.length;
   ruleExceptions = ruleExceptions.filter(e => 
     !(e.ruleId === ruleId && e.surah === surah && e.verse === verse && e.charIndex === charIndex)
   );
-  saveConfig();
+  if (ruleExceptions.length !== before) saveConfig();
 }
 
-// Clear all exceptions for a specific position
 function clearExceptionsForPosition(surah, verse, charIndex) {
+  const before = ruleExceptions.length;
   ruleExceptions = ruleExceptions.filter(e => 
     !(e.surah === surah && e.verse === verse && e.charIndex === charIndex)
   );
-  saveConfig();
+  if (ruleExceptions.length !== before) saveConfig();
 }
 
-// Clear all rule exceptions
 function clearAllRuleExceptions() {
   ruleExceptions = [];
   saveConfig();
 }
 
-// Get all rule exceptions
 function getRuleExceptions() {
   return ruleExceptions;
 }
@@ -213,11 +198,10 @@ function getTanween(t, i) {
   return getDiac(t, i).find(x => TANWEEN.includes(x));
 }
 
-// 3. Detection Function - WITH EXCEPTION SUPPORT
+// 3. Detection Function
 function detect(t, surahNum, verseNum) {
   const a = [];
   
-  // Get dynamic letter sets
   const QALQ = getQalqLetters();
   const IDGH_GH = getIdghamWithGhunnah();
   const IDGH_NO = getIdghamNoGhunnah();
@@ -227,7 +211,6 @@ function detect(t, surahNum, verseNum) {
   const HEAVY_LETTERS = getHeavyLetters();
   const HAMZA_DYNAMIC = getHamzaLetters();
   
-  // Track letter index for exceptions
   let letterIndex = 0;
   
   for (let i = 0; i < t.length; i++) {
@@ -239,7 +222,6 @@ function detect(t, surahNum, verseNum) {
     const end = endW(t, i);
     const endIdx = getEnd(t, i);
     
-    // Current letter's exception check helper
     const checkException = (ruleId) => {
       if (surahNum !== undefined && verseNum !== undefined) {
         return !isRuleExcepted(ruleId, surahNum, verseNum, letterIndex);
@@ -247,14 +229,14 @@ function detect(t, surahNum, verseNum) {
       return true;
     };
 
-    // ===== QALQALAH =====
+    // QALQALAH
     if (QALQ.includes(c)) {
       if ((has(t, i, SUKUN) || has(t, i, SHADDA) || end) && checkException('tj-qalqalah')) {
         a.push({ s: i, e: endIdx, cls: 'tj-qalqalah', letterIndex });
       }
     }
 
-    // ===== NOON SAKINAH =====
+    // NOON SAKINAH
     if (c === 'ن' && (has(t, i, SUKUN) || end) && n && !has(t, i, SHADDA)) {
       if (IDGH_GH.includes(n.c)) {
         if (checkException('tj-silent')) a.push({ s: i, e: endIdx, cls: 'tj-silent', letterIndex });
@@ -268,7 +250,7 @@ function detect(t, surahNum, verseNum) {
       }
     }
 
-    // ===== TANWEEN =====
+    // TANWEEN
     const tw = getTanween(t, i);
     if (tw && n) {
       if (IDGH_GH.includes(n.c) && checkException('tj-ghunnah')) {
@@ -280,7 +262,7 @@ function detect(t, surahNum, verseNum) {
       }
     }
 
-    // ===== MEEM SAKINAH =====
+    // MEEM SAKINAH
     if (c === 'م' && (has(t, i, SUKUN) || end) && n) {
       if (n.c === 'م') {
         if (checkException('tj-silent')) a.push({ s: i, e: endIdx, cls: 'tj-silent', letterIndex });
@@ -290,24 +272,24 @@ function detect(t, surahNum, verseNum) {
       }
     }
 
-    // ===== GHUNNAH MUSHADDA =====
+    // GHUNNAH MUSHADDA
     if ((c === 'م' || c === 'ن') && has(t, i, SHADDA) && checkException('tj-ghunnah')) {
       a.push({ s: i, e: endIdx, cls: 'tj-ghunnah', letterIndex });
     }
 
-    // ===== LAM SHAMSIYYAH =====
+    // LAM SHAMSIYYAH
     if (c === 'ل' && p && (p.c === 'ا' || p.c === '\u0671') && n && LAM_SHAMSIYYA.includes(n.c) && checkException('tj-silent')) {
       a.push({ s: i, e: endIdx, cls: 'tj-silent', letterIndex });
     }
 
-    // ===== MADD =====
+    // MADD
     if (MADD_LETTERS.includes(c)) {
       if (n && (HAMZA_DYNAMIC.includes(n.c) || has(t, n.i, SUKUN) || has(t, n.i, SHADDA)) && checkException('tj-madd')) {
         a.push({ s: i, e: endIdx, cls: 'tj-madd', letterIndex });
       }
     }
 
-    // ===== RA RULES =====
+    // RA RULES
     if (c === 'ر') {
       let isHeavy = false, isLight = false;
       
@@ -334,14 +316,14 @@ function detect(t, surahNum, verseNum) {
       }
     }
 
-    // ===== HEAVY LETTERS =====
+    // HEAVY LETTERS
     const HEAVY_ONLY = HEAVY_LETTERS.replace('ق', '');
     if (HEAVY_ONLY.includes(c) && checkException('tj-heavy')) {
       const alreadyMarked = a.some(r => i >= r.s && i < r.e);
       if (!alreadyMarked) a.push({ s: i, e: endIdx, cls: 'tj-heavy', letterIndex });
     }
 
-    // ===== QAF =====
+    // QAF
     if (c === 'ق' && HEAVY_LETTERS.includes('ق') && checkException('tj-heavy')) {
       const alreadyMarked = a.some(r => i >= r.s && i < r.e);
       if (!alreadyMarked) a.push({ s: i, e: endIdx, cls: 'tj-heavy', letterIndex });
@@ -353,49 +335,27 @@ function detect(t, surahNum, verseNum) {
   return a;
 }
 
-// 4. Apply with inline styles - ENHANCED with exception info
+// 4. Apply with colors
 function applyWithColors(text, rules, surahNum, verseNum, editMode) {
-  if (!rules || rules.length === 0) {
-    // Still need to render letters for dev mode
-    if (editMode) {
-      let letterIndex = 0;
-      let out = '';
-      for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        if (isLtr(c)) {
-          const endIdx = getEnd(text, i);
-          const letterUnit = text.slice(i, endIdx);
-          const dataAttrs = `data-letter-index="${letterIndex}" data-surah="${surahNum}" data-verse="${verseNum}" data-letter="${c}"`;
-          out += `<span class="letter-unit" style="cursor: pointer; user-select: none;" ${dataAttrs}>${letterUnit}</span>`;
-          letterIndex++;
-          i = endIdx - 1;
-        } else {
-          out += c;
-        }
-      }
-      return out;
-    }
-    return text;
-  }
-  
   let charClasses = new Array(text.length).fill(null);
   let charLetterIndex = new Array(text.length).fill(null);
   
-  rules.forEach(r => {
-    for (let i = r.s; i < r.e; i++) {
-      if (!charClasses[i]) {
-        charClasses[i] = r.cls;
-        charLetterIndex[i] = r.letterIndex;
+  if (rules && rules.length > 0) {
+    rules.forEach(r => {
+      for (let i = r.s; i < r.e; i++) {
+        if (!charClasses[i]) {
+          charClasses[i] = r.cls;
+          charLetterIndex[i] = r.letterIndex;
+        }
       }
-    }
-  });
+    });
+  }
 
   const overrideMap = new Map();
   letterOverrides.filter(o => o.surah === surahNum && o.verse === verseNum).forEach(o => {
     overrideMap.set(o.charIndex, o);
   });
 
-  // Build exception map for this verse
   const exceptionMap = new Map();
   ruleExceptions.filter(e => e.surah === surahNum && e.verse === verseNum).forEach(e => {
     if (!exceptionMap.has(e.charIndex)) exceptionMap.set(e.charIndex, []);
@@ -429,10 +389,11 @@ function applyWithColors(text, rules, surahNum, verseNum, editMode) {
       }
       
       if (editMode) {
+        const exceptionClass = exceptions.length > 0 ? ' has-exception' : '';
         const exceptionAttr = exceptions.length > 0 ? ` data-exceptions="${exceptions.join(',')}"` : '';
         const ruleAttr = appliedRule ? ` data-rule="${appliedRule}"` : '';
         const dataAttrs = `data-letter-index="${letterIndex}" data-surah="${surahNum}" data-verse="${verseNum}" data-letter="${c}"${ruleAttr}${exceptionAttr}`;
-        out += `<span class="letter-unit" style="${style}cursor: pointer; user-select: none;" ${dataAttrs}>${letterUnit}</span>`;
+        out += `<span class="letter-unit${exceptionClass}" style="${style}cursor: pointer; user-select: none;" ${dataAttrs}>${letterUnit}</span>`;
       } else {
         if (style) {
           out += `<span style="${style}">${letterUnit}</span>`;
@@ -465,7 +426,20 @@ function renderVerse(text, surahNum, verseNum) {
 function loadConfig() {
   try {
     const savedRules = localStorage.getItem('warsh_tajweed_rules');
-    if (savedRules) tajweedRules = JSON.parse(savedRules);
+    if (savedRules) {
+      const parsed = JSON.parse(savedRules);
+      // Merge with defaults
+      tajweedRules = DEFAULT_RULES.map(d => {
+        const saved = parsed.find(p => p.id === d.id);
+        return saved ? { ...d, ...saved } : { ...d };
+      });
+      // Add custom rules
+      parsed.forEach(p => {
+        if (p.id.startsWith('tj-custom-') && !tajweedRules.find(r => r.id === p.id)) {
+          tajweedRules.push(p);
+        }
+      });
+    }
     
     const savedOverrides = localStorage.getItem('warsh_letter_overrides');
     if (savedOverrides) letterOverrides = JSON.parse(savedOverrides);
@@ -473,11 +447,9 @@ function loadConfig() {
     const savedExceptions = localStorage.getItem('warsh_rule_exceptions');
     if (savedExceptions) ruleExceptions = JSON.parse(savedExceptions);
 
-    const savedConditions = localStorage.getItem('warsh_tajweed_conditions');
-    if (savedConditions) tajweedConditions = JSON.parse(savedConditions);
-
     const savedSets = localStorage.getItem('warsh_tajweed_sets');
-    if (savedSets) tajweedSets = JSON.parse(savedSets);
+    if (savedSets) tajweedSets = { ...tajweedSets, ...JSON.parse(savedSets) };
+    
   } catch(e) {
     console.error('Error loading config:', e);
   }
@@ -487,7 +459,6 @@ function saveConfig() {
   localStorage.setItem('warsh_tajweed_rules', JSON.stringify(tajweedRules));
   localStorage.setItem('warsh_letter_overrides', JSON.stringify(letterOverrides));
   localStorage.setItem('warsh_rule_exceptions', JSON.stringify(ruleExceptions));
-  localStorage.setItem('warsh_tajweed_conditions', JSON.stringify(tajweedConditions));
   localStorage.setItem('warsh_tajweed_sets', JSON.stringify(tajweedSets));
 }
 
@@ -502,7 +473,6 @@ function updateRuleColor(ruleId, color) {
 
 function resetRules() {
   tajweedRules = JSON.parse(JSON.stringify(DEFAULT_RULES));
-  ruleExceptions = [];
   saveConfig();
 }
 
@@ -527,39 +497,22 @@ function clearAllOverrides() {
   saveConfig();
 }
 
-// Condition Management
-function getConditions() { return tajweedConditions; }
-function setConditions(c) { tajweedConditions = c; saveConfig(); }
-function updateCondition(key, updates) {
-  if (tajweedConditions[key]) {
-    tajweedConditions[key] = { ...tajweedConditions[key], ...updates };
-    saveConfig();
-  }
-}
-function resetConditions() {
-  tajweedConditions = JSON.parse(JSON.stringify(DEFAULT_CONDITIONS));
-  saveConfig();
-}
-
+// 9. Set Management
 function getSets() { return tajweedSets; }
 function setSets(s) { tajweedSets = s; saveConfig(); }
 function updateSet(key, value) { tajweedSets[key] = value; saveConfig(); }
-function resetSets() {
-  tajweedSets = JSON.parse(JSON.stringify(DEFAULT_SETS));
-  saveConfig();
-}
+function resetSets() { tajweedSets = JSON.parse(JSON.stringify(DEFAULT_SETS)); saveConfig(); }
 
-// 9. Dev Mode
+// 10. Dev Mode
 function setDevMode(enabled) { devMode = enabled; }
 function isDevMode() { return devMode; }
 
-// 10. Config Get/Set
+// 11. Config Get/Set
 function getConfig() {
   return { 
     rules: tajweedRules, 
     overrides: letterOverrides,
     exceptions: ruleExceptions,
-    conditions: tajweedConditions,
     sets: tajweedSets
   };
 }
@@ -568,7 +521,6 @@ function setConfig(config) {
   if (config.rules) tajweedRules = config.rules;
   if (config.overrides) letterOverrides = config.overrides;
   if (config.exceptions) ruleExceptions = config.exceptions;
-  if (config.conditions) tajweedConditions = config.conditions;
   if (config.sets) tajweedSets = config.sets;
   saveConfig();
 }
@@ -576,7 +528,7 @@ function setConfig(config) {
 function getRules() { return tajweedRules; }
 function getOverrides() { return letterOverrides; }
 
-// 11. Dynamic CSS
+// 12. Dynamic CSS
 function generateDynamicCSS() {
   let css = '';
   tajweedRules.forEach(rule => {
@@ -595,32 +547,10 @@ function injectDynamicCSS() {
   styleEl.textContent = generateDynamicCSS();
 }
 
-// Additional exports
-function updateRuleLetters(ruleId, letters) {
-  const rule = tajweedRules.find(r => r.id === ruleId);
-  if (rule) { rule.letters = letters; saveConfig(); }
-}
-
+// Additional functions
 function updateRuleProperty(ruleId, prop, value) {
   const rule = tajweedRules.find(r => r.id === ruleId);
   if (rule) { rule[prop] = value; saveConfig(); }
-}
-
-function addNewRule(name, nameAr, color) {
-  const id = 'tj-custom-' + Date.now();
-  const newRule = { id, name, nameAr: nameAr || name, color: color || '#ff0000', defaultColor: color || '#ff0000', bold: false };
-  tajweedRules.push(newRule);
-  saveConfig();
-  return newRule;
-}
-
-function deleteRule(ruleId) {
-  if (ruleId.startsWith('tj-custom-')) {
-    tajweedRules = tajweedRules.filter(r => r.id !== ruleId);
-    saveConfig();
-    return true;
-  }
-  return false;
 }
 
 // Exports
@@ -641,26 +571,18 @@ window.saveConfig = saveConfig;
 window.getRules = getRules;
 window.getOverrides = getOverrides;
 window.injectDynamicCSS = injectDynamicCSS;
-window.getConditions = getConditions;
-window.setConditions = setConditions;
-window.updateCondition = updateCondition;
-window.resetConditions = resetConditions;
 window.getSets = getSets;
 window.setSets = setSets;
 window.updateSet = updateSet;
 window.resetSets = resetSets;
-window.updateRuleLetters = updateRuleLetters;
 window.updateRuleProperty = updateRuleProperty;
-window.addNewRule = addNewRule;
-window.deleteRule = deleteRule;
-// NEW: Exception exports
+// Exception exports
 window.isRuleExcepted = isRuleExcepted;
 window.addRuleException = addRuleException;
 window.removeRuleException = removeRuleException;
 window.clearExceptionsForPosition = clearExceptionsForPosition;
 window.clearAllRuleExceptions = clearAllRuleExceptions;
 window.getRuleExceptions = getRuleExceptions;
-window.getAppliedRules = getAppliedRules;
 
-// Auto-load
+// Auto-load config
 loadConfig();
