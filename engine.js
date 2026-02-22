@@ -35,12 +35,78 @@ const DEFAULT_RULES = [
   { id: 'tj-silent', name: 'Silent', nameAr: 'ساكن', color: '#9ca3af', defaultColor: '#9ca3af', bold: false },
   { id: 'tj-special', name: 'Special', nameAr: 'خاص', color: '#d97706', defaultColor: '#d97706', bold: true }
 ];
+const DEFAULT_CONDITIONS = {
+  qalqalah: {
+    id: 'tj-qalqalah',
+    name: 'Qalqalah',
+    nameAr: 'قلقة',
+    letters: 'قطبجد',
+    triggers: ['sukun', 'shadda', 'wordEnd']
+  },
+  ghunnah: {
+    id: 'tj-ghunnah',
+    name: 'Ghunnah',
+    nameAr: 'غنة',
+    letters: 'نم',
+    triggers: ['shadda', 'noonSakinah', 'meemSakinah', 'tanween']
+  },
+  heavy: {
+    id: 'tj-heavy',
+    name: 'Heavy Letters',
+    nameAr: 'تفخيم',
+    letters: 'صضطظق',
+    triggers: ['always']
+  },
+  raHeavy: {
+    id: 'tj-ra-heavy',
+    name: 'Ra Heavy',
+    nameAr: 'ر تفخيم',
+    letters: 'ر',
+    triggers: ['fatha', 'damma', 'tanweenFathDamm', 'sukunAfterHeavy']
+  },
+  raLight: {
+    id: 'tj-ra-light',
+    name: 'Ra Light',
+    nameAr: 'ر ترقيق',
+    letters: 'ر',
+    triggers: ['kasra', 'tanweenKasr', 'sukunAfterLight']
+  },
+  madd: {
+    id: 'tj-madd',
+    name: 'Madd',
+    nameAr: 'مد',
+    letters: 'اوىي\u0670',
+    triggers: ['beforeHamza', 'beforeSukun']
+  },
+  silent: {
+    id: 'tj-silent',
+    name: 'Silent',
+    nameAr: 'ساكن',
+    letters: 'لنم',
+    triggers: ['lamShamsiyya', 'idghamNoGhunnah', 'idghamWithGhunnah']
+  },
+  special: {
+    id: 'tj-special',
+    name: 'Special',
+    nameAr: 'خاص',
+    letters: '',
+    triggers: []
+  }
+};
 
+const DEFAULT_SETS = {
+  idghamWithGhunnah: 'ينمو',
+  idghamNoGhunnah: 'لر',
+  ikhfa: 'تثجدذزسشصضطظفقك',
+  lamShamsiyya: 'تثدذرزسشصضطظلن',
+  hamzaLetters: 'ءأإؤئ'
+};
 // State
 let tajweedRules = [...DEFAULT_RULES];
 let letterOverrides = [];
 let devMode = false;
-
+let tajweedConditions = JSON.parse(JSON.stringify(DEFAULT_CONDITIONS));
+let tajweedSets = JSON.parse(JSON.stringify(DEFAULT_SETS));
 // 2. Helpers - FIXED!
 function isDiac(c) {
   const x = c.charCodeAt(0);
@@ -337,6 +403,12 @@ function loadConfig() {
     
     const savedOverrides = localStorage.getItem('warsh_letter_overrides');
     if (savedOverrides) letterOverrides = JSON.parse(savedOverrides);
+
+    const savedConditions = localStorage.getItem('warsh_tajweed_conditions');
+    if (savedConditions) tajweedConditions = JSON.parse(savedConditions);
+
+    const savedSets = localStorage.getItem('warsh_tajweed_sets');
+    if (savedSets) tajweedSets = JSON.parse(savedSets);
   } catch(e) {
     console.error('Error loading config:', e);
   }
@@ -345,6 +417,8 @@ function loadConfig() {
 function saveConfig() {
   localStorage.setItem('warsh_tajweed_rules', JSON.stringify(tajweedRules));
   localStorage.setItem('warsh_letter_overrides', JSON.stringify(letterOverrides));
+  localStorage.setItem('warsh_tajweed_conditions', JSON.stringify(tajweedConditions));
+  localStorage.setItem('warsh_tajweed_sets', JSON.stringify(tajweedSets));
 }
 
 // 8. Rule Management
@@ -381,7 +455,86 @@ function clearAllOverrides() {
   letterOverrides = [];
   saveConfig();
 }
+// Condition Management
+function getConditions() {
+  return tajweedConditions;
+}
 
+function setConditions(conditions) {
+  tajweedConditions = conditions;
+  saveConfig();
+}
+
+function updateCondition(key, updates) {
+  if (tajweedConditions[key]) {
+    tajweedConditions[key] = { ...tajweedConditions[key], ...updates };
+    saveConfig();
+  }
+}
+
+function resetConditions() {
+  tajweedConditions = JSON.parse(JSON.stringify(DEFAULT_CONDITIONS));
+  saveConfig();
+}
+
+function getSets() {
+  return tajweedSets;
+}
+
+function setSets(sets) {
+  tajweedSets = sets;
+  saveConfig();
+}
+
+function updateSet(key, value) {
+  tajweedSets[key] = value;
+  saveConfig();
+}
+
+function resetSets() {
+  tajweedSets = JSON.parse(JSON.stringify(DEFAULT_SETS));
+  saveConfig();
+}
+
+function getTriggerOptions() {
+  return {
+    qalqalah: [
+      { id: 'sukun', label: 'With Sukun (ْ)' },
+      { id: 'shadda', label: 'With Shadda (ّ)' },
+      { id: 'wordEnd', label: 'At Word End' }
+    ],
+    ghunnah: [
+      { id: 'shadda', label: 'نّ or مّ (with Shadda)' },
+      { id: 'noonSakinah', label: 'Noon Sakinah Rules' },
+      { id: 'meemSakinah', label: 'Meem Sakinah Rules' },
+      { id: 'tanween', label: 'Tanween Rules' }
+    ],
+    heavy: [
+      { id: 'always', label: 'Always Heavy' }
+    ],
+    raHeavy: [
+      { id: 'fatha', label: 'With Fatha (َ)' },
+      { id: 'damma', label: 'With Damma (ُ)' },
+      { id: 'tanweenFathDamm', label: 'With Tanween Fath/Damm (ً/ٌ)' },
+      { id: 'sukunAfterHeavy', label: 'Sukun after Fatha/Damma' }
+    ],
+    raLight: [
+      { id: 'kasra', label: 'With Kasra (ِ)' },
+      { id: 'tanweenKasr', label: 'With Tanween Kasr (ٍ)' },
+      { id: 'sukunAfterLight', label: 'Sukun after Kasra' }
+    ],
+    madd: [
+      { id: 'beforeHamza', label: 'Before Hamza (ءأإؤئ)' },
+      { id: 'beforeSukun', label: 'Before Sukun/Shadda' }
+    ],
+    silent: [
+      { id: 'lamShamsiyya', label: 'Lam Shamsiyya' },
+      { id: 'idghamNoGhunnah', label: 'Idgham without Ghunnah' },
+      { id: 'idghamWithGhunnah', label: 'Idgham with Ghunnah' }
+    ],
+    special: []
+  };
+}
 // 10. Dev Mode
 function setDevMode(enabled) {
   devMode = enabled;
@@ -524,6 +677,15 @@ window.getOverrides = getOverrides;
 window.injectDynamicCSS = injectDynamicCSS;
 window.generateDynamicCSS = generateDynamicCSS;
 window.updateRulePattern = updateRulePattern;
+window.getConditions = getConditions;
+window.setConditions = setConditions;
+window.updateCondition = updateCondition;
+window.resetConditions = resetConditions;
+window.getSets = getSets;
+window.setSets = setSets;
+window.updateSet = updateSet;
+window.resetSets = resetSets;
+window.getTriggerOptions = getTriggerOptions;
 
 // Auto-load
 loadConfig();
