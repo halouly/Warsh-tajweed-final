@@ -546,12 +546,19 @@ function isDevMode() {
 
 // 11. Config Get/Set
 function getConfig() {
-  return { rules: tajweedRules, overrides: letterOverrides };
+  return { 
+    rules: tajweedRules, 
+    overrides: letterOverrides,
+    conditions: tajweedConditions,
+    sets: tajweedSets
+  };
 }
 
 function setConfig(config) {
   if (config.rules) tajweedRules = config.rules;
   if (config.overrides) letterOverrides = config.overrides;
+  if (config.conditions) tajweedConditions = config.conditions;
+  if (config.sets) tajweedSets = config.sets;
   saveConfig();
 }
 
@@ -686,6 +693,10 @@ window.setSets = setSets;
 window.updateSet = updateSet;
 window.resetSets = resetSets;
 window.getTriggerOptions = getTriggerOptions;
+window.updateRuleLetters = updateRuleLetters;
+window.updateRuleProperty = updateRuleProperty;
+window.addNewRule = addNewRule;
+window.deleteRule = deleteRule;
 
 // Auto-load
 loadConfig();
