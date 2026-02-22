@@ -428,7 +428,74 @@ function injectDynamicCSS() {
   }
   styleEl.textContent = generateDynamicCSS();
 }
+// === NEW: Rule editing functions ===
 
+function updateRuleLetters(ruleId, letters) {
+  const rule = tajweedRules.find(r => r.id === ruleId);
+  if (rule) {
+    rule.letters = letters;
+    saveConfig();
+  }
+}
+
+function updateRuleProperty(ruleId, prop, value) {
+  const rule = tajweedRules.find(r => r.id === ruleId);
+  if (rule) {
+    rule[prop] = value;
+    saveConfig();
+  }
+}
+
+function addNewRule(name, nameAr, color) {
+  const id = 'tj-custom-' + Date.now();
+  const newRule = {
+    id: id,
+    name: name,
+    nameAr: nameAr || name,
+    color: color || '#ff0000',
+    defaultColor: color || '#ff0000',
+    bold: false,
+    type: 'custom',
+    letters: '',
+    customPositions: []
+  };
+  tajweedRules.push(newRule);
+  saveConfig();
+  return newRule;
+}
+
+function deleteRule(ruleId) {
+  if (ruleId.startsWith('tj-custom-')) {
+    tajweedRules = tajweedRules.filter(r => r.id !== ruleId);
+    saveConfig();
+    return true;
+  }
+  return false;
+}
+
+function addCustomPosition(ruleId, surah, verse, charIndex, letter) {
+  const rule = tajweedRules.find(r => r.id === ruleId);
+  if (rule) {
+    if (!rule.customPositions) rule.customPositions = [];
+    const exists = rule.customPositions.some(p => 
+      p.surah === surah && p.verse === verse && p.charIndex === charIndex
+    );
+    if (!exists) {
+      rule.customPositions.push({ surah, verse, charIndex, letter });
+      saveConfig();
+    }
+  }
+}
+
+function removeCustomPosition(ruleId, surah, verse, charIndex) {
+  const rule = tajweedRules.find(r => r.id === ruleId);
+  if (rule && rule.customPositions) {
+    rule.customPositions = rule.customPositions.filter(p => 
+      !(p.surah === surah && p.verse === verse && p.charIndex === charIndex)
+    );
+    saveConfig();
+  }
+}
 // Exports
 window.detect = detect;
 window.apply = apply;
