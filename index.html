@@ -501,28 +501,36 @@
             return;
         }
         
-        status.innerHTML = 'Saving...';
+        status.innerHTML = 'Checking file...';
         
         try {
             const config = getConfig();
             const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2))));
             
-            // Get existing file SHA
+            // Get existing file SHA first
             let sha = null;
-            try {
-                const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/vnd.github+json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    }
-                });
-                if (getRes.ok) {
-                    const data = await getRes.json();
-                    sha = data.sha;
-                }
-            } catch(e) {}
+            const getUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
             
+            const getRes = await fetch(getUrl, {
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'Warsh-Reader-App'
+                }
+            });
+            
+            if (getRes.ok) {
+                const data = await getRes.json();
+                sha = data.sha;
+                status.innerHTML = 'Updating existing file...';
+            } else if (getRes.status === 404) {
+                status.innerHTML = 'Creating new file...';
+            } else {
+                const errData = await getRes.json();
+                throw new Error('GET failed: ' + (errData.message || getRes.status));
+            }
+            
+            // Now PUT the file
             const body = {
                 message: `Update tajweed config - ${new Date().toISOString()}`,
                 content: content,
@@ -530,19 +538,19 @@
             };
             if (sha) body.sha = sha;
             
-            const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+            const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.github+json',
-                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'Warsh-Reader-App',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(body)
             });
             
-            if (!res.ok) {
-                const err = await res.json();
+            if (!putRes.ok) {
+                const err = await putRes.json();
                 throw new Error(err.message || 'Failed to save');
             }
             
