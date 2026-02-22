@@ -40,74 +40,57 @@ const DEFAULT_CONDITIONS = {
     id: 'tj-qalqalah',
     name: 'Qalqalah',
     nameAr: 'قلقة',
-    consonants: 'قطبجد',
-    vowels: ['sukun', 'shadda', 'none'],
-    wordEnd: true,
-    description: 'Qalqalah letters with sukun, shadda, or at word end'
+    letters: 'قطبجد',
+    triggers: ['sukun', 'shadda', 'wordEnd']
   },
   ghunnah: {
     id: 'tj-ghunnah',
     name: 'Ghunnah',
     nameAr: 'غنة',
-    consonants: 'نم',
-    vowels: ['shadda'],
-    ikhfa: true,
-    idgham: true,
-    iqlab: true,
-    description: 'Noon/Meem with shadda, or in ikhfa/idgham/iqlab'
+    letters: 'نم',
+    triggers: ['shadda', 'noonSakinah', 'meemSakinah', 'tanween']
   },
   heavy: {
     id: 'tj-heavy',
     name: 'Heavy Letters',
     nameAr: 'تفخيم',
-    consonants: 'صضطظق',
-    vowels: ['any'],
-    description: 'Always heavy letters'
+    letters: 'صضطظق',
+    triggers: ['always']
   },
   raHeavy: {
     id: 'tj-ra-heavy',
     name: 'Ra Heavy',
     nameAr: 'ر تفخيم',
-    consonants: 'ر',
-    vowels: ['fatha', 'damma', 'tanween_fath', 'tanween_damm'],
-    sukunAfter: ['fatha', 'damma'],
-    description: 'Ra with fatha/damma or sukun after fatha/damma'
+    letters: 'ر',
+    triggers: ['fatha', 'damma', 'tanweenFathDamm', 'sukunAfterHeavy']
   },
   raLight: {
     id: 'tj-ra-light',
     name: 'Ra Light',
     nameAr: 'ر ترقيق',
-    consonants: 'ر',
-    vowels: ['kasra', 'tanween_kasr'],
-    sukunAfter: ['kasra'],
-    description: 'Ra with kasra or sukun after kasra'
+    letters: 'ر',
+    triggers: ['kasra', 'tanweenKasr', 'sukunAfterLight']
   },
   madd: {
     id: 'tj-madd',
     name: 'Madd',
     nameAr: 'مد',
-    consonants: 'اوىي',
-    vowels: ['madda', 'super_alif', 'any'],
-    beforeHamza: true,
-    beforeSukun: true,
-    description: 'Madd letters with madda sign or before hamza/sukun'
+    letters: 'اوىي\u0670',
+    triggers: ['beforeHamza', 'beforeSukun']
   },
   silent: {
     id: 'tj-silent',
     name: 'Silent',
     nameAr: 'ساكن',
-    consonants: 'لنم',
-    lamShamsiyya: true,
-    idghamNoGhunnah: true,
-    description: 'Silent letters (lam shamsiyya, idgham)'
+    letters: 'لنم',
+    triggers: ['lamShamsiyya', 'idghamNoGhunnah', 'idghamWithGhunnah']
   },
   special: {
     id: 'tj-special',
     name: 'Special',
     nameAr: 'خاص',
-    consonants: '',
-    vowels: [],
-    description: 'Special cases'
+    letters: '',
+    triggers: []
   }
 };
 
@@ -198,13 +181,6 @@ function getTanween(t, i) {
 function detect(t) {
   const a = [];
   
-  const maddSign = '\u0653';
-  const superAlif = '\u0670';
-  
-  // Get configurable sets
-  const sets = tajweedSets;
-  const cond = tajweedConditions;
-  
   for (let i = 0; i < t.length; i++) {
     const c = t[i];
     if (!isLtr(c)) continue;
@@ -213,58 +189,26 @@ function detect(t) {
     const p = prevL(t, i);
     const end = endW(t, i);
     const diacs = getDiac(t, i);
-    
-    // Get current letter's vowel state
-    const vowelState = {
-      fatha: diacs.includes(FATHA),
-      damma: diacs.includes(DAMMA),
-      kasra: diacs.includes(KASRA),
-      sukun: diacs.includes(SUKUN),
-      shadda: diacs.includes(SHADDA),
-      tanween_fath: diacs.includes(TANWEEN_FATH),
-      tanween_damm: diacs.includes(TANWEEN_DAMM),
-      tanween_kasr: diacs.includes(TANWEEN_KASR),
-      madda: diacs.includes(maddSign),
-      super_alif: diacs.includes(superAlif),
-      none: diacs.length === 0 || !diacs.some(d => [FATHA, DAMMA, KASRA, SUKUN, SHADDA, TANWEEN_FATH, TANWEEN_DAMM, TANWEEN_KASR].includes(d))
-    };
-    
-    // Check if vowel matches any in list
-    function hasVowel(vowelList) {
-      if (!vowelList || vowelList.length === 0) return false;
-      if (vowelList.includes('any')) return true;
-      return vowelList.some(v => vowelState[v]);
-    }
-    
-    // Get previous letter's vowel
-    let prevVowel = null;
-    if (p) {
-      const pDiacs = getDiac(t, p.i);
-      if (pDiacs.includes(FATHA)) prevVowel = 'fatha';
-      else if (pDiacs.includes(DAMMA)) prevVowel = 'damma';
-      else if (pDiacs.includes(KASRA)) prevVowel = 'kasra';
-    }
 
-    // ===== QALQALAH =====
-    const qCond = cond.qalqalah;
-    if (qCond.consonants.includes(c)) {
-      let match = hasVowel(qCond.vowels);
-      if (!match && qCond.wordEnd && end) match = true;
-      if (match) {
+    // ===== QALQALAH: ق ط ب ج د =====
+    if (QALQ.includes(c)) {
+      if (has(t, i, SUKUN) || has(t, i, SHADDA)) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-qalqalah' });
+      } else if (end) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-qalqalah' });
       }
     }
 
     // ===== NOON SAKINAH =====
-    if (c === 'ن' && (vowelState.sukun || end) && n) {
-      if (sets.idghamWithGhunnah.includes(n.c)) {
+    if (c === 'ن' && (has(t, i, SUKUN) || end) && n && !has(t, i, SHADDA)) {
+      if (IDGH_GH.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
         a.push({ s: n.i, e: getEnd(t, n.i), cls: 'tj-ghunnah' });
-      } else if (sets.idghamNoGhunnah.includes(n.c)) {
+      } else if (IDGH_NO.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
       } else if (n.c === 'ب') {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
-      } else if (sets.ikhfa.includes(n.c)) {
+      } else if (IKHFA.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
       }
     }
@@ -272,17 +216,17 @@ function detect(t) {
     // ===== TANWEEN =====
     const tw = getTanween(t, i);
     if (tw && n) {
-      if (sets.idghamWithGhunnah.includes(n.c)) {
+      if (IDGH_GH.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
       } else if (n.c === 'ب') {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
-      } else if (sets.ikhfa.includes(n.c)) {
+      } else if (IKHFA.includes(n.c)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
       }
     }
 
     // ===== MEEM SAKINAH =====
-    if (c === 'م' && (vowelState.sukun || end) && n) {
+    if (c === 'م' && (has(t, i, SUKUN) || end) && n) {
       if (n.c === 'م') {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
         a.push({ s: n.i, e: getEnd(t, n.i), cls: 'tj-ghunnah' });
@@ -292,52 +236,59 @@ function detect(t) {
     }
 
     // ===== GHUNNAH MUSHADDA =====
-    const gCond = cond.ghunnah;
-    if (gCond.consonants.includes(c) && vowelState.shadda) {
+    if ((c === 'م' || c === 'ن') && has(t, i, SHADDA)) {
       a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
     }
 
     // ===== LAM SHAMSIYYAH =====
-    const sCond = cond.silent;
-    if (sCond.consonants.includes(c) && sCond.lamShamsiyya && p && (p.c === 'ا' || p.c === '\u0671') && n && sets.lamShamsiyya.includes(n.c)) {
+    if (c === 'ل' && p && (p.c === 'ا' || p.c === '\u0671') && n && LAM_SHAMSIYYA.includes(n.c)) {
       a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
     }
 
     // ===== MADD =====
-    const mCond = cond.madd;
-    if (mCond.consonants.includes(c)) {
-      let match = hasVowel(mCond.vowels);
-      if (!match && mCond.beforeHamza && n && sets.hamzaLetters.includes(n.c)) match = true;
-      if (!match && mCond.beforeSukun && n && (has(t, n.i, SUKUN) || has(t, n.i, SHADDA))) match = true;
-      if (match) {
+    if (MADD_LETTERS.includes(c)) {
+      if (n && HAMZA.includes(n.c)) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
+      } else if (n && (has(t, n.i, SUKUN) || has(t, n.i, SHADDA))) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
       }
     }
 
     // ===== RA RULES =====
-    const rhCond = cond.raHeavy;
-    const rlCond = cond.raLight;
-    
-    if (rhCond.consonants.includes(c)) {
-      let isHeavy = hasVowel(rhCond.vowels);
-      let isLight = hasVowel(rlCond.vowels);
-      
-      if (vowelState.sukun || end) {
-        if (rhCond.sukunAfter && rhCond.sukunAfter.includes(prevVowel)) isHeavy = true;
-        if (rlCond.sukunAfter && rlCond.sukunAfter.includes(prevVowel)) isLight = true;
-      }
-      if (vowelState.shadda) isHeavy = true;
-      
-      if (isHeavy && !isLight) {
+    if (c === 'ر') {
+      if (has(t, i, FATHA) || has(t, i, DAMMA) || hasAny(t, i, [TANWEEN_FATH, TANWEEN_DAMM])) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
-      } else if (isLight) {
+      } else if (has(t, i, KASRA) || has(t, i, TANWEEN_KASR)) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-light' });
+      } else if (has(t, i, SUKUN) || end) {
+        if (p) {
+          const pDiacs = getDiac(t, p.i);
+          if (pDiacs.includes(FATHA) || pDiacs.includes(DAMMA)) {
+            a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
+          } else if (pDiacs.includes(KASRA)) {
+            a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-light' });
+          } else {
+            a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
+          }
+        } else {
+          a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
+        }
+      } else if (has(t, i, SHADDA)) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-ra-heavy' });
       }
     }
 
-    // ===== HEAVY LETTERS =====
-    const hCond = cond.heavy;
-    if (hCond.consonants.includes(c) && hasVowel(hCond.vowels)) {
+    // ===== HEAVY LETTERS: ص ض ط ظ =====
+    const HEAVY_ONLY = 'صضطظ';
+    if (HEAVY_ONLY.includes(c)) {
+      const alreadyMarked = a.some(r => i >= r.s && i < r.e);
+      if (!alreadyMarked) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-heavy' });
+      }
+    }
+
+    // ===== QAF - Also heavy =====
+    if (c === 'ق') {
       const alreadyMarked = a.some(r => i >= r.s && i < r.e);
       if (!alreadyMarked) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-heavy' });
@@ -347,7 +298,6 @@ function detect(t) {
   
   return a;
 }
-
 
 // 4. APPLY (Original CSS class version)
 function apply(text, rules) {
@@ -548,75 +498,41 @@ function resetSets() {
 
 function getTriggerOptions() {
   return {
-    qalqalah: {
-      vowels: [
-        { id: 'sukun', label: 'With Sukun (ْ)' },
-        { id: 'shadda', label: 'With Shadda (ّ)' },
-        { id: 'none', label: 'No vowel (at word end)' }
-      ],
-      options: [
-        { id: 'wordEnd', label: 'Also at Word End' }
-      ]
-    },
-    ghunnah: {
-      vowels: [
-        { id: 'shadda', label: 'With Shadda (ّ)' }
-      ],
-      options: [
-        { id: 'ikhfa', label: 'Ikhfa Rules' },
-        { id: 'idgham', label: 'Idgham Rules' },
-        { id: 'iqlab', label: 'Iqlab (ن+ب)' }
-      ]
-    },
-    heavy: {
-      vowels: [
-        { id: 'any', label: 'Any Vowel' }
-      ],
-      options: []
-    },
-    raHeavy: {
-      vowels: [
-        { id: 'fatha', label: 'With Fatha (َ)' },
-        { id: 'damma', label: 'With Damma (ُ)' },
-        { id: 'tanween_fath', label: 'With Tanween Fath (ً)' },
-        { id: 'tanween_damm', label: 'With Tanween Damm (ٌ)' }
-      ],
-      options: [
-        { id: 'sukunAfter_fatha', label: 'Sukun after Fatha' },
-        { id: 'sukunAfter_damma', label: 'Sukun after Damma' }
-      ]
-    },
-    raLight: {
-      vowels: [
-        { id: 'kasra', label: 'With Kasra (ِ)' },
-        { id: 'tanween_kasr', label: 'With Tanween Kasr (ٍ)' }
-      ],
-      options: [
-        { id: 'sukunAfter_kasra', label: 'Sukun after Kasra' }
-      ]
-    },
-    madd: {
-      vowels: [
-        { id: 'madda', label: 'With Madda (ٓ)' },
-        { id: 'super_alif', label: 'With Super Alif (ٰ)' },
-        { id: 'any', label: 'Any Vowel' }
-      ],
-      options: [
-        { id: 'beforeHamza', label: 'Before Hamza' },
-        { id: 'beforeSukun', label: 'Before Sukun/Shadda' }
-      ]
-    },
-    silent: {
-      vowels: [],
-      options: [
-        { id: 'lamShamsiyya', label: 'Lam Shamsiyya' },
-        { id: 'idghamNoGhunnah', label: 'Idgham without Ghunnah' }
-      ]
-    },
-    special: {
-      vowels: [],
-      options: []
-    }
+    qalqalah: [
+      { id: 'sukun', label: 'With Sukun (ْ)' },
+      { id: 'shadda', label: 'With Shadda (ّ)' },
+      { id: 'wordEnd', label: 'At Word End' }
+    ],
+    ghunnah: [
+      { id: 'shadda', label: 'نّ or مّ (with Shadda)' },
+      { id: 'noonSakinah', label: 'Noon Sakinah Rules' },
+      { id: 'meemSakinah', label: 'Meem Sakinah Rules' },
+      { id: 'tanween', label: 'Tanween Rules' }
+    ],
+    heavy: [
+      { id: 'always', label: 'Always Heavy' }
+    ],
+    raHeavy: [
+      { id: 'fatha', label: 'With Fatha (َ)' },
+      { id: 'damma', label: 'With Damma (ُ)' },
+      { id: 'tanweenFathDamm', label: 'With Tanween Fath/Damm (ً/ٌ)' },
+      { id: 'sukunAfterHeavy', label: 'Sukun after Fatha/Damma' }
+    ],
+    raLight: [
+      { id: 'kasra', label: 'With Kasra (ِ)' },
+      { id: 'tanweenKasr', label: 'With Tanween Kasr (ٍ)' },
+      { id: 'sukunAfterLight', label: 'Sukun after Kasra' }
+    ],
+    madd: [
+      { id: 'beforeHamza', label: 'Before Hamza (ءأإؤئ)' },
+      { id: 'beforeSukun', label: 'Before Sukun/Shadda' }
+    ],
+    silent: [
+      { id: 'lamShamsiyya', label: 'Lam Shamsiyya' },
+      { id: 'idghamNoGhunnah', label: 'Idgham without Ghunnah' },
+      { id: 'idghamWithGhunnah', label: 'Idgham with Ghunnah' }
+    ],
+    special: []
   };
 }
 // 10. Dev Mode
