@@ -682,25 +682,7 @@
     function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
     function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
 
-    // Load config from GitHub on startup
-    async function loadConfigFromServer() {
-        try {
-            const res = await fetch('tajweed-config.json?t=' + Date.now());
-            if (res.ok) {
-                const config = await res.json();
-                setConfig(config);
-                console.log('Loaded config from server');
-                injectDynamicCSS();
-                if (state.data) render();
-                updateOverrideCount();
-            }
-        } catch(e) {
-            console.log('No server config, using localStorage');
-        }
-    }
-
     init();
-    loadConfigFromServer();
     </script>
 </body>
 </html>
