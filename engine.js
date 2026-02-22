@@ -35,7 +35,72 @@ const DEFAULT_RULES = [
   { id: 'tj-silent', name: 'Silent', nameAr: 'ساكن', color: '#9ca3af', defaultColor: '#9ca3af', bold: false },
   { id: 'tj-special', name: 'Special', nameAr: 'خاص', color: '#d97706', defaultColor: '#d97706', bold: true }
 ];
+const DEFAULT_CONDITIONS = {
+  qalqalah: {
+    id: 'tj-qalqalah',
+    name: 'Qalqalah',
+    nameAr: 'قلقة',
+    letters: 'قطبجد',
+    triggers: ['sukun', 'shadda', 'wordEnd']
+  },
+  ghunnah: {
+    id: 'tj-ghunnah',
+    name: 'Ghunnah',
+    nameAr: 'غنة',
+    letters: 'نم',
+    triggers: ['shadda', 'noonSakinah', 'meemSakinah', 'tanween']
+  },
+  heavy: {
+    id: 'tj-heavy',
+    name: 'Heavy Letters',
+    nameAr: 'تفخيم',
+    letters: 'صضطظق',
+    triggers: ['always']
+  },
+  raHeavy: {
+    id: 'tj-ra-heavy',
+    name: 'Ra Heavy',
+    nameAr: 'ر تفخيم',
+    letters: 'ر',
+    triggers: ['fatha', 'damma', 'tanweenFathDamm', 'sukunAfterHeavy']
+  },
+  raLight: {
+    id: 'tj-ra-light',
+    name: 'Ra Light',
+    nameAr: 'ر ترقيق',
+    letters: 'ر',
+    triggers: ['kasra', 'tanweenKasr', 'sukunAfterLight']
+  },
+  madd: {
+    id: 'tj-madd',
+    name: 'Madd',
+    nameAr: 'مد',
+    letters: 'اوىي\u0670',
+    triggers: ['beforeHamza', 'beforeSukun']
+  },
+  silent: {
+    id: 'tj-silent',
+    name: 'Silent',
+    nameAr: 'ساكن',
+    letters: 'لنم',
+    triggers: ['lamShamsiyya', 'idghamNoGhunnah', 'idghamWithGhunnah']
+  },
+  special: {
+    id: 'tj-special',
+    name: 'Special',
+    nameAr: 'خاص',
+    letters: '',
+    triggers: []
+  }
+};
 
+const DEFAULT_SETS = {
+  idghamWithGhunnah: 'ينمو',
+  idghamNoGhunnah: 'لر',
+  ikhfa: 'تثجدذزسشصضطظفقك',
+  lamShamsiyya: 'تثدذرزسشصضطظلن',
+  hamzaLetters: 'ءأإؤئ'
+};
 // State
 let tajweedRules = [...DEFAULT_RULES];
 let letterOverrides = [];
