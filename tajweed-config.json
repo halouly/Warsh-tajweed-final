@@ -138,8 +138,10 @@
       "id": "tj-madd",
       "name": "Madd",
       "nameAr": "مد",
-      "letters": "آ يَٰٓ ۦٓ  ۥٓ لَٰٓئِ مُۥٓ",
-      "triggers": []
+      "letters": "آ يَٰٓ ۦٓ  ۥٓ لَٰٓۥٓ",
+      "triggers": [
+        "withMaddSign"
+      ]
     },
     "silent": {
       "id": "tj-silent",
