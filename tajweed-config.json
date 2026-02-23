@@ -12,7 +12,7 @@
       "id": "tj-qalqalah",
       "name": "Qalqalah",
       "nameAr": "قلقة",
-      "color": "#0284c7",
+      "color": "#0fa5f0",
       "defaultColor": "#0284c7",
       "bold": false
     },
@@ -20,7 +20,7 @@
       "id": "tj-heavy",
       "name": "Heavy Letters",
       "nameAr": "تفخيم",
-      "color": "#2057ee",
+      "color": "#0630a2",
       "defaultColor": "#1e3a8a",
       "bold": true
     },
@@ -28,7 +28,7 @@
       "id": "tj-ra-heavy",
       "name": "Ra Heavy",
       "nameAr": "ر تفخيم",
-      "color": "#2c61f2",
+      "color": "#0331b0",
       "defaultColor": "#1e3a8a",
       "bold": true
     },
