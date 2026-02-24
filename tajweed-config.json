@@ -65,7 +65,11 @@
       "nameAr": "ساكن",
       "color": "#9ca3af",
       "defaultColor": "#9ca3af",
-      "bold": false
+      "bold": false,
+      "patterns": {
+        "noonIdgham": false,
+        "meemIdgham": false
+      }
     },
     {
       "id": "tj-special",
@@ -159,8 +163,7 @@
       "letters": "لنم",
       "triggers": [
         "lamShamsiyya",
-        "idghamNoGhunnah",
-        "idghamWithGhunnah"
+        "idghamNoGhunnah"
       ]
     },
     "special": {
