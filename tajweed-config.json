@@ -14,7 +14,11 @@
       "nameAr": "قلقة",
       "color": "#0fa5f0",
       "defaultColor": "#0284c7",
-      "bold": false
+      "bold": false,
+      "patterns": {
+        "atEnd": false,
+        "withShadda": false
+      }
     },
     {
       "id": "tj-heavy",
@@ -86,9 +90,7 @@
       "nameAr": "قلقة",
       "letters": "قطبجد",
       "triggers": [
-        "sukun",
-        "shadda",
-        "wordEnd"
+        "sukun"
       ]
     },
     "ghunnah": {
