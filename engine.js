@@ -12,8 +12,12 @@ const TANWEEN_KASR = '\u064D';
 const TANWEEN = [TANWEEN_FATH, TANWEEN_DAMM, TANWEEN_KASR];
 const ALIF_KHANJARIA = '\u0670';
 const HAMZA = 'ءأإؤئ';
-const MADD_SIGN = '\u0653'; // The Madd sign (ٓ)
+const MADD_SIGN = '\u0653';
 const WARSH_DOT = '\u06EC';
+
+// Warsh Specific Ghunnah/Ikhfa Markers
+const GHUNNA_MARKER_HIGH = '\u065E'; // ٞ (Small High Meem / Rounded Zero)
+const GHUNNA_MARKER_LOW = '\u065F'; // ٗ (Small Low Meem / Rounded Zero)
 
 // Default Rule Sets (fallbacks)
 const QALQ_DEFAULT = 'قطبجد';
@@ -61,7 +65,7 @@ const DEFAULT_CONDITIONS = {
     name: 'Ghunnah',
     nameAr: 'غنة',
     letters: 'نم',
-    triggers: ['shadda', 'noonSakinah', 'meemSakinah', 'tanween']
+    triggers: ['shadda', 'noonSakinah', 'meemSakinah', 'tanween', 'explicitMarker']
   },
   heavy: {
     id: 'tj-heavy',
@@ -174,6 +178,7 @@ function getHamzaLetters() {
 // 2. Helpers
 function isDiac(c) {
   const x = c.charCodeAt(0);
+  // Include 0x065E and 0x065F in the standard diac range check
   return (x >= 0x064B && x <= 0x065F) || x === 0x0670 || (x >= 0x06D6 && x <= 0x06ED);
 }
 
@@ -273,10 +278,16 @@ function detect(t) {
     const end = endW(t, i);
     const diacs = getDiac(t, i);
 
+    // ===== EXPLICIT GHUNNA/IKHFA MARKERS (Warsh Specific) =====
+    // If the letter carries High Meem (ٞ) or Low Meem (ٗ), it indicates Ghunnah/Ikhfa explicitly.
+    if (has(t, i, GHUNNA_MARKER_HIGH) || has(t, i, GHUNNA_MARKER_LOW)) {
+      if (isPatternEnabled('tj-ghunnah', 'explicitMarker')) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
+      }
+    }
     // ===== MADD RULE (Warsh Specific: Explicit Madd Sign) =====
     // Detects combinations like لَٰٓ, مُۥٓ, يِۦٓ, آ
-    // If the letter carries the Madd sign (ٓ), it is Madd.
-    if (has(t, i, MADD_SIGN)) {
+    else if (has(t, i, MADD_SIGN)) {
       if (isPatternEnabled('tj-madd', 'withMaddSign')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
       }
@@ -320,6 +331,7 @@ function detect(t) {
     }
 
     // ===== NOON SAKINAH =====
+    // Note: Explicit markers are handled above. This handles standard Sukun/Tanween logic.
     if (c === 'ن' && (has(t, i, SUKUN) || end) && n && !has(t, i, SHADDA)) {
       if (IDGH_GH.includes(n.c)) {
         if (isPatternEnabled('tj-silent', 'noonIdgham')) {
@@ -699,7 +711,8 @@ function getTriggerOptions() {
       { id: 'shadda', label: 'نّ or مّ (with Shadda)' },
       { id: 'noonSakinah', label: 'Noon Sakinah Rules' },
       { id: 'meemSakinah', label: 'Meem Sakinah Rules' },
-      { id: 'tanween', label: 'Tanween Rules' }
+      { id: 'tanween', label: 'Tanween Rules' },
+      { id: 'explicitMarker', label: 'Explicit Marker (ٞ/ٗ)' }
     ],
     heavy: [
       { id: 'always', label: 'Always Heavy' }
