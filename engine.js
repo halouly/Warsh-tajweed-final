@@ -43,8 +43,13 @@ const DEFAULT_RULES = [
   { id: 'tj-ra-light', name: 'Ra Light', nameAr: 'ر ترقيق', color: '#06b6d4', defaultColor: '#06b6d4', bold: false,
     patterns: { withKasra: true, sukunAfterKasra: true }
   },
-  { id: 'tj-madd', name: 'Madd', nameAr: 'مد', color: '#dc2626', defaultColor: '#dc2626', bold: false,
-    patterns: { beforeHamza: true, beforeSukun: true, beforeShadda: true, withMaddSign: true }
+  // NEW: Madd Lazem (Dark Red) - specifically for Shadda
+  { id: 'tj-madd-lazem', name: 'Madd Lazem', nameAr: 'مد لازم', color: '#991b1b', defaultColor: '#991b1b', bold: true,
+    patterns: { beforeShadda: true, withMaddSign: true }
+  },
+  // MODIFIED: Madd Mochbaa (Bright Red) - for Hamza/Sukun
+  { id: 'tj-madd', name: 'Madd Mochbaa', nameAr: 'مد متصل', color: '#dc2626', defaultColor: '#dc2626', bold: false,
+    patterns: { beforeHamza: true, beforeSukun: true, withMaddSign: true }
   },
   { id: 'tj-silent', name: 'Silent', nameAr: 'ساكن', color: '#9ca3af', defaultColor: '#9ca3af', bold: false,
     patterns: { lamShamsiyya: true, idghamNoGhunnah: true, noonIdgham: true, meemIdgham: true }
@@ -88,10 +93,17 @@ const DEFAULT_CONDITIONS = {
     letters: 'ر',
     triggers: ['kasra', 'tanweenKasr', 'sukunAfterLight']
   },
+  maddLazem: {
+    id: 'tj-madd-lazem',
+    name: 'Madd Lazem',
+    nameAr: 'مد لازم',
+    letters: 'اوىي\u0670',
+    triggers: ['beforeShadda', 'withMaddSign']
+  },
   madd: {
     id: 'tj-madd',
-    name: 'Madd',
-    nameAr: 'مد',
+    name: 'Madd Mochbaa',
+    nameAr: 'مد متصل',
     letters: 'اوىي\u0670',
     triggers: ['beforeHamza', 'beforeSukun', 'withMaddSign']
   },
@@ -214,7 +226,6 @@ function hasAny(t, i, chars) {
   return d.some(x => chars.includes(x));
 }
 
-// NEW: Check if a letter has any vowel (Haraka)
 function hasVowel(t, i) {
   return hasAny(t, i, [FATHA, DAMMA, KASRA, ...TANWEEN]);
 }
@@ -274,34 +285,41 @@ function detect(t) {
     const end = endW(t, i);
     const diacs = getDiac(t, i);
 
+    // ===== MADD LOGIC (Split into Lazem and Mochbaa) =====
+    // 1. Check for Explicit Madd Sign (ٓ)
+    if (has(t, i, MADD_SIGN)) {
+      if (n && has(t, n.i, SHADDA)) {
+        // Madd Sign + Shadda = Lazem
+        if (isPatternEnabled('tj-madd-lazem', 'withMaddSign')) {
+          a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd-lazem' });
+        }
+      } else {
+        // Madd Sign without Shadda = Mochbaa (General Madd)
+        if (isPatternEnabled('tj-madd', 'withMaddSign')) {
+          a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
+        }
+      }
+    }
+    // 2. Check for Standard Madd Letters
+    else if (MADD_LETTERS.includes(c)) {
+      // Priority 1: Madd Lazem (Before Shadda)
+      if (n && has(t, n.i, SHADDA) && isPatternEnabled('tj-madd-lazem', 'beforeShadda')) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd-lazem' });
+      }
+      // Priority 2: Madd Mochbaa (Before Hamza)
+      else if (n && HAMZA_DYNAMIC.includes(n.c) && isPatternEnabled('tj-madd', 'beforeHamza')) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
+      }
+      // Priority 3: Madd Mochbaa (Before Sukun)
+      else if (n && has(t, n.i, SUKUN) && isPatternEnabled('tj-madd', 'beforeSukun')) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
+      }
+    }
+
     // ===== EXPLICIT GHUNNA/IKHFA MARKERS (Warsh Specific) =====
     if (has(t, i, GHUNNA_MARKER_HIGH) || has(t, i, GHUNNA_MARKER_LOW)) {
       if (isPatternEnabled('tj-ghunnah', 'explicitMarker')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
-      }
-    }
-    // ===== MADD RULE (Warsh Specific: Explicit Madd Sign) =====
-    else if (has(t, i, MADD_SIGN)) {
-      if (isPatternEnabled('tj-madd', 'withMaddSign')) {
-        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
-      }
-    }
-    // ===== MADD RULE (Standard Logic) =====
-    else if (MADD_LETTERS.includes(c)) {
-      let isMadd = false;
-      
-      if (n && HAMZA_DYNAMIC.includes(n.c) && isPatternEnabled('tj-madd', 'beforeHamza')) {
-        isMadd = true;
-      }
-      if (n && has(t, n.i, SUKUN) && isPatternEnabled('tj-madd', 'beforeSukun')) {
-        isMadd = true;
-      }
-      if (n && has(t, n.i, SHADDA) && isPatternEnabled('tj-madd', 'beforeShadda')) {
-        isMadd = true;
-      }
-      
-      if (isMadd) {
-        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
       }
     }
 
@@ -325,8 +343,6 @@ function detect(t) {
     }
 
     // ===== NOON SAKINAH =====
-    // FIX: Check !hasVowel instead of just looking for Sukun.
-    // A Noon in the middle of a word is Sakinah if it has no vowel (Fatha, Damma, Kasra, Tanween).
     if (c === 'ن' && !has(t, i, SHADDA) && !hasVowel(t, i) && n) {
       if (IDGH_GH.includes(n.c)) {
         if (isPatternEnabled('tj-silent', 'noonIdgham')) {
@@ -369,7 +385,6 @@ function detect(t) {
     }
 
     // ===== MEEM SAKINAH =====
-    // FIX: Same logic update for Meem Sakinah
     if (c === 'م' && !has(t, i, SHADDA) && !hasVowel(t, i) && n) {
       if (n.c === 'م') {
         if (isPatternEnabled('tj-silent', 'meemIdgham')) {
@@ -724,9 +739,13 @@ function getTriggerOptions() {
       { id: 'tanweenKasr', label: 'With Tanween Kasr (ٍ)' },
       { id: 'sukunAfterLight', label: 'Sukun after Kasra' }
     ],
+    maddLazem: [
+      { id: 'beforeShadda', label: 'Before Shadda (ّ)' },
+      { id: 'withMaddSign', label: 'With Madd Sign (ٓ)' }
+    ],
     madd: [
       { id: 'beforeHamza', label: 'Before Hamza (ءأإؤئ)' },
-      { id: 'beforeSukun', label: 'Before Sukun/Shadda' },
+      { id: 'beforeSukun', label: 'Before Sukun (ْ)' },
       { id: 'withMaddSign', label: 'With Madd Sign (ٓ)' }
     ],
     silent: [
