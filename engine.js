@@ -16,8 +16,8 @@ const MADD_SIGN = '\u0653';
 const WARSH_DOT = '\u06EC';
 
 // Warsh Specific Ghunnah/Ikhfa Markers
-const GHUNNA_MARKER_HIGH = '\u065E'; // ٞ
-const GHUNNA_MARKER_LOW = '\u065F'; // ٗ
+const GHUNNA_MARKER_HIGH = '\u065E'; // ٞ (Small High Meem / Rounded Zero)
+const GHUNNA_MARKER_LOW = '\u065F'; // ٗ (Small Low Meem / Rounded Zero)
 
 // Default Rule Sets (fallbacks)
 const QALQ_DEFAULT = 'قطبجد';
@@ -31,7 +31,7 @@ const LAM_SHAMSIYYA_DEFAULT = 'تثدذرزسشصضطظلن';
 // Default Color Configuration
 const DEFAULT_RULES = [
   { id: 'tj-ghunnah', name: 'Ghunnah', nameAr: 'غنة', color: '#16a34a', defaultColor: '#16a34a', bold: false,
-    patterns: { noonShadda: true, meemShadda: true, ikhfa: true, iqlab: true, idghamGhunnah: true, meemSakinah: true, explicitMarker: true }
+    patterns: { noonShadda: true, meemShadda: true, ikhfa: true, iqlab: true, idghamGhunnah: true, meemSakinah: true }
   },
   { id: 'tj-qalqalah', name: 'Qalqalah', nameAr: 'قلقة', color: '#0284c7', defaultColor: '#0284c7', bold: false,
     patterns: { withSukun: true, withShadda: true, atEnd: true }
@@ -178,6 +178,7 @@ function getHamzaLetters() {
 // 2. Helpers
 function isDiac(c) {
   const x = c.charCodeAt(0);
+  // Include 0x065E and 0x065F in the standard diac range check
   return (x >= 0x064B && x <= 0x065F) || x === 0x0670 || (x >= 0x06D6 && x <= 0x06ED);
 }
 
@@ -186,8 +187,16 @@ function isLtr(c) {
   if (x < 0x0600 || x > 0x06FF) return false;
   if (isDiac(c)) return false;
   
+  // Standard Arabic letters
   if ((x >= 0x0621 && x <= 0x063A) || (x >= 0x0641 && x <= 0x064A)) return true;
+  
+  // Warsh Specific: Include small letters used as Madd carriers
+  // U+0670 (Small Alif ٰ)
+  // U+0675 (High Hamza Alef ٥ - often used as small Waw carrier in Warsh)
+  // U+0666 (Small Yeh/Digit Six ۦ - often used as small Ya carrier in Warsh)
   if (x === 0x0670 || x === 0x0675 || x === 0x0666) return true;
+
+  // Extended Arabic block
   if (x >= 0x0671 && x <= 0x06D3) return true;
   
   return false;
@@ -212,11 +221,6 @@ function has(t, i, c) {
 function hasAny(t, i, chars) {
   const d = getDiac(t, i);
   return d.some(x => chars.includes(x));
-}
-
-// NEW: Check if a letter has any vowel (Haraka)
-function hasVowel(t, i) {
-  return hasAny(t, i, [FATHA, DAMMA, KASRA, ...TANWEEN]);
 }
 
 function nextL(t, i) {
@@ -275,12 +279,14 @@ function detect(t) {
     const diacs = getDiac(t, i);
 
     // ===== EXPLICIT GHUNNA/IKHFA MARKERS (Warsh Specific) =====
+    // If the letter carries High Meem (ٞ) or Low Meem (ٗ), it indicates Ghunnah/Ikhfa explicitly.
     if (has(t, i, GHUNNA_MARKER_HIGH) || has(t, i, GHUNNA_MARKER_LOW)) {
       if (isPatternEnabled('tj-ghunnah', 'explicitMarker')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
       }
     }
     // ===== MADD RULE (Warsh Specific: Explicit Madd Sign) =====
+    // Detects combinations like لَٰٓ, مُۥٓ, يِۦٓ, آ
     else if (has(t, i, MADD_SIGN)) {
       if (isPatternEnabled('tj-madd', 'withMaddSign')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
@@ -325,9 +331,8 @@ function detect(t) {
     }
 
     // ===== NOON SAKINAH =====
-    // FIX: Check !hasVowel instead of just looking for Sukun.
-    // A Noon in the middle of a word is Sakinah if it has no vowel (Fatha, Damma, Kasra, Tanween).
-    if (c === 'ن' && !has(t, i, SHADDA) && !hasVowel(t, i) && n) {
+    // Note: Explicit markers are handled above. This handles standard Sukun/Tanween logic.
+    if (c === 'ن' && (has(t, i, SUKUN) || end) && n && !has(t, i, SHADDA)) {
       if (IDGH_GH.includes(n.c)) {
         if (isPatternEnabled('tj-silent', 'noonIdgham')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
@@ -369,8 +374,7 @@ function detect(t) {
     }
 
     // ===== MEEM SAKINAH =====
-    // FIX: Same logic update for Meem Sakinah
-    if (c === 'م' && !has(t, i, SHADDA) && !hasVowel(t, i) && n) {
+    if (c === 'م' && (has(t, i, SUKUN) || end) && n) {
       if (n.c === 'م') {
         if (isPatternEnabled('tj-silent', 'meemIdgham')) {
           a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
