@@ -9,9 +9,9 @@
       "bold": false,
       "letters": "ٞٞ ٞ  ٗ ",
       "patterns": {
-        "ikhfa": false,
-        "iqlab": false,
-        "idghamGhunnah": false
+        "ikhfa": true,
+        "iqlab": true,
+        "idghamGhunnah": true
       }
     },
     {
@@ -110,7 +110,6 @@
       "letters": "مَّ ن",
       "triggers": [
         "shadda",
-        "noonSakinah",
         "meemSakinah",
         "explicitMarker"
       ]
