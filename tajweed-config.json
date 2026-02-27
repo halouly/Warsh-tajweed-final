@@ -9,9 +9,9 @@
       "bold": false,
       "letters": "ٞٞ ٞ  ٗ ",
       "patterns": {
-        "ikhfa": false,
-        "iqlab": false,
-        "idghamGhunnah": false
+        "ikhfa": true,
+        "iqlab": true,
+        "idghamGhunnah": true
       }
     },
     {
@@ -112,7 +112,8 @@
         "shadda",
         "meemSakinah",
         "explicitMarker",
-        "tanween"
+        "tanween",
+        "noonSakinah"
       ]
     },
     "heavy": {
