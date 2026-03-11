@@ -21,7 +21,20 @@
         /* --- THEMES & UI --- */
 
         @media (max-width: 768px) {
-            #controls { padding: 8px; font-size: 0.95rem; }
+            #controls { padding: 6px; font-size: 0.9rem; }
+            #controls select, #controls button, #controls input { font-size: 0.9rem; padding: 2px 4px; height: 32px; }
+            #controls label { font-size: 0.85rem; margin-left: 2px !important; margin-right: 2px !important; }
+            .row { gap: 4px; margin-bottom: 4px; justify-content: space-evenly; }
+            .control-group { padding: 4px; gap: 4px; border-radius: 6px; }
+            #surah-select, #reciter-select { width: 110px !important; }
+            #view-mode { width: 65px !important; }
+            .big-btn { padding: 0 10px; height: 32px; }
+            #play-btn { height: 32px; padding: 0 10px; }
+        }
+        @media (max-width: 480px) {
+            .control-group { border: none; background: transparent; padding: 0; }
+            .row { margin-bottom: 2px; }
+        }
             #controls select, #controls button, #controls input, #controls label { font-size: 0.95rem; padding: 4px; }
             .row { gap: 6px; margin-bottom: 6px; }
             .control-group { padding: 4px 8px; gap: 6px; }
