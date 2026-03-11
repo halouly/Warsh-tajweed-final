@@ -21,41 +21,42 @@
         /* --- THEMES & UI --- */
 
         @media (max-width: 768px) {
-            #controls { padding: 6px; font-size: 0.9rem; }
-            #controls select, #controls button, #controls input { font-size: 0.9rem; padding: 2px 4px; height: 32px; }
+            #controls { padding: 4px !important; font-size: 0.9rem; }
+            #controls select, #controls button, #controls input { font-size: 0.9rem; padding: 2px 4px !important; height: 32px; }
             #controls label { font-size: 0.85rem; margin-left: 2px !important; margin-right: 2px !important; }
-            .row { gap: 4px; margin-bottom: 4px; justify-content: space-evenly; }
-            .control-group { padding: 4px; gap: 4px; border-radius: 6px; }
+            .row { gap: 4px !important; margin-bottom: 4px !important; justify-content: space-evenly; }
+            .control-group { padding: 4px !important; gap: 4px !important; border-radius: 6px; }
             #surah-select, #reciter-select { width: 110px !important; }
             #view-mode { width: 65px !important; }
             .big-btn { padding: 0 10px; height: 32px; }
             #play-btn { height: 32px; padding: 0 10px; }
+            #status { min-width: 90px !important; margin-left: 4px !important; }
         }
         @media (max-width: 480px) {
-            .control-group { border: none; background: transparent; padding: 0; }
-            .row { margin-bottom: 2px; }
-            #controls select, #controls button, #controls input, #controls label { font-size: 0.95rem; padding: 4px; }
-            .row { gap: 6px; margin-bottom: 6px; }
-            .control-group { padding: 4px 8px; gap: 6px; }
-            #surah-select, #reciter-select { width: 130px !important; }
-            .is-fullscreen .hide-on-fs { display: none !important; }
-            .is-fullscreen header { display: none !important; }
-            .exit-fs-btn { display: none; background: #ef4444 !important; color: white; }
-            .is-fullscreen .exit-fs-btn { display: inline-block; }
-            .control-group {
-                           display: flex;
-                           align-items: center;
-                           gap: 10px;
-                           padding: 8px 12px;
-                           border: 1px solid var(--border);
-                           border-radius: 8px;
-                           background: rgba(0, 0, 0, 0.02);
-                           flex-wrap: wrap;}
-             body.dark .control-group {
-                 background: rgba(255, 255, 255, 0.02);
+            .control-group { border: none !important; background: transparent !important; padding: 2px !important; }
+            .row { gap: 2px !important; margin-bottom: 2px !important; }
+            #controls { padding: 3px !important; }
+        }
+        .is-fullscreen header { display: none !important; }
+        .exit-fs-btn { display: none; background: #ef4444 !important; color: white; }
+        .is-fullscreen .exit-fs-btn { display: inline-block; }
+        .is-fullscreen .hide-on-fs { display: none !important; }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.02);
+            flex-wrap: wrap;
+        }
+        body.dark .control-group {
+            background: rgba(255, 255, 255, 0.02);
         }
 
-         {
+        * {
             font-variant-numeric: tabular-nums !important;
             -moz-font-feature-settings: "lnum" !important;
             -webkit-font-feature-settings: "lnum" !important;
@@ -194,7 +195,7 @@
         <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:15px; text-align:center;">
             <button onclick="localStorage.removeItem('tajweed_rules_config'); localStorage.removeItem('tajweed_conditions_config'); localStorage.removeItem('tajweed_overrides'); localStorage.removeItem('quran_state'); window.location.reload(true);" style="background:#ef4444; color:white; width:100%;">مسح الذاكرة المؤقتة</button>
         </div>
-    </div>
+</div>
 
     <div id="display">اختر سورة...</div>
 
