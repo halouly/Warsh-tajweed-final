@@ -19,6 +19,20 @@
         .tj-special   { color: #d97706 !important; font-weight: bold; }
 
         /* --- THEMES & UI --- */
+
+        @media (max-width: 768px) {
+            #controls { padding: 6px; font-size: 0.9rem; }
+            #controls select, #controls button, #controls input, #controls label { font-size: 0.9rem; padding: 2px 4px; }
+            .row { gap: 4px; margin-bottom: 4px; }
+            .control-group { padding: 4px 6px; gap: 4px; border-radius: 4px; }
+
+            /* Shrink specific wide elements */
+            #surah-select, #reciter-select { width: 120px !important; }
+
+            /* Also reduce the huge padding-bottom on the body so text doesn't scroll miles above the menu */
+            body { padding-bottom: 140px !important; }
+        }
+
         .is-fullscreen .hide-on-fs { display: none !important; }
 
 
@@ -56,7 +70,7 @@
             --active-bg: #374151; --active-border: #fbbf24;
         }
 
-        body { font-family: 'Amiri', serif; background: var(--bg); color: var(--text); margin:0; padding-bottom:180px; transition: 0.3s; }
+        body { font-family: 'Amiri', serif; background: var(--bg); color: var(--text); margin:0; padding-bottom: 140px; transition: 0.3s; }
         header { position: sticky; top: 0; z-index: 900; background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
         .tools { display: flex; gap: 8px; }
