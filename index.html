@@ -20,19 +20,27 @@
 
         /* --- THEMES & UI --- */
 
+        
         @media (max-width: 768px) {
-            #controls { padding: 6px; font-size: 0.9rem; }
-            #controls select, #controls button, #controls input { font-size: 0.9rem; padding: 2px 4px; height: 32px; }
-            #controls label { font-size: 0.85rem; margin-left: 2px !important; margin-right: 2px !important; }
-            .row { gap: 4px; margin-bottom: 4px; justify-content: space-evenly; }
-            .control-group { padding: 4px; gap: 4px; border-radius: 6px; }
+            #controls { padding: 4px; font-size: 0.85rem; border-top: 1px solid var(--accent); }
+            #controls select, #controls button, #controls input { font-size: 0.85rem; padding: 0 4px; height: 30px; border-radius: 4px; }
+            #controls label { font-size: 0.85rem; margin: 0 !important; }
+            .row { gap: 2px; margin-bottom: 2px; justify-content: center; align-items: center; }
+            .control-group { padding: 2px; gap: 2px; border-radius: 4px; border: none; background: transparent; }
             #surah-select, #reciter-select { width: 110px !important; }
-            #view-mode { width: 65px !important; }
-            .big-btn { padding: 0 10px; height: 32px; }
-            #play-btn { height: 32px; padding: 0 10px; }
+            #view-mode { width: 60px !important; }
+            .big-btn { padding: 0 8px; height: 30px; font-size: 1rem; }
+            #play-btn { height: 30px; padding: 0 8px; }
+            .exit-fs-btn { height: 30px; padding: 0 8px; }
+            #loop-count { width: 35px !important; }
         }
-        @media (max-width: 480px) {
-            .control-group { border: none; background: transparent; padding: 0; }
+        @media (max-width: 400px) {
+            #surah-select, #reciter-select { width: 95px !important; }
+            #controls select, #controls button, #controls input { font-size: 0.8rem; }
+            #controls label { font-size: 0.8rem; letter-spacing: -0.5px; }
+            .big-btn { padding: 0 5px; }
+        }
+
             .row { margin-bottom: 2px; }
         }
             #controls select, #controls button, #controls input, #controls label { font-size: 0.95rem; padding: 4px; }
@@ -246,7 +254,7 @@
             <button onclick="stop()">⏹</button>
             <button class="exit-fs-btn" onclick="document.exitFullscreen ? document.exitFullscreen() : (document.webkitExitFullscreen ? document.webkitExitFullscreen() : null); document.body.classList.remove('is-fullscreen');" title="الخروج من ملء الشاشة">✖ خروج</button>
             </div>
-            <div id="status" style="margin-left: 10px; font-weight: bold; color: var(--accent); min-width: 150px; text-align: right;">مستعد</div>
+            <div id="status" style="margin-left: 5px; font-weight: bold; color: var(--accent); min-width: 80px; text-align: right;">مستعد</div>
         </div>
         
     </div>
@@ -1183,13 +1191,22 @@ function resetAllConditions() {
     function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
     function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
     function toggleFullScreen() { 
-    if (!document.fullscreenElement) { 
-        document.documentElement.requestFullscreen(); 
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) { 
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => {});
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+        }
         document.body.classList.add('is-fullscreen');
     } else { 
-        if (document.exitFullscreen) document.exitFullscreen(); 
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(err => {});
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
         document.body.classList.remove('is-fullscreen');
     } 
+}
 }
 document.addEventListener('fullscreenchange', () => {
     if (!document.fullscreenElement) {
