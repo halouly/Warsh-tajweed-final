@@ -6,6 +6,11 @@
     <title>القارئ برواية ورش التفاعلي</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#92400e">
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- TAJWEED COLORS (defaults, overridden by dynamic CSS) --- */
@@ -1089,11 +1094,32 @@ function resetAllConditions() {
     function hl(n) { document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); const el=document.getElementById('v'+n); if(el){el.classList.add('active'); el.scrollIntoView({behavior:'smooth', block:'center'});}}
 
     function togglePlay() {
-    if (!document.fullscreenElement) {
-        try { 
-            document.documentElement.requestFullscreen(); 
-            document.body.classList.add('is-fullscreen');
-        } catch (err) { console.log(err); }
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => {});
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+        }
+        document.body.classList.add('is-fullscreen');
+    }
+
+    if (!playing) {
+        play();
+    } else {
+        const btn = document.getElementById('play-btn');
+        if (!paused) {
+            aud.pause();
+            paused = true;
+            btn.innerText = "▶ استئناف";
+            btn.style.background = "#d97706";
+        } else {
+            aud.play();
+            paused = false;
+            btn.innerText = "⏸ قيد التشغيل";
+            btn.style.background = "";
+        }
+    }
+}
     }
 
     if (!playing) {
@@ -1164,6 +1190,40 @@ function resetAllConditions() {
 }
     function stop() {     stopReq = true;     aud.pause();     if (stopRes) stopRes();     playing = false;     paused = false;     const btn = document.getElementById('play-btn');     btn.innerText = "▶ تشغيل";     btn.style.background = "";     document.getElementById('status').innerText = "مستعد";}
     function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
+    function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
+    function toggleFullScreen() { 
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) { 
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => {});
+        } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+            document.documentElement.webkitRequestFullscreen();
+        }
+        document.body.classList.add('is-fullscreen');
+    } else { 
+        exitFullScreen();
+    } 
+}
+
+function exitFullScreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => {});
+    } else if (document.webkitExitFullscreen) { /* Safari */
+        document.webkitExitFullscreen();
+    }
+    document.body.classList.remove('is-fullscreen');
+}
+
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) document.body.classList.remove('is-fullscreen');
+    else document.body.classList.add('is-fullscreen');
+});
+
+document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement) document.body.classList.remove('is-fullscreen');
+    else document.body.classList.add('is-fullscreen');
+});
+
+function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
     function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
     function toggleFullScreen() { 
     if (!document.fullscreenElement) { 
