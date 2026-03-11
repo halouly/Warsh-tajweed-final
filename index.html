@@ -20,6 +20,16 @@
 
         /* --- THEMES & UI --- */
 
+        .is-fullscreen #nav-row { display: none !important; }
+        .is-fullscreen #controls { padding: 8px 15px; }
+
+        /* Optimize normal controls spacing */
+        #controls { padding: 10px 15px; }
+        .row { margin-bottom: 8px; gap: 8px; }
+        .control-group { padding: 4px 10px; gap: 6px; }
+        .big-btn { padding: 2px 10px; font-size: 1.1rem; }
+
+
         .control-group {
             display: flex;
             align-items: center;
@@ -68,7 +78,7 @@
         .num { font-size: 0.5em; color: var(--accent); border: 1px solid var(--accent); border-radius: 50%; padding: 0 6px; margin: 0 6px; vertical-align: middle; display: inline-block; }
         .bm-icon { font-size: 0.6em; margin-left: 5px; color: #ccc; cursor: pointer; }
         .bm-icon.saved { color: #f59e0b; }
-        #controls { position: fixed; bottom: 0; left: 0; right: 0; background: var(--panel); border-top: 2px solid var(--accent); padding: 15px; z-index: 1000; direction: ltr; font-size: 1.1rem; }
+        #controls { position: fixed; bottom: 0; left: 0; right: 0; background: var(--panel); border-top: 2px solid var(--accent); padding: 10px; z-index: 1000; direction: ltr; font-size: 1.1rem; }
         #controls select, #controls button, #controls input, #controls label { font-size: 1.1rem; padding: 4px; }
 
         .row { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
@@ -157,7 +167,7 @@
     <div id="display">اختر سورة...</div>
 
     <div id="controls">
-        <div class="row">
+        <div class="row" id="nav-row">
             <div class="control-group">
                 <button onclick="navSurah(-1)">« السابق</button>
                 <label style="margin-left:5px; margin-right:5px; font-weight:bold;">السورة:</label>
@@ -178,7 +188,7 @@
                 <button class="big-btn" onclick="changePage(1)" title="الآيات التالية">التالي ›</button>
             </div>
         </div>
-        <div class="row">
+        <div class="row" id="player-row">
             <div class="control-group">
                 <label style="margin-left:5px; margin-right:5px; font-weight:bold;">القارئ:</label><select id="reciter-select" title="اختر القارئ" style="width:160px" onchange="saveState()">
                 <option value="warsh/warsh_ibrahim_aldosary_128kbps">إبراهيم الدوسري</option>
@@ -186,9 +196,9 @@
                 <option value="warsh/warsh_Abdul_Basit_128kbps">عبد الباسط عبد الصمد (ورش)</option>
             </select>
             </div>
-            <div class="control-group">
-                <label for="v_start" style="margin-left:5px">من آية:</label><input type="number" id="v_start" value="1" min="1" style="width:50px" title="من آية">
-            <label for="v_end" style="margin-left:5px">إلى آية:</label><input type="number" id="v_end" value="1" min="1" style="width:50px" title="إلى آية">
+            <div class="control-group" style="display:none;">
+                <input type="number" id="v_start" value="1" min="1" style="width:50px" title="من آية">
+            <span style="font-weight:bold; margin: 0 5px;">-</span><input type="number" id="v_end" value="1" min="1" style="width:50px" title="إلى آية">
             </div>
             <div class="control-group">
                 <label style="margin-left:5px; margin-right:5px; font-weight:bold;" title="تفعيل التكرار"><input type="checkbox" id="loop-box"> تكرار</label> <input type="number" id="loop-count" value="0" min="0" style="width:40px; margin-right:-5px;" title="عدد مرات التكرار (0 = مستمر)">
@@ -1123,7 +1133,24 @@ async function play() {
     function stop() {     stopReq = true;     aud.pause();     if (stopRes) stopRes();     playing = false;     paused = false;     const btn = document.getElementById('play-btn');     btn.innerText = "▶ تشغيل";     btn.style.background = "";     document.getElementById('status').innerText = "مستعد";}
     function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
     function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
-    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
+    function toggleFullScreen() { 
+    if (!document.fullscreenElement) { 
+        document.documentElement.requestFullscreen(); 
+        document.body.classList.add('is-fullscreen');
+    } else { 
+        if (document.exitFullscreen) document.exitFullscreen(); 
+        document.body.classList.remove('is-fullscreen');
+    } 
+}
+// Also listen for escape key exiting fullscreen
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+        document.body.classList.remove('is-fullscreen');
+    } else {
+        document.body.classList.add('is-fullscreen');
+    }
+});
+ }
     function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
 
     // Load config from GitHub on startup
