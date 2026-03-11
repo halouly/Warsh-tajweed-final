@@ -19,6 +19,8 @@
         .tj-special   { color: #d97706 !important; font-weight: bold; }
 
         /* --- THEMES & UI --- */
+        .is-fullscreen .hide-on-fs { display: none !important; }
+
 
         .control-group {
             display: flex;
@@ -58,7 +60,7 @@
         header { position: sticky; top: 0; z-index: 900; background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
         .tools { display: flex; gap: 8px; }
-        .popover { display: none; position: absolute; top: 60px; right: 20px; background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 8px; z-index: 950; min-width: 300px; max-height: 500px; overflow-y: auto; }
+        .popover { display: none; position: fixed; top: 60px; right: 20px; background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 8px; z-index: 2000; min-width: 300px; max-height: calc(100vh - 220px); overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); overflow-y: auto; }
         .popover.show { display: block; }
         html[dir="rtl"] .popover { right: auto; left: 20px; }
         .pop-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; }
@@ -175,7 +177,7 @@
 
     <div id="controls">
         <div class="row">
-            <div class="control-group">
+            <div class="control-group hide-on-fs">
                 <button onclick="navSurah(-1)">« السابق</button>
                 <label style="margin-left:5px; margin-right:5px; font-weight:bold;">السورة:</label>
                 <select id="surah-select" title="اختر سورة" onchange="changeSurah(this.value)" style="width:160px">
@@ -196,7 +198,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="control-group">
+            <div class="control-group hide-on-fs">
                 <label style="margin-left:5px; margin-right:5px; font-weight:bold;">القارئ:</label><select id="reciter-select" title="اختر القارئ" style="width:160px" onchange="saveState()">
                 <option value="warsh/warsh_ibrahim_aldosary_128kbps">إبراهيم الدوسري</option>
                 <option value="warsh/warsh_yassin_al_jazaery_64kbps">ياسين الجزائري</option>
@@ -1141,7 +1143,23 @@ async function play() {
     function stop() {     stopReq = true;     aud.pause();     if (stopRes) stopRes();     playing = false;     paused = false;     const btn = document.getElementById('play-btn');     btn.innerText = "▶ تشغيل";     btn.style.background = "";     document.getElementById('status').innerText = "مستعد";}
     function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
     function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
-    function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); } }
+    function toggleFullScreen() { 
+    if (!document.fullscreenElement) { 
+        document.documentElement.requestFullscreen(); 
+        document.body.classList.add('is-fullscreen');
+    } else { 
+        if (document.exitFullscreen) document.exitFullscreen(); 
+        document.body.classList.remove('is-fullscreen');
+    } 
+}
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+        document.body.classList.remove('is-fullscreen');
+    } else {
+        document.body.classList.add('is-fullscreen');
+    }
+});
+
     function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
 
     // Load config from GitHub on startup
