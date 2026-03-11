@@ -19,6 +19,23 @@
         .tj-special   { color: #d97706 !important; font-weight: bold; }
 
         /* --- THEMES & UI --- */
+
+        @media (max-width: 768px) {
+            #controls { padding: 8px; font-size: 0.95rem; }
+            #controls select, #controls button, #controls input, #controls label { font-size: 0.95rem; padding: 4px; }
+            .row { gap: 6px; margin-bottom: 6px; }
+            .control-group { padding: 4px 8px; gap: 6px; }
+            #surah-select, #reciter-select { width: 130px !important; }
+        }
+
+        .is-fullscreen .hide-on-fs { display: none !important; }
+        .is-fullscreen header { display: none !important; }
+        .exit-fs-btn { display: none; background: #ef4444 !important; color: white; }
+        .is-fullscreen .exit-fs-btn { display: inline-block; }
+
+
+
+
         .control-group {
             display: flex;
             align-items: center;
@@ -31,33 +48,6 @@
         }
         body.dark .control-group {
             background: rgba(255, 255, 255, 0.02);
-        }
-
-        .is-fullscreen header { display: none !important; }
-        .is-fullscreen .hide-on-fs { display: none !important; }
-        .exit-fs-btn { display: none; background: #ef4444 !important; color: white; }
-        .is-fullscreen .exit-fs-btn { display: inline-block; }
-
-        :fullscreen, ::backdrop { background-color: var(--bg); }
-        :-webkit-full-screen { background-color: var(--bg); }
-
-        @media (max-width: 768px) {
-            #controls { padding: 4px; font-size: 0.9rem; }
-            #controls select, #controls button, #controls input { font-size: 0.9rem; padding: 2px 4px; height: 32px; }
-            #controls label { font-size: 0.85rem; margin-left: 2px; margin-right: 2px; }
-            .row { gap: 4px; margin-bottom: 4px; justify-content: space-evenly; }
-            .control-group { padding: 4px; gap: 4px; border-radius: 6px; }
-            #surah-select, #reciter-select { width: 110px !important; }
-            #view-mode { width: 65px !important; }
-            .big-btn { padding: 0 10px; height: 32px; }
-            #play-btn { height: 32px; padding: 0 10px; }
-            #status { min-width: 90px; margin-left: 4px; }
-        }
-
-        @media (max-width: 480px) {
-            .control-group { border: none; background: transparent; padding: 2px; }
-            .row { gap: 2px; margin-bottom: 2px; }
-            #controls { padding: 3px; }
         }
 
         * {
@@ -138,7 +128,35 @@
         /* Override List */
         .override-item { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--border); }
         .override-letter { font-size: 1.5rem; min-width: 40px; }
-    </style>
+    
+        /* --- MOBILE UI COMPRESSION --- */
+        @media (max-width: 768px) {
+            #controls { padding: 4px !important; font-size: 0.9rem !important; border-top: 1px solid var(--accent); }
+            #controls select, #controls button, #controls input { font-size: 0.9rem !important; padding: 2px 4px !important; height: 32px; border-radius: 4px; }
+            #controls label { font-size: 0.85rem !important; margin: 0 2px !important; }
+            .row { gap: 4px !important; margin-bottom: 4px !important; justify-content: center; }
+            .control-group { padding: 4px !important; gap: 4px !important; border-radius: 6px; }
+            #surah-select, #reciter-select { width: 115px !important; }
+            #view-mode { width: 65px !important; }
+            .big-btn { padding: 0 10px !important; height: 32px !important; }
+            #play-btn { height: 32px !important; padding: 0 8px !important; }
+            #status { min-width: 80px !important; margin-left: 2px !important; }
+        }
+
+        @media (max-width: 480px) {
+            .control-group { border: none !important; background: transparent !important; padding: 2px !important; }
+            .row { gap: 2px !important; margin-bottom: 2px !important; }
+            #controls { padding: 3px !important; }
+        }
+
+        /* --- FULLSCREEN STYLES --- */
+        :fullscreen, ::backdrop { background-color: var(--bg); }
+        :-webkit-full-screen { background-color: var(--bg); }
+        .is-fullscreen header { display: none !important; }
+        .is-fullscreen .hide-on-fs { display: none !important; }
+        .exit-fs-btn { display: none !important; background: #ef4444 !important; color: white !important; }
+        .is-fullscreen .exit-fs-btn { display: inline-block !important; }
+</style>
 </head>
 <body>
     <header>
@@ -197,7 +215,7 @@
         <div class="typo-row"><span class="typo-label">عرض المحتوى</span><input type="range" min="400" max="1200" value="800" oninput="updateSetting('max-w', this.value+'px')" title="عرض المحتوى"></div>
     
         <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:15px; text-align:center;">
-            <button onclick="localStorage.removeItem('tajweed_rules_config'); localStorage.removeItem('tajweed_conditions_config'); localStorage.removeItem('tajweed_overrides'); localStorage.removeItem('quran_state'); window.location.reload(true);" style="background:#ef4444; color:white; width:100%;">مسح الذاكرة المؤقتة</button>
+            <button onclick="localStorage.removeItem('tajweed_rules_config'); localStorage.removeItem('tajweed_conditions_config'); localStorage.removeItem('tajweed_overrides'); localStorage.removeItem('quran_state'); window.location.reload(true);" style="background:#ef4444; color:white; width:100%; border:none; padding:8px; border-radius:6px; font-weight:bold;">مسح الذاكرة المؤقتة</button>
         </div>
 </div>
 
@@ -1180,40 +1198,6 @@ function resetAllConditions() {
     function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
     function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
     function toggleFullScreen() { 
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) { 
-        try {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(e => {});
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen();
-            }
-        } catch(e) {}
-        document.body.classList.add('is-fullscreen');
-    } else { 
-        try {
-            if (document.exitFullscreen) {
-                document.exitFullscreen().catch(e => {});
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
-        } catch(e) {}
-        document.body.classList.remove('is-fullscreen');
-    } 
-}
-
-document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) document.body.classList.remove('is-fullscreen');
-    else document.body.classList.add('is-fullscreen');
-});
-
-document.addEventListener('webkitfullscreenchange', () => {
-    if (!document.webkitFullscreenElement) document.body.classList.remove('is-fullscreen');
-    else document.body.classList.add('is-fullscreen');
-});
-
-function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
-    function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
-    function toggleFullScreen() { 
     if (!document.fullscreenElement) { 
         document.documentElement.requestFullscreen(); 
         document.body.classList.add('is-fullscreen');
@@ -1251,22 +1235,27 @@ document.addEventListener('fullscreenchange', () => {
 
     init();
     loadConfigFromServer();
-    </script>
-</body>
-</html>async function togglePlay() {
+    
+// OVERRIDES TO FIX FULLSCREEN & BLACK SCREEN BUG
+const originalTogglePlay = window.togglePlay || async function() {};
+window.togglePlay = async function() {
+    // Force CSS fullscreen mode
+    document.body.classList.add('is-fullscreen');
+
+    // Safely attempt OS fullscreen
     if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         try {
             if (document.documentElement.requestFullscreen) {
-                await document.documentElement.requestFullscreen();
+                await document.documentElement.requestFullscreen().catch(()=>{});
             } else if (document.documentElement.webkitRequestFullscreen) {
                 await document.documentElement.webkitRequestFullscreen();
             }
-        } catch (err) {
-            console.log("Fullscreen blocked by browser, falling back to CSS focus mode.", err);
+        } catch (e) {
+            console.warn("Fullscreen blocked", e);
         }
-        document.body.classList.add('is-fullscreen');
     }
 
+    // Check if player is already playing
     if (!playing) {
         play();
     } else {
@@ -1283,97 +1272,8 @@ document.addEventListener('fullscreenchange', () => {
             btn.style.background = "";
         }
     }
-}
+};
 
-        async function play() { 
-    if(playing) return; 
-    playing=true; 
-    paused=false;
-    stopReq=false; 
-    const btn = document.getElementById('play-btn'); 
-    const reciter = document.getElementById('reciter-select').value; 
-    const sId = String(state.surah).padStart(3,'0'); 
-    const st = document.getElementById('status'); 
-    btn.innerText = "⏸ قيد التشغيل"; 
-    btn.style.background = "";
-
-    let loopMax = parseInt(document.getElementById('loop-count').value) || 0;
-    let loopCurrent = 0;
-
-    while(true) { 
-        const start = parseInt(document.getElementById('v_start').value); 
-        const end = parseInt(document.getElementById('v_end').value); 
-        for(let a=start; a<=end; a++) { 
-            if(stopReq) break; 
-            hl(a); 
-            st.innerText = `تشغيل آية ${a} / ${end}`; 
-            aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`; 
-            try { 
-                await new Promise((resolve) => { 
-                    stopRes = resolve; 
-                    aud.onended = resolve; 
-                    aud.onerror = () => { console.error('Audio Err'); st.innerText="خطأ: الصوت غير موجود"; resolve(); }; 
-                    aud.play().catch(resolve); 
-                }); 
-            } catch(e){} 
-            if(!stopReq) await new Promise(r=> { stopRes = r; setTimeout(r, 200); }); 
-        } 
-
-        if(stopReq || !document.getElementById('loop-box').checked) break; 
-
-        loopCurrent++;
-        if(loopMax > 0 && loopCurrent >= loopMax) break;
-
-        st.innerText = "جاري التكرار..."; 
-        await new Promise(r=> { stopRes = r; setTimeout(r, 500); }); 
-    } 
-    playing=false;
-    paused=false;
-    btn.innerText = "▶ تشغيل"; 
-    btn.style.background = "";
-    st.innerText = "مستعد"; 
-}
-    function stop() {     stopReq = true;     aud.pause();     if (stopRes) stopRes();     playing = false;     paused = false;     const btn = document.getElementById('play-btn');     btn.innerText = "▶ تشغيل";     btn.style.background = "";     document.getElementById('status').innerText = "مستعد";}
-    function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
-    function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
-    function toggleFullScreen() { 
-    if (!document.fullscreenElement) { 
-        document.documentElement.requestFullscreen(); 
-        document.body.classList.add('is-fullscreen');
-    } else { 
-        if (document.exitFullscreen) document.exitFullscreen(); 
-        document.body.classList.remove('is-fullscreen');
-    } 
-}
-document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) {
-        document.body.classList.remove('is-fullscreen');
-    } else {
-        document.body.classList.add('is-fullscreen');
-    }
-});
-
-    function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
-
-    // Load config from GitHub on startup
-    async function loadConfigFromServer() {
-        try {
-            const res = await fetch('tajweed-config.json?t=' + Date.now());
-            if (res.ok) {
-                const config = await res.json();
-                setConfig(config);
-                console.log('Loaded config from server');
-                injectDynamicCSS();
-                if (state.data) render();
-                updateOverrideCount();
-            }
-        } catch(e) {
-            console.log('No server config, using localStorage');
-        }
-    }
-
-    init();
-    loadConfigFromServer();
     </script>
 </body>
 </html>
