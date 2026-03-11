@@ -20,8 +20,36 @@
 
         /* --- THEMES & UI --- */
 
+        
+        
         @media (max-width: 768px) {
-            #controls { padding: 6px; font-size: 0.9rem; }
+            #controls { padding: 8px; font-size: 0.95rem; }
+            #controls select, #controls button, #controls input, #controls label { font-size: 0.95rem; padding: 4px; }
+            .row { gap: 6px; margin-bottom: 6px; }
+            .control-group { padding: 4px 8px; gap: 6px; }
+            #surah-select, #reciter-select { width: 130px !important; }
+        }
+
+            #controls select, #controls button, #controls input { font-size: 0.85rem; padding: 4px; }
+            .row { gap: 4px; margin-bottom: 4px; justify-content: center; }
+            .control-group { padding: 4px; gap: 4px; border: none; background: transparent; }
+
+            /* Hide redundant descriptive labels on phones */
+            .control-group > label:not([title="تفعيل التكرار"]) { display: none !important; }
+
+            /* Shrink dropdowns */
+            #surah-select, #reciter-select { width: 110px !important; }
+            #view-mode { width: 60px !important; }
+
+            /* Shrink buttons */
+            .big-btn { font-size: 1rem; padding: 2px 10px; }
+            #play-btn { font-size: 0.85rem; padding: 4px 8px; }
+
+            /* Hide textual part of prev/next buttons using a CSS trick or just let them shrink. 
+               We will replace the inline text in HTML with span classes so we can hide them. */
+            
+        }
+
             #controls select, #controls button, #controls input, #controls label { font-size: 0.9rem; padding: 2px 4px; }
             .row { gap: 4px; margin-bottom: 4px; }
             .control-group { padding: 4px 6px; gap: 4px; border-radius: 4px; }
