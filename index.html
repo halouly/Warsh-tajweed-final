@@ -20,45 +20,12 @@
 
         /* --- THEMES & UI --- */
 
-        
-        
         @media (max-width: 768px) {
             #controls { padding: 8px; font-size: 0.95rem; }
             #controls select, #controls button, #controls input, #controls label { font-size: 0.95rem; padding: 4px; }
             .row { gap: 6px; margin-bottom: 6px; }
             .control-group { padding: 4px 8px; gap: 6px; }
             #surah-select, #reciter-select { width: 130px !important; }
-        }
-
-            #controls select, #controls button, #controls input { font-size: 0.85rem; padding: 4px; }
-            .row { gap: 4px; margin-bottom: 4px; justify-content: center; }
-            .control-group { padding: 4px; gap: 4px; border: none; background: transparent; }
-
-            /* Hide redundant descriptive labels on phones */
-            .control-group > label:not([title="تفعيل التكرار"]) { display: none !important; }
-
-            /* Shrink dropdowns */
-            #surah-select, #reciter-select { width: 110px !important; }
-            #view-mode { width: 60px !important; }
-
-            /* Shrink buttons */
-            .big-btn { font-size: 1rem; padding: 2px 10px; }
-            #play-btn { font-size: 0.85rem; padding: 4px 8px; }
-
-            /* Hide textual part of prev/next buttons using a CSS trick or just let them shrink. 
-               We will replace the inline text in HTML with span classes so we can hide them. */
-            
-        }
-
-            #controls select, #controls button, #controls input, #controls label { font-size: 0.9rem; padding: 2px 4px; }
-            .row { gap: 4px; margin-bottom: 4px; }
-            .control-group { padding: 4px 6px; gap: 4px; border-radius: 4px; }
-
-            /* Shrink specific wide elements */
-            #surah-select, #reciter-select { width: 120px !important; }
-
-            /* Also reduce the huge padding-bottom on the body so text doesn't scroll miles above the menu */
-            body { padding-bottom: 140px !important; }
         }
 
         .is-fullscreen .hide-on-fs { display: none !important; }
@@ -98,7 +65,7 @@
             --active-bg: #374151; --active-border: #fbbf24;
         }
 
-        body { font-family: 'Amiri', serif; background: var(--bg); color: var(--text); margin:0; padding-bottom: 140px; transition: 0.3s; }
+        body { font-family: 'Amiri', serif; background: var(--bg); color: var(--text); margin:0; padding-bottom:180px; transition: 0.3s; }
         header { position: sticky; top: 0; z-index: 900; background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
         .tools { display: flex; gap: 8px; }
