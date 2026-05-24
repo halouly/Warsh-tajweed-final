@@ -95,6 +95,13 @@ const DEFAULT_CONDITIONS = {
     letters: 'اوىي\u0670',
     triggers: ['beforeHamza', 'beforeSukun', 'withMaddSign']
   },
+  maddBadal: {
+    id: 'tj-madd-badal',
+    name: 'Madd Badal',
+    nameAr: 'مد بدل',
+    letters: 'اوىي\\u0670',
+    triggers: ['afterHamza']
+  },
   silent: {
     id: 'tj-silent',
     name: 'Silent',
@@ -728,6 +735,9 @@ function getTriggerOptions() {
       { id: 'beforeHamza', label: 'Before Hamza (ءأإؤئ)' },
       { id: 'beforeSukun', label: 'Before Sukun/Shadda' },
       { id: 'withMaddSign', label: 'With Madd Sign (ٓ)' }
+    ],
+    maddBadal: [
+    { id: 'afterHamza', label: 'After Hamza' }
     ],
     silent: [
       { id: 'lamShamsiyya', label: 'Lam Shamsiyya' },
