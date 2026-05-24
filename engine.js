@@ -287,7 +287,7 @@ function detect(t) {
       }
     }
     // ===== MADD RULE (Standard Logic) =====
-    else if (MADD_LETTERS.includes(c){
+    else if (MADD_LETTERS.includes(c)) {
       let isMadd = false;
       
       if (n && HAMZA_DYNAMIC.includes(n.c) && isPatternEnabled('tj-madd', 'beforeHamza')) {
