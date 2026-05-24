@@ -46,6 +46,9 @@ const DEFAULT_RULES = [
   { id: 'tj-madd', name: 'Madd', nameAr: 'مد', color: '#dc2626', defaultColor: '#dc2626', bold: false,
     patterns: { beforeHamza: true, beforeSukun: true, beforeShadda: true, withMaddSign: true }
   },
+  { id: 'tj-madd-badal', name: 'Madd Badal', nameAr: 'مد البدل', color: '#ea580c', defaultColor: '#ea580c', bold: false,
+    patterns: { sameWord: true, crossWord: true }
+  },
   { id: 'tj-silent', name: 'Silent', nameAr: 'ساكن', color: '#9ca3af', defaultColor: '#9ca3af', bold: false,
     patterns: { lamShamsiyya: true, idghamNoGhunnah: true, noonIdgham: true, meemIdgham: true }
   },
@@ -289,19 +292,57 @@ function detect(t) {
     // ===== MADD RULE (Standard Logic) =====
     else if (MADD_LETTERS.includes(c)) {
       let isMadd = false;
-      
-      if (n && HAMZA_DYNAMIC.includes(n.c) && isPatternEnabled('tj-madd', 'beforeHamza')) {
-        isMadd = true;
+      let isBadal = false;
+
+      // --- Madd al-Badal (Warsh: 3 harakat) ---
+      // Pattern: vowelled Hamza + matching Madd letter
+      // ءَ + ا  |  إِ + ي  |  أُ + و
+      // Hamza must be vowelled (NOT sukun); Alif al-Wasl (ٱ U+0671) excluded
+      if (p && HAMZA_DYNAMIC.includes(p.c) && c !== '\u0671') {
+        const pDiacs = getDiac(t, p.i);
+        const pHasSukun = pDiacs.includes(SUKUN);
+        const pHasShadda = pDiacs.includes(SHADDA);
+
+        if (!pHasSukun) {
+          const pHasFatha = pDiacs.includes(FATHA);
+          const pHasKasra = pDiacs.includes(KASRA);
+          const pHasDamma = pDiacs.includes(DAMMA);
+
+          // Matching pairs only
+          const matchesAlif = (c === 'ا' || c === '\u0670') && pHasFatha;
+          const matchesYa = c === 'ي' && pHasKasra;
+          const matchesWaw = c === 'و' && pHasDamma;
+
+          if (matchesAlif || matchesYa || matchesWaw) {
+            // Check if same word: no space between Hamza and Madd letter
+            const between = t.slice(p.i + 1, i);
+            const isSameWord = !between.includes(' ');
+
+            if (isSameWord && isPatternEnabled('tj-madd-badal', 'sameWord')) {
+              isBadal = true;
+            } else if (!isSameWord && isPatternEnabled('tj-madd-badal', 'crossWord')) {
+              isBadal = true;
+            }
+          }
+        }
       }
-      if (n && has(t, n.i, SUKUN) && isPatternEnabled('tj-madd', 'beforeSukun')) {
-        isMadd = true;
-      }
-      if (n && has(t, n.i, SHADDA) && isPatternEnabled('tj-madd', 'beforeShadda')) {
-        isMadd = true;
-      }
-      
-      if (isMadd) {
-        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
+
+      if (isBadal) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd-badal' });
+      } else {
+        // Standard Madd checks (only if not already classified as Badal)
+        if (n && HAMZA_DYNAMIC.includes(n.c) && isPatternEnabled('tj-madd', 'beforeHamza')) {
+          isMadd = true;
+        }
+        if (n && has(t, n.i, SUKUN) && isPatternEnabled('tj-madd', 'beforeSukun')) {
+          isMadd = true;
+        }
+        if (n && has(t, n.i, SHADDA) && isPatternEnabled('tj-madd', 'beforeShadda')) {
+          isMadd = true;
+        }
+        if (isMadd) {
+          a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
+        }
       }
     }
 
