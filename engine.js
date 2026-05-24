@@ -295,33 +295,40 @@ function detect(t) {
       let isBadal = false;
 
       // --- Madd al-Badal (Warsh: 3 harakat) ---
-      // Pattern: vowelled Hamza + matching Madd letter
-      // ءَ + ا  |  إِ + ي  |  أُ + و
-      // Hamza must be vowelled (NOT sukun); Alif al-Wasl (ٱ U+0671) excluded
-      if (p && HAMZA_DYNAMIC.includes(p.c) && c !== '\u0671') {
+      // Pattern: vowelled Hamza + matching Madd letter (ءَا / إِي / أُو)
+      // Warsh orthography uses TWO encodings for Hamza:
+      //   1. Standard Hamza characters: ء أ إ ؤ ئ (HAMZA_DYNAMIC)
+      //   2. Hamza-on-seat: any letter carrying the U+06EC (۬) Warsh Hamza mark
+      // Hamza must be vowelled (NOT sukun); Alif al-Wasl (ٱ U+0671) excluded as Madd letter.
+      if (p && c !== '\u0671') {
         const pDiacs = getDiac(t, p.i);
-        const pHasSukun = pDiacs.includes(SUKUN);
-        const pHasShadda = pDiacs.includes(SHADDA);
+        const pIsStandardHamza = HAMZA_DYNAMIC.includes(p.c);
+        const pHasWarshHamzaMark = pDiacs.includes(WARSH_DOT); // U+06EC
+        const pIsHamza = pIsStandardHamza || pHasWarshHamzaMark;
 
-        if (!pHasSukun) {
-          const pHasFatha = pDiacs.includes(FATHA);
-          const pHasKasra = pDiacs.includes(KASRA);
-          const pHasDamma = pDiacs.includes(DAMMA);
+        if (pIsHamza) {
+          const pHasSukun = pDiacs.includes(SUKUN);
 
-          // Matching pairs only
-          const matchesAlif = (c === 'ا' || c === '\u0670') && pHasFatha;
-          const matchesYa = c === 'ي' && pHasKasra;
-          const matchesWaw = c === 'و' && pHasDamma;
+          if (!pHasSukun) {
+            const pHasFatha = pDiacs.includes(FATHA);
+            const pHasKasra = pDiacs.includes(KASRA);
+            const pHasDamma = pDiacs.includes(DAMMA);
 
-          if (matchesAlif || matchesYa || matchesWaw) {
-            // Check if same word: no space between Hamza and Madd letter
-            const between = t.slice(p.i + 1, i);
-            const isSameWord = !between.includes(' ');
+            // Matching pairs only
+            const matchesAlif = (c === 'ا' || c === '\u0670') && pHasFatha;
+            const matchesYa = c === 'ي' && pHasKasra;
+            const matchesWaw = c === 'و' && pHasDamma;
 
-            if (isSameWord && isPatternEnabled('tj-madd-badal', 'sameWord')) {
-              isBadal = true;
-            } else if (!isSameWord && isPatternEnabled('tj-madd-badal', 'crossWord')) {
-              isBadal = true;
+            if (matchesAlif || matchesYa || matchesWaw) {
+              // Same word if no space between Hamza-seat and Madd letter
+              const between = t.slice(p.i + 1, i);
+              const isSameWord = !between.includes(' ');
+
+              if (isSameWord && isPatternEnabled('tj-madd-badal', 'sameWord')) {
+                isBadal = true;
+              } else if (!isSameWord && isPatternEnabled('tj-madd-badal', 'crossWord')) {
+                isBadal = true;
+              }
             }
           }
         }
