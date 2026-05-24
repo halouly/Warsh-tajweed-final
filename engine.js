@@ -809,7 +809,11 @@ function getTriggerOptions() {
       { id: 'idghamNoGhunnah', label: 'Idgham without Ghunnah' },
       { id: 'idghamWithGhunnah', label: 'Idgham with Ghunnah' }
     ],
-    special: []
+    special: [],
+    maddBadal: [
+      { id: 'sameWord', label: 'Same Word (orthodox)' },
+      { id: 'crossWord', label: 'Cross Word (non-orthodox)' }
+    ]
   };
 }
 
