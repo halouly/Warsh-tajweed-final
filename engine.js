@@ -826,7 +826,25 @@ function getConfig() {
 }
 
 function setConfig(config) {
-  if (config.rules) tajweedRules = config.rules;
+  if (config.rules) {
+    // Merge: start from current DEFAULT_RULES (so new rules survive),
+    // apply saved customizations on top.
+    tajweedRules = DEFAULT_RULES.map(def => {
+      const saved = config.rules.find(r => r.id === def.id);
+      if (!saved) return JSON.parse(JSON.stringify(def));
+      return {
+        ...def,
+        ...saved,
+        patterns: { ...(def.patterns || {}), ...(saved.patterns || {}) }
+      };
+    });
+    // Preserve user-created custom rules (tj-custom-*)
+    config.rules.forEach(r => {
+      if (r.id.startsWith('tj-custom-') && !tajweedRules.find(rule => rule.id === r.id)) {
+        tajweedRules.push(r);
+      }
+    });
+  }
   if (config.overrides) letterOverrides = config.overrides;
   if (config.conditions) tajweedConditions = config.conditions;
   if (config.sets) tajweedSets = config.sets;
