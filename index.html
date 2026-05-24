@@ -413,6 +413,9 @@
             'beforeHamza': ['beforeHamza'],
             'beforeSukun': ['beforeSukun', 'beforeShadda']
         },
+        maddBadal: {
+            'afterHamza': ['afterHamza']
+        },
         silent: {
             'lamShamsiyya': ['lamShamsiyya'],
             'idghamNoGhunnah': ['idghamNoGhunnah'],
@@ -872,7 +875,7 @@ function renderConditionsList() {
         const triggerOptions = getTriggerOptions();
         const rules = getRules();
         
-        const conditionKeys = ['qalqalah', 'ghunnah', 'heavy', 'raHeavy', 'raLight', 'madd', 'silent', 'special'];
+        const conditionKeys = ['qalqalah', 'ghunnah', 'heavy', 'raHeavy', 'raLight', 'madd', 'maddBadal', 'silent', 'special'];
         
         let html = '';
         conditionKeys.forEach(key => {
