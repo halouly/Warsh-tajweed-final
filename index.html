@@ -417,11 +417,7 @@
             'lamShamsiyya': ['lamShamsiyya'],
             'idghamNoGhunnah': ['idghamNoGhunnah'],
             'idghamWithGhunnah': ['noonIdgham', 'meemIdgham']
-        },
-        maddBadal: {
-        'sameWord': ['sameWord'],
-        'crossWord': ['crossWord']
-    }
+        }
     };
     // Dev Mode Functions
     function toggleDevMode() {
@@ -499,10 +495,6 @@
             {id:'beforeHamza', label:'Before Hamza'},
             {id:'beforeSukun', label:'Before Sukun'},
             {id:'beforeShadda', label:'Before Shadda'}
-        ],
-        'tj-madd-badal': [
-            {id:'sameWord', label:'Same Word (orthodox)'},
-            {id:'crossWord', label:'Cross Word (non-orthodox)'}
         ],
         'tj-silent': [
             {id:'lamShamsiyya', label:'Lam Shamsiyya'},
@@ -880,7 +872,7 @@ function renderConditionsList() {
         const triggerOptions = getTriggerOptions();
         const rules = getRules();
         
-        const conditionKeys = ['qalqalah', 'ghunnah', 'heavy', 'raHeavy', 'raLight', 'madd', 'maddBadal', 'silent', 'special'];
+        const conditionKeys = ['qalqalah', 'ghunnah', 'heavy', 'raHeavy', 'raLight', 'madd', 'silent', 'special'];
         
         let html = '';
         conditionKeys.forEach(key => {
