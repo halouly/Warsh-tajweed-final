@@ -570,16 +570,24 @@ function applyWithColors(text, rules, surahNum, verseNum, editMode) {
 
   let letterIndex = 0;
   let out = '';
+  let currentStyle = null;  // track current run's style to merge
+
+  const closeRun = () => {
+    if (currentStyle !== null) {
+      out += '</span>';
+      currentStyle = null;
+    }
+  };
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
-    
+
     if (isLtr(c)) {
       const endIdx = getEnd(text, i);
       const letterUnit = text.slice(i, endIdx);
       const cls = charClasses[i];
       const override = overrideMap.get(letterIndex);
-      
+
       let style = '';
       if (override) {
         style = `color: ${override.color};${override.bold ? ' font-weight: bold;' : ''}`;
@@ -589,25 +597,37 @@ function applyWithColors(text, rules, surahNum, verseNum, editMode) {
           style = `color: ${rule.color};${rule.bold ? ' font-weight: bold;' : ''}`;
         }
       }
-      
+
       if (editMode) {
+        // Edit mode: every letter is its own clickable unit (shaping will break — expected)
+        closeRun();
         const dataAttrs = `data-letter-index="${letterIndex}" data-surah="${surahNum}" data-verse="${verseNum}" data-letter="${c}"`;
         out += `<span class="letter-unit" style="${style}cursor: pointer; user-select: none;" ${dataAttrs}>${letterUnit}</span>`;
       } else {
-        if (style) {
-          out += `<span style="${style}">${letterUnit}</span>`;
-        } else {
-          out += letterUnit;
+        // Non-edit mode: merge consecutive same-style letters into one span
+        if (style !== currentStyle) {
+          closeRun();
+          if (style) {
+            out += `<span style="${style}">`;
+            currentStyle = style;
+          }
         }
+        out += letterUnit;
       }
-      
+
       letterIndex++;
       i = endIdx - 1;
     } else {
+      // Non-letter character (space, diacritic, punctuation): close any open run
+      if (!editMode && currentStyle !== null && c === ' ') {
+        // Spaces break words anyway; safe to close span before space
+        closeRun();
+      }
       out += c;
     }
   }
 
+  closeRun();
   return out;
 }
 
