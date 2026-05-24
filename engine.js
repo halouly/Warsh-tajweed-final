@@ -1,23 +1,23 @@
 // --- WARSH ENGINE (Enhanced with Developer Mode) ---
 
 // 1. Constants
-const SUKUN = '\\u0652';
-const SHADDA = '\\u0651';
-const FATHA = '\\u064E';
-const DAMMA = '\\u064F';
-const KASRA = '\\u0650';
-const TANWEEN_FATH = '\\u064B';
-const TANWEEN_DAMM = '\\u064C';
-const TANWEEN_KASR = '\\u064D';
+const SUKUN = '\u0652';
+const SHADDA = '\u0651';
+const FATHA = '\u064E';
+const DAMMA = '\u064F';
+const KASRA = '\u0650';
+const TANWEEN_FATH = '\u064B';
+const TANWEEN_DAMM = '\u064C';
+const TANWEEN_KASR = '\u064D';
 const TANWEEN = [TANWEEN_FATH, TANWEEN_DAMM, TANWEEN_KASR];
-const ALIF_KHANJARIA = '\\u0670';
+const ALIF_KHANJARIA = '\u0670';
 const HAMZA = 'ءأإؤئ';
-const MADD_SIGN = '\\u0653';
-const WARSH_DOT = '\\u06EC';
+const MADD_SIGN = '\u0653';
+const WARSH_DOT = '\u06EC';
 
 // Warsh Specific Ghunnah/Ikhfa Markers
-const GHUNNA_MARKER_HIGH = '\\u065E'; // ٞ
-const GHUNNA_MARKER_LOW = '\\u065F'; // ٗ
+const GHUNNA_MARKER_HIGH = '\u065E'; // ٞ
+const GHUNNA_MARKER_LOW = '\u065F'; // ٗ
 
 // Default Rule Sets (fallbacks)
 const QALQ_DEFAULT = 'قطبجد';
@@ -45,9 +45,6 @@ const DEFAULT_RULES = [
   },
   { id: 'tj-madd', name: 'Madd', nameAr: 'مد', color: '#dc2626', defaultColor: '#dc2626', bold: false,
     patterns: { beforeHamza: true, beforeSukun: true, beforeShadda: true, withMaddSign: true }
-  },
-  { id: 'tj-madd-badal', name: 'Madd Badal', nameAr: 'مد بدل', color: '#9333ea', defaultColor: '#9333ea', bold: false,
-    patterns: { afterHamza: true }
   },
   { id: 'tj-silent', name: 'Silent', nameAr: 'ساكن', color: '#9ca3af', defaultColor: '#9ca3af', bold: false,
     patterns: { lamShamsiyya: true, idghamNoGhunnah: true, noonIdgham: true, meemIdgham: true }
@@ -95,15 +92,8 @@ const DEFAULT_CONDITIONS = {
     id: 'tj-madd',
     name: 'Madd',
     nameAr: 'مد',
-    letters: 'اوىي\\u0670',
+    letters: 'اوىي\u0670',
     triggers: ['beforeHamza', 'beforeSukun', 'withMaddSign']
-  },
-  maddBadal: {
-    id: 'tj-madd-badal',
-    name: 'Madd Badal',
-    nameAr: 'مد بدل',
-    letters: 'اوىي\\u0670',
-    triggers: ['afterHamza']
   },
   silent: {
     id: 'tj-silent',
@@ -284,23 +274,22 @@ function detect(t) {
     const end = endW(t, i);
     const diacs = getDiac(t, i);
 
+    // ===== EXPLICIT GHUNNA/IKHFA MARKERS (Warsh Specific) =====
     if (has(t, i, GHUNNA_MARKER_HIGH) || has(t, i, GHUNNA_MARKER_LOW)) {
       if (isPatternEnabled('tj-ghunnah', 'explicitMarker')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
       }
     }
+    // ===== MADD RULE (Warsh Specific: Explicit Madd Sign) =====
     else if (has(t, i, MADD_SIGN)) {
       if (isPatternEnabled('tj-madd', 'withMaddSign')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
       }
     }
+    // ===== MADD RULE (Standard Logic) =====
     else if (MADD_LETTERS.includes(c)) {
       let isMadd = false;
-      let isMaddBadal = false;
       
-      if (p && HAMZA_DYNAMIC.includes(p.c) && isPatternEnabled('tj-madd-badal', 'afterHamza')) {
-        isMaddBadal = true;
-      }
       if (n && HAMZA_DYNAMIC.includes(n.c) && isPatternEnabled('tj-madd', 'beforeHamza')) {
         isMadd = true;
       }
@@ -313,11 +302,10 @@ function detect(t) {
       
       if (isMadd) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
-      } else if (isMaddBadal) {
-        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd-badal' });
       }
     }
 
+    // ===== QALQALAH =====
     if (QALQ.includes(c)) {
       let isQalqalah = false;
       
@@ -336,6 +324,9 @@ function detect(t) {
       }
     }
 
+    // ===== NOON SAKINAH =====
+    // FIX: Check !hasVowel instead of just looking for Sukun.
+    // A Noon in the middle of a word is Sakinah if it has no vowel (Fatha, Damma, Kasra, Tanween).
     if (c === 'ن' && !has(t, i, SHADDA) && !hasVowel(t, i) && n) {
       if (IDGH_GH.includes(n.c)) {
         if (isPatternEnabled('tj-silent', 'noonIdgham')) {
@@ -359,6 +350,7 @@ function detect(t) {
       }
     }
 
+    // ===== TANWEEN =====
     const tw = getTanween(t, i);
     if (tw && n) {
       if (IDGH_GH.includes(n.c)) {
@@ -376,6 +368,8 @@ function detect(t) {
       }
     }
 
+    // ===== MEEM SAKINAH =====
+    // FIX: Same logic update for Meem Sakinah
     if (c === 'م' && !has(t, i, SHADDA) && !hasVowel(t, i) && n) {
       if (n.c === 'م') {
         if (isPatternEnabled('tj-silent', 'meemIdgham')) {
@@ -391,6 +385,7 @@ function detect(t) {
       }
     }
 
+    // ===== GHUNNAH MUSHADDA (نّ or مّ) =====
     if (c === 'ن' && has(t, i, SHADDA)) {
       if (isPatternEnabled('tj-ghunnah', 'noonShadda')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-ghunnah' });
@@ -402,12 +397,14 @@ function detect(t) {
       }
     }
 
-    if (c === 'ل' && p && (p.c === 'ا' || p.c === '\\u0671') && n && LAM_SHAMSIYYA.includes(n.c)) {
+    // ===== LAM SHAMSIYYAH =====
+    if (c === 'ل' && p && (p.c === 'ا' || p.c === '\u0671') && n && LAM_SHAMSIYYA.includes(n.c)) {
       if (isPatternEnabled('tj-silent', 'lamShamsiyya')) {
         a.push({ s: i, e: getEnd(t, i), cls: 'tj-silent' });
       }
     }
 
+    // ===== RA RULES =====
     if (c === 'ر') {
       let isHeavy = false;
       let isLight = false;
@@ -466,6 +463,7 @@ function detect(t) {
       }
     }
 
+    // ===== HEAVY LETTERS =====
     const HEAVY_ONLY = HEAVY_LETTERS.replace('ق', '');
     if (HEAVY_ONLY.includes(c)) {
       const alreadyMarked = a.some(r => i >= r.s && i < r.e);
@@ -474,6 +472,7 @@ function detect(t) {
       }
     }
 
+    // ===== QAF =====
     if (c === 'ق' && HEAVY_LETTERS.includes('ق')) {
       const alreadyMarked = a.some(r => i >= r.s && i < r.e);
       if (!alreadyMarked) {
@@ -730,9 +729,6 @@ function getTriggerOptions() {
       { id: 'beforeSukun', label: 'Before Sukun/Shadda' },
       { id: 'withMaddSign', label: 'With Madd Sign (ٓ)' }
     ],
-    maddBadal: [
-      { id: 'afterHamza', label: 'After Hamza' }
-    ],
     silent: [
       { id: 'lamShamsiyya', label: 'Lam Shamsiyya' },
       { id: 'idghamNoGhunnah', label: 'Idgham without Ghunnah' },
@@ -781,7 +777,7 @@ function getOverrides() {
 function generateDynamicCSS() {
   let css = '';
   tajweedRules.forEach(rule => {
-    css += `.${rule.id} { color: ${rule.color} !important;${rule.bold ? ' font-weight: bold;' : ''} }\\n`;
+    css += `.${rule.id} { color: ${rule.color} !important;${rule.bold ? ' font-weight: bold;' : ''} }\n`;
   });
   return css;
 }
