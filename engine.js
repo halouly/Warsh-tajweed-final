@@ -46,9 +46,6 @@ const DEFAULT_RULES = [
   { id: 'tj-madd', name: 'Madd', nameAr: 'مد', color: '#dc2626', defaultColor: '#dc2626', bold: false,
     patterns: { beforeHamza: true, beforeSukun: true, beforeShadda: true, withMaddSign: true }
   },
-  { id: 'tj-madd-badal', name: 'Madd Badal', nameAr: 'مد البدل', color: '#ea580c', defaultColor: '#ea580c', bold: false,
-    patterns: { sameWord: true, crossWord: true }
-  },
   { id: 'tj-silent', name: 'Silent', nameAr: 'ساكن', color: '#9ca3af', defaultColor: '#9ca3af', bold: false,
     patterns: { lamShamsiyya: true, idghamNoGhunnah: true, noonIdgham: true, meemIdgham: true }
   },
@@ -111,13 +108,6 @@ const DEFAULT_CONDITIONS = {
     nameAr: 'خاص',
     letters: '',
     triggers: []
-  },
-  maddBadal: {
-    id: 'tj-madd-badal',
-    name: 'Madd Badal',
-    nameAr: 'مد البدل',
-    letters: 'اوي\u0670',
-    triggers: ['sameWord', 'crossWord']
   }
 };
 
@@ -299,64 +289,19 @@ function detect(t) {
     // ===== MADD RULE (Standard Logic) =====
     else if (MADD_LETTERS.includes(c)) {
       let isMadd = false;
-      let isBadal = false;
-
-      // --- Madd al-Badal (Warsh: 3 harakat) ---
-      // Pattern: vowelled Hamza + matching Madd letter (ءَا / إِي / أُو)
-      // Warsh orthography uses TWO encodings for Hamza:
-      //   1. Standard Hamza characters: ء أ إ ؤ ئ (HAMZA_DYNAMIC)
-      //   2. Hamza-on-seat: any letter carrying the U+06EC (۬) Warsh Hamza mark
-      // Hamza must be vowelled (NOT sukun); Alif al-Wasl (ٱ U+0671) excluded as Madd letter.
-      if (p && c !== '\u0671') {
-        const pDiacs = getDiac(t, p.i);
-        const pIsStandardHamza = HAMZA_DYNAMIC.includes(p.c);
-        const pHasWarshHamzaMark = pDiacs.includes(WARSH_DOT); // U+06EC
-        const pIsHamza = pIsStandardHamza || pHasWarshHamzaMark;
-
-        if (pIsHamza) {
-          const pHasSukun = pDiacs.includes(SUKUN);
-
-          if (!pHasSukun) {
-            const pHasFatha = pDiacs.includes(FATHA);
-            const pHasKasra = pDiacs.includes(KASRA);
-            const pHasDamma = pDiacs.includes(DAMMA);
-
-            // Matching pairs only
-            const matchesAlif = (c === 'ا' || c === '\u0670') && pHasFatha;
-            const matchesYa = c === 'ي' && pHasKasra;
-            const matchesWaw = c === 'و' && pHasDamma;
-
-            if (matchesAlif || matchesYa || matchesWaw) {
-              // Same word if no space between Hamza-seat and Madd letter
-              const between = t.slice(p.i + 1, i);
-              const isSameWord = !between.includes(' ');
-
-              if (isSameWord && isPatternEnabled('tj-madd-badal', 'sameWord')) {
-                isBadal = true;
-              } else if (!isSameWord && isPatternEnabled('tj-madd-badal', 'crossWord')) {
-                isBadal = true;
-              }
-            }
-          }
-        }
+      
+      if (n && HAMZA_DYNAMIC.includes(n.c) && isPatternEnabled('tj-madd', 'beforeHamza')) {
+        isMadd = true;
       }
-
-      if (isBadal) {
-        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd-badal' });
-      } else {
-        // Standard Madd checks (only if not already classified as Badal)
-        if (n && HAMZA_DYNAMIC.includes(n.c) && isPatternEnabled('tj-madd', 'beforeHamza')) {
-          isMadd = true;
-        }
-        if (n && has(t, n.i, SUKUN) && isPatternEnabled('tj-madd', 'beforeSukun')) {
-          isMadd = true;
-        }
-        if (n && has(t, n.i, SHADDA) && isPatternEnabled('tj-madd', 'beforeShadda')) {
-          isMadd = true;
-        }
-        if (isMadd) {
-          a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
-        }
+      if (n && has(t, n.i, SUKUN) && isPatternEnabled('tj-madd', 'beforeSukun')) {
+        isMadd = true;
+      }
+      if (n && has(t, n.i, SHADDA) && isPatternEnabled('tj-madd', 'beforeShadda')) {
+        isMadd = true;
+      }
+      
+      if (isMadd) {
+        a.push({ s: i, e: getEnd(t, i), cls: 'tj-madd' });
       }
     }
 
@@ -584,24 +529,16 @@ function applyWithColors(text, rules, surahNum, verseNum, editMode) {
 
   let letterIndex = 0;
   let out = '';
-  let currentStyle = null;  // track current run's style to merge
-
-  const closeRun = () => {
-    if (currentStyle !== null) {
-      out += '</span>';
-      currentStyle = null;
-    }
-  };
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
-
+    
     if (isLtr(c)) {
       const endIdx = getEnd(text, i);
       const letterUnit = text.slice(i, endIdx);
       const cls = charClasses[i];
       const override = overrideMap.get(letterIndex);
-
+      
       let style = '';
       if (override) {
         style = `color: ${override.color};${override.bold ? ' font-weight: bold;' : ''}`;
@@ -611,37 +548,25 @@ function applyWithColors(text, rules, surahNum, verseNum, editMode) {
           style = `color: ${rule.color};${rule.bold ? ' font-weight: bold;' : ''}`;
         }
       }
-
+      
       if (editMode) {
-        // Edit mode: every letter is its own clickable unit (shaping will break — expected)
-        closeRun();
         const dataAttrs = `data-letter-index="${letterIndex}" data-surah="${surahNum}" data-verse="${verseNum}" data-letter="${c}"`;
         out += `<span class="letter-unit" style="${style}cursor: pointer; user-select: none;" ${dataAttrs}>${letterUnit}</span>`;
       } else {
-        // Non-edit mode: merge consecutive same-style letters into one span
-        if (style !== currentStyle) {
-          closeRun();
-          if (style) {
-            out += `<span style="${style}">`;
-            currentStyle = style;
-          }
+        if (style) {
+          out += `<span style="${style}">${letterUnit}</span>`;
+        } else {
+          out += letterUnit;
         }
-        out += letterUnit;
       }
-
+      
       letterIndex++;
       i = endIdx - 1;
     } else {
-      // Non-letter character (space, diacritic, punctuation): close any open run
-      if (!editMode && currentStyle !== null && c === ' ') {
-        // Spaces break words anyway; safe to close span before space
-        closeRun();
-      }
       out += c;
     }
   }
 
-  closeRun();
   return out;
 }
 
@@ -809,11 +734,7 @@ function getTriggerOptions() {
       { id: 'idghamNoGhunnah', label: 'Idgham without Ghunnah' },
       { id: 'idghamWithGhunnah', label: 'Idgham with Ghunnah' }
     ],
-    special: [],
-    maddBadal: [
-      { id: 'sameWord', label: 'Same Word (orthodox)' },
-      { id: 'crossWord', label: 'Cross Word (non-orthodox)' }
-    ]
+    special: []
   };
 }
 
@@ -837,25 +758,7 @@ function getConfig() {
 }
 
 function setConfig(config) {
-  if (config.rules) {
-    // Merge: start from current DEFAULT_RULES (so new rules survive),
-    // apply saved customizations on top.
-    tajweedRules = DEFAULT_RULES.map(def => {
-      const saved = config.rules.find(r => r.id === def.id);
-      if (!saved) return JSON.parse(JSON.stringify(def));
-      return {
-        ...def,
-        ...saved,
-        patterns: { ...(def.patterns || {}), ...(saved.patterns || {}) }
-      };
-    });
-    // Preserve user-created custom rules (tj-custom-*)
-    config.rules.forEach(r => {
-      if (r.id.startsWith('tj-custom-') && !tajweedRules.find(rule => rule.id === r.id)) {
-        tajweedRules.push(r);
-      }
-    });
-  }
+  if (config.rules) tajweedRules = config.rules;
   if (config.overrides) letterOverrides = config.overrides;
   if (config.conditions) tajweedConditions = config.conditions;
   if (config.sets) tajweedSets = config.sets;
