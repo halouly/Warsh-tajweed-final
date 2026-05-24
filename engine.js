@@ -111,6 +111,13 @@ const DEFAULT_CONDITIONS = {
     nameAr: 'خاص',
     letters: '',
     triggers: []
+  },
+  maddBadal: {
+    id: 'tj-madd-badal',
+    name: 'Madd Badal',
+    nameAr: 'مد البدل',
+    letters: 'اوي\u0670',
+    triggers: ['sameWord', 'crossWord']
   }
 };
 
