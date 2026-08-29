@@ -156,6 +156,21 @@
         .is-fullscreen .hide-on-fs { display: none !important; }
         .exit-fs-btn { display: none !important; background: #ef4444 !important; color: white !important; }
         .is-fullscreen .exit-fs-btn { display: inline-block !important; }
+        .verse-translation {
+            display: block;
+            font-size: 0.45em;
+            color: var(--text);
+            opacity: 0.65;
+            font-family: Arial, Helvetica, sans-serif;
+            direction: ltr;
+            text-align: left;
+            margin: 4px 0 14px 0;
+            line-height: 1.6;
+            font-style: italic;
+            border-right: 3px solid var(--accent);
+            padding-right: 10px;
+        }
+        .eng-btn-active { color: #22c55e !important; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -167,6 +182,7 @@
             <button class="icon-btn" onclick="togglePanel('legend-panel')" title="أحكام التجويد">📖</button>
             <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌗</button>
             <button class="icon-btn" onclick="toggleFullScreen()" title="Full Screen">⛶</button>
+            <button class="icon-btn" onclick="toggleEnglishMode()" id="eng-btn" title="الترجمة الإنجليزية">EN</button>
         </div>
         <h1 id="surah-title">القارئ برواية ورش</h1>
         <div class="tools">
@@ -1024,7 +1040,37 @@ function resetAllConditions() {
         render();
     }
 }
-    // Original app functions
+    let englishMode = false;
+    let translationCache = {};
+
+    function toggleEnglishMode() {
+        englishMode = !englishMode;
+        const btn = document.getElementById('eng-btn');
+        if (englishMode) {
+            btn.classList.add('eng-btn-active');
+            fetchTranslation(state.surah).then(() => render());
+        } else {
+            btn.classList.remove('eng-btn-active');
+            render();
+        }
+    }
+
+    async function fetchTranslation(surahNum) {
+        if (translationCache[surahNum]) return;
+        try {
+            const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/en.sahih`);
+            if (!res.ok) throw new Error('API error');
+            const json = await res.json();
+            const verses = {};
+            json.data.ayahs.forEach(a => {
+                verses[a.numberInSurah] = a.text;
+            });
+            translationCache[surahNum] = verses;
+        } catch (e) {
+            console.error('Translation fetch failed:', e);
+        }
+    }
+        // Original app functions
     function init() {
         const saved = JSON.parse(localStorage.getItem('warsh_state'));
         if(saved) {
@@ -1072,7 +1118,7 @@ function resetAllConditions() {
         }));
     }
 
-    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
+    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(englishMode) fetchTranslation(state.surah); if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
     function navSurah(dir) { let next = state.surah + dir; if(next >= 1 && next <= 114) changeSurah(next); }
     function changeViewMode(mode) { const inp = document.getElementById('custom-chunk-input'); if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); } updateNavVisibility(); saveState(); }
     function setCustomChunk(val) { let n = parseInt(val); if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); } }
@@ -1097,8 +1143,12 @@ function resetAllConditions() {
         chunk.forEach((txt, i) => { 
             let n = startIdx + i + 1; 
             let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); 
-            let starClass = isSaved ? 'bm-icon saved' : 'bm-icon'; 
-            html += `<div class="verse" id="v${n}" onclick="pick(${n})">${renderVerse(txt, state.surah, n)} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span></div>`; 
+            let starClass = isSaved ? 'bm-icon saved' : 'bm-icon';
+            let transHtml = '';
+            if (englishMode && translationCache[state.surah] && translationCache[state.surah][n]) {
+                transHtml = `<span class="verse-translation">${translationCache[state.surah][n]}</span>`;
+            }
+            html += `<div class="verse" id="v${n}" onclick="pick(${n})">${renderVerse(txt, state.surah, n)} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span>${transHtml}</div>`; 
         });
         div.innerHTML = html; 
         window.scrollTo({ top: 0, behavior: 'smooth' });
