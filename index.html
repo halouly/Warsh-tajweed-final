@@ -80,6 +80,9 @@
         .popover { display: none; position: fixed; top: 60px; right: 20px; background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 8px; z-index: 2000; min-width: 300px; max-height: calc(100vh - 220px); overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); overflow-y: auto; }
         .popover.show { display: block; }
         html[dir="rtl"] .popover { right: auto; left: 20px; }
+        @media (max-width: 768px) {
+            html[dir="rtl"] .popover { right: 0 !important; left: 0 !important; }
+        }
         .pop-item { padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; }
         #display { padding: 40px 20px; max-width: var(--max-w); margin: 0 auto; line-height: var(--lh); word-spacing: var(--ws); text-align: justify; }
         .verse { display: inline; font-size: var(--sz); padding: 4px 0; border-bottom: 1px dashed var(--border); transition: 0.2s; position: relative; }
@@ -87,7 +90,7 @@
         .num { font-size: 0.5em; color: var(--accent); border: 1px solid var(--accent); border-radius: 50%; padding: 0 6px; margin: 0 6px; vertical-align: middle; display: inline-block; }
         .bm-icon { font-size: 0.6em; margin-left: 5px; color: #ccc; cursor: pointer; }
         .bm-icon.saved { color: #f59e0b; }
-        #controls { position: fixed; bottom: 0; left: 0; right: 0; background: var(--panel); border-top: 2px solid var(--accent); padding: 15px; z-index: 1000; direction: ltr; font-size: calc(1.1rem + var(--menu-fs-offset, 0rem)); }
+        #controls { position: fixed; bottom: 0; left: 0; right: 0; background: var(--panel); border-top: 2px solid var(--accent); padding: 15px; z-index: 1000; direction: ltr; font-size: calc(1.1rem + var(--menu-fs-offset, 0rem)); box-sizing: border-box; width: 100%; }
         #controls select, #controls button, #controls input, #controls label { font-size: calc(1.1rem + var(--menu-fs-offset, 0rem)); padding: 4px; }
 
         .row { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
