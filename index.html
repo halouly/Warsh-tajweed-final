@@ -601,36 +601,6 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
 
     // Original app functions
 
-    function addWordByWord(verseHtml, wbwWords) {
-        let result = '';
-        let wordIndex = 0;
-        let inTag = false;
-        let currentChunk = '';
-
-        for (let i = 0; i < verseHtml.length; i++) {
-            const ch = verseHtml[i];
-            if (ch === '<') inTag = true;
-            if (ch === '>') { inTag = false; currentChunk += ch; continue; }
-            if (ch === ' ' && !inTag) {
-                if (currentChunk.length > 0) {
-                    const eng = wbwWords[wordIndex] ? wbwWords[wordIndex].en : '';
-                    result += '<span class="wbw-item">' + currentChunk + '<span class="wbw-en">' + eng + '</span></span> ';
-                    wordIndex++;
-                    currentChunk = '';
-                } else {
-                    result += ' ';
-                }
-            } else {
-                currentChunk += ch;
-            }
-        }
-        if (currentChunk.length > 0) {
-            const eng = wbwWords[wordIndex] ? wbwWords[wordIndex].en : '';
-            result += '<span class="wbw-item">' + currentChunk + '<span class="wbw-en">' + eng + '</span></span>';
-        }
-        return '<div class="word-by-word">' + result + '</div>';
-    }
-
     function init() {
         const saved = JSON.parse(localStorage.getItem('warsh_state'));
         if(saved) {
@@ -696,18 +666,17 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
             let n = startIdx + i + 1; 
             let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); 
             let starClass = isSaved ? 'bm-icon saved' : 'bm-icon';
-            let verseContent = renderVerse(txt, state.surah, n);
             let transHtml = '';
             if (englishMode) {
+                if (translationCache[state.surah] && translationCache[state.surah][n]) {
+                    transHtml += `<span class="verse-translation">${translationCache[state.surah][n]}</span>`;
+                }
                 let wbwData = translationCache['wbw_' + state.surah];
                 if (wbwData && wbwData[n]) {
-                    verseContent = addWordByWord(verseContent, wbwData[n]);
-                }
-                if (translationCache[state.surah] && translationCache[state.surah][n]) {
-                    transHtml = `<span class="verse-translation">${translationCache[state.surah][n]}</span>`;
+                    transHtml += '<div class="word-by-word">' + wbwData[n].map(w => `<span class="wbw-en">${w.en}</span>`).join('') + '</div>';
                 }
             }
-            html += `<div class="verse" id="v${n}" onclick="pick(${n})">${verseContent} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span>${transHtml}</div>`; 
+            html += `<div class="verse" id="v${n}" onclick="pick(${n})">${renderVerse(txt, state.surah, n)} <span class="num">${n} <span class="${starClass}" onclick="toggleBM(event, ${n})">★</span></span>${transHtml}</div>`; 
         });
         div.innerHTML = html; 
         window.scrollTo({ top: 0, behavior: 'smooth' });
