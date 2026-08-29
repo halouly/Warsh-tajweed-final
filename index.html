@@ -270,6 +270,18 @@
             direction: ltr;
             opacity: 0.8;
         }
+        .verse-translit {
+            display: block;
+            font-size: var(--trans-sz, 0.9rem);
+            font-family: var(--trans-font, Arial, Helvetica, sans-serif);
+            color: var(--accent);
+            opacity: 0.75;
+            direction: ltr;
+            text-align: left;
+            margin: 4px 0 6px 0;
+            line-height: 1.6;
+        }
+        .translit-btn-active { color: #e67e22 !important; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -283,6 +295,7 @@
             <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌗</button>
             <button class="icon-btn" onclick="toggleFullScreen()" title="Full Screen">⛶</button>
             <button class="icon-btn" onclick="toggleEnglishMode()" id="eng-btn" title="الترجمة الإنجليزية">EN</button>
+            <button class="icon-btn" onclick="toggleTranslitMode()" id="translit-btn" title="النطق اللاتيني" style="font-size:0.9rem;">Aa</button>
         </div>
         <h1 id="surah-title">القارئ برواية ورش</h1>
         <div class="tools">
@@ -302,6 +315,7 @@
         <button onclick="toggleTheme(); toggleMobileMenu()">🌗 الوضع الليلي</button>
         <button onclick="toggleFullScreen(); toggleMobileMenu()">⛶ شاشة كاملة</button>
         <button onclick="toggleEnglishMode(); toggleMobileMenu()" id="eng-btn-mobile">EN الترجمة</button>
+        <button onclick="toggleTranslitMode(); toggleMobileMenu()" id="translit-btn-mobile">Aa النطق اللاتيني</button>
     </div>
 
     <!-- Dev Mode Banner -->
@@ -697,8 +711,8 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
         var mm = document.getElementById('mobile-menu');
         if (mm) {
             var btns = mm.querySelectorAll('button:not(.mobile-menu-close)');
-            var arLabels = ['🔍 البحث','★ العلامات','⚙ إعدادات العرض','📖 أحكام التجويد','🌗 الوضع الليلي','⛶ شاشة كاملة','EN الترجمة'];
-            var enLabels = ['🔍 Search','★ Bookmarks','⚙ Display Settings','📖 Tajweed Rules','🌗 Dark Mode','⛶ Fullscreen','EN Translation'];
+            var arLabels = ['🔍 البحث','★ العلامات','⚙ إعدادات العرض','📖 أحكام التجويد','🌗 الوضع الليلي','⛶ شاشة كاملة','EN الترجمة','Aa النطق اللاتيني'];
+            var enLabels = ['🔍 Search','★ Bookmarks','⚙ Display Settings','📖 Tajweed Rules','🌗 Dark Mode','⛶ Fullscreen','EN Translation','Aa Transliteration'];
             btns.forEach(function(b, i) { if (i < arLabels.length) b.textContent = en ? enLabels[i] : arLabels[i]; });
         }
     }
@@ -734,6 +748,36 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
             translationCache['wbw_' + surahNum] = verses;
         } catch (e) {
             console.error('Word-by-word fetch failed:', e);
+        }
+    }
+
+    let translitMode = false;
+
+    function toggleTranslitMode() {
+        translitMode = !translitMode;
+        const btn = document.getElementById('translit-btn');
+        if (translitMode) {
+            btn.classList.add('translit-btn-active');
+            fetchTransliteration(state.surah).then(() => render());
+        } else {
+            btn.classList.remove('translit-btn-active');
+            render();
+        }
+    }
+
+    async function fetchTransliteration(surahNum) {
+        if (translationCache['translit_' + surahNum]) return;
+        try {
+            const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/en.transliteration`);
+            if (!res.ok) throw new Error('Transliteration API error');
+            const json = await res.json();
+            const verses = {};
+            json.data.ayahs.forEach(a => {
+                verses[a.numberInSurah] = a.text;
+            });
+            translationCache['translit_' + surahNum] = verses;
+        } catch (e) {
+            console.error('Transliteration fetch failed:', e);
         }
     }
 
@@ -777,7 +821,7 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
         }));
     }
 
-    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(englishMode) { fetchTranslation(state.surah).then(() => render()); fetchWordByWord(state.surah).then(() => render()); } if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
+    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(englishMode) { fetchTranslation(state.surah).then(() => render()); fetchWordByWord(state.surah).then(() => render()); } if(translitMode) { fetchTransliteration(state.surah).then(() => render()); } if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
     function navSurah(dir) { let next = state.surah + dir; if(next >= 1 && next <= 114) changeSurah(next); }
     function changeViewMode(mode) { const inp = document.getElementById('custom-chunk-input'); if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); } updateNavVisibility(); saveState(); }
     function setCustomChunk(val) { let n = parseInt(val); if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); } }
@@ -794,7 +838,9 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
         const div = document.getElementById('display'); let html = "";
         if (state.surah != 1 && state.surah != 9 && state.offset === 1) { 
             const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; 
-            let bismTrans = englishMode ? '<span class="verse-translation" style="text-align:center">In the name of Allah, the Entirely Merciful, the Especially Merciful.</span>' : '';
+            let bismTrans = '';
+            if (translitMode) bismTrans += '<span class="verse-translit" style="text-align:center">Bismillahir Rahmanir Raheem</span>';
+            if (englishMode) bismTrans += '<span class="verse-translation" style="text-align:center">In the name of Allah, the Entirely Merciful, the Especially Merciful.</span>';
             html += `<div style="text-align:center; margin-bottom:20px">${renderVerse(bism, 0, 0)}${bismTrans}</div>`; 
         }
         let startIdx = state.offset - 1; 
@@ -805,6 +851,12 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
             let isSaved = bookmarks.some(b => b.s === state.surah && b.v === n); 
             let starClass = isSaved ? 'bm-icon saved' : 'bm-icon';
             let transHtml = '';
+            if (translitMode) {
+                let tlData = translationCache['translit_' + state.surah];
+                if (tlData && tlData[n]) {
+                    transHtml += `<span class="verse-translit">${tlData[n]}</span>`;
+                }
+            }
             if (englishMode) {
                 if (translationCache[state.surah] && translationCache[state.surah][n]) {
                     transHtml += `<span class="verse-translation">${translationCache[state.surah][n]}</span>`;
