@@ -758,27 +758,122 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
         const btn = document.getElementById('translit-btn');
         if (translitMode) {
             btn.classList.add('translit-btn-active');
-            fetchTransliteration(state.surah).then(() => render());
         } else {
             btn.classList.remove('translit-btn-active');
-            render();
         }
+        render();
     }
 
-    async function fetchTransliteration(surahNum) {
-        if (translationCache['translit_' + surahNum]) return;
-        try {
-            const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/en.transliteration`);
-            if (!res.ok) throw new Error('Transliteration API error');
-            const json = await res.json();
-            const verses = {};
-            json.data.ayahs.forEach(a => {
-                verses[a.numberInSurah] = a.text;
-            });
-            translationCache['translit_' + surahNum] = verses;
-        } catch (e) {
-            console.error('Transliteration fetch failed:', e);
+    function transliterate(text) {
+        const map = {
+            'ب':'b','ت':'t','ث':'th','ج':'j','ح':'ḥ','خ':'kh','د':'d','ذ':'dh',
+            'ر':'r','ز':'z','س':'s','ش':'sh','ص':'ṣ','ض':'ḍ','ط':'ṭ','ظ':'ẓ',
+            'ع':'ʿ','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n',
+            'ه':'h','و':'w','ي':'y','ء':'ʾ','ة':'h',
+            'أ':'ʾ','إ':'ʾ','ؤ':'ʾ','ئ':'ʾ','ٱ':''
+        };
+        const FATHA = '\u064E', KASRA = '\u0650', DAMMA = '\u064F';
+        const SUKUN = '\u0652', SHADDA = '\u0651';
+        const TAN_F = '\u064B', TAN_K = '\u064D', TAN_D = '\u064C';
+        const ALIF_KHANJAR = '\u0670', MADD_SIGN = '\u0653';
+
+        let out = '';
+        for (let i = 0; i < text.length; i++) {
+            const c = text[i];
+            const code = c.charCodeAt(0);
+
+            if (c === ' ') { out += ' '; continue; }
+
+            // Skip diacritics here — handled when processing the letter before them
+            if ((code >= 0x064B && code <= 0x0652) || code === 0x0670 || code === 0x0653 || (code >= 0x06D6 && code <= 0x06ED)) continue;
+
+            // Skip non-Arabic
+            if (code < 0x0600 || code > 0x06FF) continue;
+
+            // Alif — check if it's a madd vowel (long 'a' after fatha)
+            if (c === 'ا' || c === 'ى' || c === '\u0670') {
+                // These are vowel carriers, usually elongate previous fatha to ā
+                // Only add ā if not already handled
+                if (out.length > 0 && out[out.length - 1] === 'a') {
+                    out = out.slice(0, -1) + 'ā';
+                } else if (c === 'ى') {
+                    out += 'ā';
+                }
+                continue;
+            }
+
+            // Alif with madda
+            if (c === 'آ') { out += 'ʾā'; continue; }
+
+            const latin = map[c];
+            if (!latin && latin !== '') continue;
+
+            // Collect diacritics after this letter
+            let diacs = [];
+            for (let j = i + 1; j < text.length; j++) {
+                const dc = text[j].charCodeAt(0);
+                if ((dc >= 0x064B && dc <= 0x0652) || dc === 0x0670 || dc === 0x0653 || (dc >= 0x06D6 && dc <= 0x06ED)) {
+                    diacs.push(text[j]);
+                } else break;
+            }
+
+            const hasShadda = diacs.includes(SHADDA);
+            const hasFatha = diacs.includes(FATHA);
+            const hasKasra = diacs.includes(KASRA);
+            const hasDamma = diacs.includes(DAMMA);
+            const hasSukun = diacs.includes(SUKUN);
+            const hasTanF = diacs.includes(TAN_F);
+            const hasTanK = diacs.includes(TAN_K);
+            const hasTanD = diacs.includes(TAN_D);
+            const hasKhanjar = diacs.includes(ALIF_KHANJAR);
+            const hasMaddSign = diacs.includes(MADD_SIGN);
+
+            // Output consonant (doubled if shadda)
+            if (hasShadda) { out += latin + latin; }
+            else { out += latin; }
+
+            // Output vowel
+            if (hasMaddSign || hasKhanjar) { out += 'ā'; }
+            else if (hasFatha) {
+                // Check if next letter is alif/alif maqsura (long ā) — don't add short 'a' yet, let alif handle it
+                let nextChar = '';
+                for (let j = i + 1; j < text.length; j++) {
+                    const nc = text[j].charCodeAt(0);
+                    if ((nc >= 0x064B && nc <= 0x0652) || nc === 0x0670 || nc === 0x0653 || (nc >= 0x06D6 && nc <= 0x06ED)) continue;
+                    nextChar = text[j]; break;
+                }
+                if (nextChar === 'ا' || nextChar === 'ى' || nextChar === '\u0670') { out += 'a'; } // will become ā when alif is processed
+                else { out += 'a'; }
+            }
+            else if (hasKasra) {
+                let nextChar = '';
+                for (let j = i + 1; j < text.length; j++) {
+                    const nc = text[j].charCodeAt(0);
+                    if ((nc >= 0x064B && nc <= 0x0652) || nc === 0x0670 || nc === 0x0653 || (nc >= 0x06D6 && nc <= 0x06ED)) continue;
+                    nextChar = text[j]; break;
+                }
+                if (nextChar === 'ي') { out += 'ī'; }
+                else { out += 'i'; }
+            }
+            else if (hasDamma) {
+                let nextChar = '';
+                for (let j = i + 1; j < text.length; j++) {
+                    const nc = text[j].charCodeAt(0);
+                    if ((nc >= 0x064B && nc <= 0x0652) || nc === 0x0670 || nc === 0x0653 || (nc >= 0x06D6 && nc <= 0x06ED)) continue;
+                    nextChar = text[j]; break;
+                }
+                if (nextChar === 'و') { out += 'ū'; }
+                else { out += 'u'; }
+            }
+            else if (hasTanF) { out += 'an'; }
+            else if (hasTanK) { out += 'in'; }
+            else if (hasTanD) { out += 'un'; }
+
+            // Waw/Ya as madd vowels — skip them if already handled via kasra+ya or damma+waw
+            if (c === 'و' && out.endsWith('ū')) continue;
+            if (c === 'ي' && out.endsWith('ī')) continue;
         }
+        return out;
     }
 
     // Original app functions
@@ -821,7 +916,7 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
         }));
     }
 
-    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(englishMode) { fetchTranslation(state.surah).then(() => render()); fetchWordByWord(state.surah).then(() => render()); } if(translitMode) { fetchTransliteration(state.surah).then(() => render()); } if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
+    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(englishMode) { fetchTranslation(state.surah).then(() => render()); fetchWordByWord(state.surah).then(() => render()); } if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
     function navSurah(dir) { let next = state.surah + dir; if(next >= 1 && next <= 114) changeSurah(next); }
     function changeViewMode(mode) { const inp = document.getElementById('custom-chunk-input'); if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); } updateNavVisibility(); saveState(); }
     function setCustomChunk(val) { let n = parseInt(val); if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); } }
@@ -852,10 +947,7 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
             let starClass = isSaved ? 'bm-icon saved' : 'bm-icon';
             let transHtml = '';
             if (translitMode) {
-                let tlData = translationCache['translit_' + state.surah];
-                if (tlData && tlData[n]) {
-                    transHtml += `<span class="verse-translit">${tlData[n]}</span>`;
-                }
+                transHtml += `<span class="verse-translit">${transliterate(txt)}</span>`;
             }
             if (englishMode) {
                 if (translationCache[state.surah] && translationCache[state.surah][n]) {
