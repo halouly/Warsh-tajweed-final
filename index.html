@@ -6,6 +6,9 @@
     <title>القارئ برواية ورش التفاعلي</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#92400e">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* --- TAJWEED COLORS (defaults, overridden by dynamic CSS) --- */
@@ -458,7 +461,17 @@
 
     <script src="engine.js"></script>
     <script>
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+            reg.update();
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'activated') { window.location.reload(); }
+                });
+            });
+        });
+    }
 
     // State
     let state = { surah: 1, chunkSize: 'all', offset: 1, data: null };
