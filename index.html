@@ -144,7 +144,46 @@
             .big-btn { padding: 0 10px !important; height: 32px !important; }
             #play-btn { height: 32px !important; padding: 0 8px !important; }
             #status { min-width: 80px !important; margin-left: 2px !important; }
+
+            /* Popovers become bottom sheets on mobile */
+            .popover {
+                position: fixed !important;
+                top: auto !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-height: 70vh !important;
+                border-radius: 16px 16px 0 0 !important;
+                box-shadow: 0 -4px 25px rgba(0,0,0,0.2) !important;
+                padding: 20px 15px !important;
+                z-index: 2001 !important;
+                animation: slideUp 0.25s ease-out;
+            }
+            .popover::before {
+                content: '';
+                display: block;
+                width: 40px;
+                height: 4px;
+                background: var(--border);
+                border-radius: 2px;
+                margin: 0 auto 12px auto;
+            }
+
+            /* Modal also needs mobile fix */
+            .modal { width: 95vw !important; max-height: 85vh !important; }
+            .letter-popup { width: 90vw !important; min-width: 0 !important; }
         }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Popover backdrop on mobile */
+        .popover-backdrop { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 2000; }
+        .popover-backdrop.show { display: block; }
 
         @media (max-width: 480px) {
             .control-group { border: none !important; background: transparent !important; padding: 2px !important; }
@@ -302,6 +341,7 @@
         </div>
 </div>
 
+    <div id="popover-backdrop" class="popover-backdrop" onclick="closeAllPanels()"></div>
     <div id="display">اختر سورة...</div>
 
     <div id="controls">
@@ -804,7 +844,17 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
     playing=false; paused=false; btn.innerText = englishMode ? "▶ Play" : "▶ تشغيل"; btn.style.background = ""; st.innerText = englishMode ? "Ready" : "مستعد"; 
 }
     function stop() { stopReq = true; aud.pause(); if (stopRes) stopRes(); playing = false; paused = false; const btn = document.getElementById('play-btn'); btn.innerText = englishMode ? "▶ Play" : "▶ تشغيل"; btn.style.background = ""; document.getElementById('status').innerText = englishMode ? "Ready" : "مستعد";}
-    function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
+    function togglePanel(id) { 
+        document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); 
+        const panel = document.getElementById(id);
+        panel.classList.toggle('show');
+        const backdrop = document.getElementById('popover-backdrop');
+        if (panel.classList.contains('show')) { backdrop.classList.add('show'); } else { backdrop.classList.remove('show'); }
+    }
+    function closeAllPanels() {
+        document.querySelectorAll('.popover').forEach(p => p.classList.remove('show'));
+        document.getElementById('popover-backdrop').classList.remove('show');
+    }
     function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
     function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); document.body.classList.add('is-fullscreen'); } else { if (document.exitFullscreen) document.exitFullscreen(); document.body.classList.remove('is-fullscreen'); } }
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) { document.body.classList.remove('is-fullscreen'); } else { document.body.classList.add('is-fullscreen'); } });
