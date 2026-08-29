@@ -171,6 +171,31 @@
             padding-right: 10px;
         }
         .eng-btn-active { color: #22c55e !important; font-weight: bold; }
+
+        /* Hamburger Menu */
+        .hamburger { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text); padding: 2px 5px; }
+        .mobile-menu { display: none; position: fixed; top: 0; right: 0; bottom: 0; width: 220px; background: var(--panel); border-left: 1px solid var(--border); z-index: 1500; padding: 15px; box-shadow: -4px 0 20px rgba(0,0,0,0.15); flex-direction: column; gap: 5px; overflow-y: auto; }
+        body.dark .mobile-menu { border-left-color: var(--border); }
+        .mobile-menu.show { display: flex; }
+        .mobile-menu-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 1499; }
+        .mobile-menu-overlay.show { display: block; }
+        .mobile-menu button { width: 100%; text-align: right; padding: 12px 10px; background: none; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-size: 1rem; cursor: pointer; font-family: 'Amiri', serif; }
+        .mobile-menu button:active { background: var(--active-bg); }
+        .mobile-menu-close { text-align: left !important; font-size: 1.3rem !important; border: none !important; padding: 5px 10px !important; margin-bottom: 10px; }
+
+        /* Collapsible Controls */
+        .controls-toggle { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 1001; background: var(--accent); color: #fff; border: none; border-radius: 8px 8px 0 0; padding: 2px 20px; font-size: 1.2rem; cursor: pointer; line-height: 1; }
+        #controls.collapsed { display: none !important; }
+        #controls.collapsed + .controls-toggle { bottom: 0; }
+        body.controls-hidden { padding-bottom: 30px; }
+
+        @media (max-width: 768px) {
+            .hamburger { display: block; }
+            header .tools:first-child { display: none; }
+        }
+        @media (min-width: 769px) {
+            .mobile-menu, .mobile-menu-overlay { display: none !important; }
+        }
         .word-by-word {
             display: flex;
             flex-wrap: wrap;
@@ -198,6 +223,7 @@
 </head>
 <body>
     <header>
+        <button class="hamburger" onclick="toggleMobileMenu()">☰</button>
         <div class="tools">
             <button class="icon-btn" onclick="togglePanel('search-panel')" title="Search">🔍</button>
             <button class="icon-btn" onclick="togglePanel('bm-panel')" title="Bookmarks">★</button>
@@ -213,6 +239,19 @@
             <button class="icon-btn" id="dev-panel-btn" style="display:none" onclick="openDevPanel()">🎨</button>
         </div>
     </header>
+
+    <!-- Mobile Slide Menu -->
+    <div id="mobile-menu-overlay" class="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
+    <div id="mobile-menu" class="mobile-menu">
+        <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
+        <button onclick="togglePanel('search-panel'); toggleMobileMenu()">🔍 البحث</button>
+        <button onclick="togglePanel('bm-panel'); toggleMobileMenu()">★ العلامات</button>
+        <button onclick="togglePanel('typo-panel'); toggleMobileMenu()">⚙ إعدادات العرض</button>
+        <button onclick="togglePanel('legend-panel'); toggleMobileMenu()">📖 أحكام التجويد</button>
+        <button onclick="toggleTheme(); toggleMobileMenu()">🌗 الوضع الليلي</button>
+        <button onclick="toggleFullScreen(); toggleMobileMenu()">⛶ شاشة كاملة</button>
+        <button onclick="toggleEnglishMode(); toggleMobileMenu()" id="eng-btn-mobile">EN الترجمة</button>
+    </div>
 
     <!-- Dev Mode Banner -->
     <div id="dev-banner" class="dev-banner" style="display:none">
@@ -310,6 +349,7 @@
         </div>
         
     </div>
+    <button class="controls-toggle" id="controls-toggle" onclick="toggleControlsPanel()">▼</button>
 
     <!-- Dev Panel Modal -->
     <div id="dev-modal-overlay" class="modal-overlay">
@@ -592,6 +632,13 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
         document.getElementById('ui-tsz-label').textContent = en ? 'Translation Size' : 'حجم الترجمة';
         document.getElementById('ui-tfont-label').textContent = en ? 'Translation Font' : 'خط الترجمة';
         document.getElementById('ui-clear-cache').textContent = en ? 'Clear Cache' : 'مسح الذاكرة المؤقتة';
+        var mm = document.getElementById('mobile-menu');
+        if (mm) {
+            var btns = mm.querySelectorAll('button:not(.mobile-menu-close)');
+            var arLabels = ['🔍 البحث','★ العلامات','⚙ إعدادات العرض','📖 أحكام التجويد','🌗 الوضع الليلي','⛶ شاشة كاملة','EN الترجمة'];
+            var enLabels = ['🔍 Search','★ Bookmarks','⚙ Display Settings','📖 Tajweed Rules','🌗 Dark Mode','⛶ Fullscreen','EN Translation'];
+            btns.forEach(function(b, i) { if (i < arLabels.length) b.textContent = en ? enLabels[i] : arLabels[i]; });
+        }
     }
 
     async function fetchTranslation(surahNum) {
@@ -749,6 +796,19 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
     function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); document.body.classList.add('is-fullscreen'); } else { if (document.exitFullscreen) document.exitFullscreen(); document.body.classList.remove('is-fullscreen'); } }
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) { document.body.classList.remove('is-fullscreen'); } else { document.body.classList.add('is-fullscreen'); } });
     function updateSetting(prop, val) { document.documentElement.style.setProperty('--'+prop, val); saveState(); }
+
+    function toggleMobileMenu() {
+        document.getElementById('mobile-menu').classList.toggle('show');
+        document.getElementById('mobile-menu-overlay').classList.toggle('show');
+    }
+
+    function toggleControlsPanel() {
+        const ctrl = document.getElementById('controls');
+        const btn = document.getElementById('controls-toggle');
+        ctrl.classList.toggle('collapsed');
+        document.body.classList.toggle('controls-hidden');
+        btn.textContent = ctrl.classList.contains('collapsed') ? '▲' : '▼';
+    }
     async function loadConfigFromServer() { try { const res = await fetch('tajweed-config.json?t=' + Date.now()); if (res.ok) { const config = await res.json(); setConfig(config); console.log('Loaded config from server'); injectDynamicCSS(); if (state.data) render(); updateOverrideCount(); } } catch(e) { console.log('No server config, using localStorage'); } }
 
     init();
