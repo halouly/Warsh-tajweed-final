@@ -1138,8 +1138,9 @@ function resetAllConditions() {
         if(!state.data) return;
         const div = document.getElementById('display'); let html = "";
         if (state.surah != 1 && state.surah != 9 && state.offset === 1) { 
-            const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; 
-            html += `<div style="text-align:center; margin-bottom:20px; font-size:0.9em; opacity:0.8">${renderVerse(bism, 0, 0)}</div>`; 
+            const bism = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"; 
+            let bismTrans = englishMode ? '<span class="verse-translation" style="text-align:center">In the name of Allah, the Entirely Merciful, the Especially Merciful.</span>' : '';
+            html += `<div style="text-align:center; margin-bottom:20px">${renderVerse(bism, 0, 0)}${bismTrans}</div>`; 
         }
         let startIdx = state.offset - 1; 
         let endIdx = state.chunkSize === 'all' ? state.data.verses.length : Math.min(startIdx + state.chunkSize, state.data.verses.length); 
