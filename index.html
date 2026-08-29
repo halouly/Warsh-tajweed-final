@@ -1077,7 +1077,8 @@ function resetAllConditions() {
         const btn = document.getElementById('eng-btn');
         if (englishMode) {
             btn.classList.add('eng-btn-active');
-            Promise.all([fetchTranslation(state.surah), fetchWordByWord(state.surah)]).then(() => render());
+            fetchTranslation(state.surah).then(() => render());
+            fetchWordByWord(state.surah).then(() => render());
         } else {
             btn.classList.remove('eng-btn-active');
             render();
@@ -1166,7 +1167,7 @@ function resetAllConditions() {
         }));
     }
 
-    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(englishMode) { fetchTranslation(state.surah); fetchWordByWord(state.surah); } if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
+    async function changeSurah(id, skipOffsetReset) { state.surah = parseInt(id); if(englishMode) { fetchTranslation(state.surah).then(() => render()); fetchWordByWord(state.surah).then(() => render()); } if(!skipOffsetReset) state.offset = 1; document.getElementById('surah-select').value = state.surah; saveState(); await loadData(); render(); }
     function navSurah(dir) { let next = state.surah + dir; if(next >= 1 && next <= 114) changeSurah(next); }
     function changeViewMode(mode) { const inp = document.getElementById('custom-chunk-input'); if (mode === 'custom') { inp.classList.add('show'); inp.focus(); } else { inp.classList.remove('show'); state.chunkSize = mode === 'all' ? 'all' : parseInt(mode); state.offset = 1; render(); } updateNavVisibility(); saveState(); }
     function setCustomChunk(val) { let n = parseInt(val); if (n && n > 0) { state.chunkSize = n; state.offset = 1; render(); updateNavVisibility(); saveState(); } }
