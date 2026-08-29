@@ -238,25 +238,25 @@
     </div>
 
     <div id="search-panel" class="popover">
-        <h3 style="margin-top:0">البحث</h3>
+        <h3 style="margin-top:0" id="ui-search-title">البحث</h3>
         <div style="display:flex; gap:5px; margin-bottom:10px;">
-            <label style="margin-left:5px;font-weight:bold;">كلمة البحث:</label><input type="text" id="search-input" placeholder="اكتب كلمة..." style="flex:1">
-            <button onclick="runGlobalSearch()">بحث</button>
+            <label style="margin-left:5px;font-weight:bold;" id="ui-search-label">كلمة البحث:</label><input type="text" id="search-input" placeholder="اكتب كلمة..." style="flex:1">
+            <button onclick="runGlobalSearch()" id="ui-search-btn">بحث</button>
         </div>
         <div id="search-status" style=" color:#666; margin-bottom:5px;"></div>
         <div id="search-results" style="max-height:300px; overflow-y:auto;"></div>
     </div>
-    <div id="bm-panel" class="popover"><h3 style="margin-top:0">العلامات المرجعية</h3><div id="bm-list">لا توجد علامات مرجعية بعد.</div></div>
+    <div id="bm-panel" class="popover"><h3 style="margin-top:0" id="ui-bm-title">العلامات المرجعية</h3><div id="bm-list">لا توجد علامات مرجعية بعد.</div></div>
     <div id="typo-panel" class="popover">
-        <div class="typo-row"><span class="typo-label">حجم النص</span><input type="range" min="20" max="70" value="32" oninput="updateSetting('sz', this.value+'px')" title="حجم النص"></div>
-        <div class="typo-row"><span class="typo-label">ارتفاع السطر</span><input type="range" min="1.5" max="4.0" step="0.1" value="2.8" oninput="updateSetting('lh', this.value)" title="ارتفاع السطر"></div>
-        <div class="typo-row"><span class="typo-label">المسافة بين الكلمات</span><input type="range" min="0" max="20" value="0" oninput="updateSetting('ws', this.value+'px')" title="المسافة بين الكلمات"></div>
-        <div class="typo-row"><span class="typo-label">عرض المحتوى</span><input type="range" min="400" max="1200" value="800" oninput="updateSetting('max-w', this.value+'px')" title="عرض المحتوى"></div>
-        <div class="typo-row"><span class="typo-label">حجم الترجمة</span><input type="range" min="10" max="28" value="14" oninput="updateSetting('trans-sz', this.value+'px')" title="حجم الترجمة"></div>
-        <div class="typo-row"><span class="typo-label">خط الترجمة</span><select onchange="updateSetting('trans-font', this.value)" style="width:100%"><option value="Arial, Helvetica, sans-serif">Arial</option><option value="Georgia, serif">Georgia</option><option value="'Times New Roman', serif">Times New Roman</option><option value="Verdana, sans-serif">Verdana</option><option value="'Courier New', monospace">Courier New</option><option value="Tahoma, sans-serif">Tahoma</option></select></div>
+        <div class="typo-row"><span class="typo-label" id="ui-sz-label">حجم النص</span><input type="range" min="20" max="70" value="32" oninput="updateSetting('sz', this.value+'px')"></div>
+        <div class="typo-row"><span class="typo-label" id="ui-lh-label">ارتفاع السطر</span><input type="range" min="1.5" max="4.0" step="0.1" value="2.8" oninput="updateSetting('lh', this.value)"></div>
+        <div class="typo-row"><span class="typo-label" id="ui-ws-label">المسافة بين الكلمات</span><input type="range" min="0" max="20" value="0" oninput="updateSetting('ws', this.value+'px')"></div>
+        <div class="typo-row"><span class="typo-label" id="ui-mw-label">عرض المحتوى</span><input type="range" min="400" max="1200" value="800" oninput="updateSetting('max-w', this.value+'px')"></div>
+        <div class="typo-row"><span class="typo-label" id="ui-tsz-label">حجم الترجمة</span><input type="range" min="10" max="28" value="14" oninput="updateSetting('trans-sz', this.value+'px')"></div>
+        <div class="typo-row"><span class="typo-label" id="ui-tfont-label">خط الترجمة</span><select onchange="updateSetting('trans-font', this.value)" style="width:100%"><option value="Arial, Helvetica, sans-serif">Arial</option><option value="Georgia, serif">Georgia</option><option value="'Times New Roman', serif">Times New Roman</option><option value="Verdana, sans-serif">Verdana</option><option value="'Courier New', monospace">Courier New</option><option value="Tahoma, sans-serif">Tahoma</option></select></div>
     
         <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:15px; text-align:center;">
-            <button onclick="localStorage.removeItem('tajweed_rules_config'); localStorage.removeItem('tajweed_conditions_config'); localStorage.removeItem('tajweed_overrides'); localStorage.removeItem('quran_state'); window.location.reload(true);" style="background:#ef4444; color:white; width:100%; border:none; padding:8px; border-radius:6px; font-weight:bold;">مسح الذاكرة المؤقتة</button>
+            <button id="ui-clear-cache" onclick="localStorage.removeItem('tajweed_rules_config'); localStorage.removeItem('tajweed_conditions_config'); localStorage.removeItem('tajweed_overrides'); localStorage.removeItem('quran_state'); window.location.reload(true);" style="background:#ef4444; color:white; width:100%; border:none; padding:8px; border-radius:6px; font-weight:bold;">مسح الذاكرة المؤقتة</button>
         </div>
 </div>
 
@@ -265,32 +265,32 @@
     <div id="controls">
         <div class="row">
             <div class="control-group hide-on-fs">
-                <button onclick="navSurah(-1)">« السابق</button>
-                <label style="margin-left:5px; margin-right:5px; font-weight:bold;">السورة:</label>
+                <button id="ui-prev-surah" onclick="navSurah(-1)">« السابق</button>
+                <label id="ui-surah-label" style="margin-left:5px; margin-right:5px; font-weight:bold;">السورة:</label>
                 <select id="surah-select" title="اختر سورة" onchange="changeSurah(this.value)" style="width:160px">
                 <option value="1">1. الفاتحة</option><option value="2">2. البقرة</option><option value="3">3. آل عمران</option><option value="4">4. النساء</option><option value="5">5. المائدة</option><option value="6">6. الأنعام</option><option value="7">7. الأعراف</option><option value="8">8. الأنفال</option><option value="9">9. التوبة</option><option value="10">10. يونس</option><option value="11">11. هود</option><option value="12">12. يوسف</option><option value="13">13. الرعد</option><option value="14">14. إبراهيم</option><option value="15">15. الحجر</option><option value="16">16. النحل</option><option value="17">17. الإسراء</option><option value="18">18. الكهف</option><option value="19">19. مريم</option><option value="20">20. طه</option><option value="21">21. الأنبياء</option><option value="22">22. الحج</option><option value="23">23. المؤمنون</option><option value="24">24. النور</option><option value="25">25. الفرقان</option><option value="26">26. الشعراء</option><option value="27">27. النمل</option><option value="28">28. القصص</option><option value="29">29. العنكبوت</option><option value="30">30. الروم</option><option value="31">31. لقمان</option><option value="32">32. السجدة</option><option value="33">33. الأحزاب</option><option value="34">34. سبأ</option><option value="35">35. فاطر</option><option value="36">36. يس</option><option value="37">37. الصافات</option><option value="38">38. ص</option><option value="39">39. الزمر</option><option value="40">40. غافر</option><option value="41">41. فصلت</option><option value="42">42. الشورى</option><option value="43">43. الزخرف</option><option value="44">44. الدخان</option><option value="45">45. الجاثية</option><option value="46">46. الأحقاف</option><option value="47">47. محمد</option><option value="48">48. الفتح</option><option value="49">49. الحجرات</option><option value="50">50. ق</option><option value="51">51. الذاريات</option><option value="52">52. الطور</option><option value="53">53. النجم</option><option value="54">54. القمر</option><option value="55">55. الرحمن</option><option value="56">56. الواقعة</option><option value="57">57. الحديد</option><option value="58">58. المجادلة</option><option value="59">59. الحشر</option><option value="60">60. الممتحنة</option><option value="61">61. الصف</option><option value="62">62. الجمعة</option><option value="63">63. المنافقون</option><option value="64">64. التغابن</option><option value="65">65. الطالق</option><option value="66">66. التحريم</option><option value="67">67. الملك</option><option value="68">68. القلم</option><option value="69">69. الحاقة</option><option value="70">70. المعارج</option><option value="71">71. نوح</option><option value="72">72. الجن</option><option value="73">73. المزمل</option><option value="74">74. المدثر</option><option value="75">75. القيامة</option><option value="76">76. الإنسان</option><option value="77">77. المرسلات</option><option value="78">78. النبأ</option><option value="79">79. النازعات</option><option value="80">80. عبس</option><option value="81">81. التكوير</option><option value="82">82. الانفطار</option><option value="83">83. المطففين</option><option value="84">84. الانشقاق</option><option value="85">85. البروج</option><option value="86">86. الطارق</option><option value="87">87. الأعلى</option><option value="88">88. الغاشية</option><option value="89">89. الفجر</option><option value="90">90. البلد</option><option value="91">91. الشمس</option><option value="92">92. الليل</option><option value="93">93. الضحى</option><option value="94">94. الشرح</option><option value="95">95. التين</option><option value="96">96. العلق</option><option value="97">97. القدر</option><option value="98">98. البينة</option><option value="99">99. الزلزلة</option><option value="100">100. العاديات</option><option value="101">101. القارعة</option><option value="102">102. التكاثر</option><option value="103">103. العصر</option><option value="104">104. الهمزة</option><option value="105">105. الفيل</option><option value="106">106. قريش</option><option value="107">107. الماعون</option><option value="108">108. الكوثر</option><option value="109">109. الكافرون</option><option value="110">110. النصر</option><option value="111">111. المسد</option><option value="112">112. الإخلاص</option><option value="113">113. الفلق</option><option value="114">114. الناس</option>
             </select>
-                <button onclick="navSurah(1)">التالي »</button>
+                <button id="ui-next-surah" onclick="navSurah(1)">التالي »</button>
             </div>
             <div class="control-group hide-on-fs" style="display:flex; align-items:center; gap:2px; padding:2px 5px !important;" title="حجم خط القائمة">
                 <button onclick="changeMenuFont(0.05)" style="font-weight:bold; padding:2px 6px !important;">A+</button>
                 <button onclick="changeMenuFont(-0.05)" style="font-weight:bold; padding:2px 6px !important;">A-</button>
             </div>
             <div class="control-group" style="display:flex; align-items:center; gap:5px;">
-                <label style="margin-left:5px; margin-right:5px; font-weight:bold;">اختيار الايات:</label><select id="view-mode" title="اختيار الايات" onchange="changeViewMode(this.value)" style="width:100px">
-                    <option value="all">الكل</option><option value="5">5</option><option value="10">10</option><option value="custom">#</option>
+                <label id="ui-verses-label" style="margin-left:5px; margin-right:5px; font-weight:bold;">اختيار الايات:</label><select id="view-mode" title="اختيار الايات" onchange="changeViewMode(this.value)" style="width:100px">
+                    <option value="all" id="ui-all-opt">الكل</option><option value="5">5</option><option value="10">10</option><option value="custom">#</option>
                 </select>
                 <input type="number" id="custom-chunk-input" title="عدد الآيات المخصص" min="1" max="286" placeholder="العدد" onchange="setCustomChunk(this.value)">
             </div>
             <div id="page-controls" class="page-nav hidden">
-                <button class="big-btn" onclick="changePage(-1)" title="الآيات السابقة">‹ السابق</button>
+                <button id="ui-prev-page" class="big-btn" onclick="changePage(-1)" title="الآيات السابقة">‹ السابق</button>
                 <span id="page-info" style="font-size:1.2rem; font-weight:bold; margin:0 10px; color:var(--accent);"></span>
-                <button class="big-btn" onclick="changePage(1)" title="الآيات التالية">التالي ›</button>
+                <button id="ui-next-page" class="big-btn" onclick="changePage(1)" title="الآيات التالية">التالي ›</button>
             </div>
         </div>
         <div class="row">
             <div class="control-group hide-on-fs">
-                <label style="margin-left:5px; margin-right:5px; font-weight:bold;">القارئ:</label><select id="reciter-select" title="اختر القارئ" style="width:160px" onchange="saveState()">
+                <label id="ui-reciter-label" style="margin-left:5px; margin-right:5px; font-weight:bold;">القارئ:</label><select id="reciter-select" title="اختر القارئ" style="width:160px" onchange="saveState()">
                 <option value="warsh/warsh_ibrahim_aldosary_128kbps">إبراهيم الدوسري</option>
                 <option value="warsh/warsh_yassin_al_jazaery_64kbps">ياسين الجزائري</option>
                 <option value="warsh/warsh_Abdul_Basit_128kbps">عبد الباسط عبد الصمد (ورش)</option>
@@ -301,9 +301,9 @@
                 <input type="number" id="v_end" value="1" min="1">
             </div>
             <div class="control-group">
-                <label style="margin-left:5px; margin-right:5px; font-weight:bold;" title="تفعيل التكرار"><input type="checkbox" id="loop-box"> تكرار</label> <input type="number" id="loop-count" value="0" min="0" style="width:40px; margin-right:-5px;" title="عدد مرات التكرار (0 = مستمر)">
+                <label id="ui-loop-label" style="margin-left:5px; margin-right:5px; font-weight:bold;" title="تفعيل التكرار"><input type="checkbox" id="loop-box"> تكرار</label> <input type="number" id="loop-count" value="0" min="0" style="width:40px; margin-right:-5px;" title="عدد مرات التكرار (0 = مستمر)">
             <button class="primary" onclick="togglePlay()" id="play-btn">▶ تشغيل</button>
-            <button onclick="stop()">⏹</button>
+            <button id="ui-stop-btn" onclick="stop()">⏹</button>
             <button class="exit-fs-btn" onclick="document.exitFullscreen ? document.exitFullscreen() : (document.webkitExitFullscreen ? document.webkitExitFullscreen() : null); document.body.classList.remove('is-fullscreen');" title="الخروج من ملء الشاشة">✖ خروج</button>
             </div>
             <div id="status" style="margin-left: 10px; font-weight: bold; color: var(--accent); min-width: 150px; text-align: right;">مستعد</div>
@@ -563,6 +563,35 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
             btn.classList.remove('eng-btn-active');
             render();
         }
+        updateUILanguage();
+    }
+
+    function updateUILanguage() {
+        const en = englishMode;
+        document.getElementById('ui-prev-surah').textContent = en ? '« Prev' : '« السابق';
+        document.getElementById('ui-next-surah').textContent = en ? 'Next »' : 'التالي »';
+        document.getElementById('ui-surah-label').textContent = en ? 'Surah:' : 'السورة:';
+        document.getElementById('ui-verses-label').textContent = en ? 'Verses:' : 'اختيار الايات:';
+        document.getElementById('ui-all-opt').textContent = en ? 'All' : 'الكل';
+        document.getElementById('ui-prev-page').textContent = en ? '‹ Prev' : '‹ السابق';
+        document.getElementById('ui-next-page').textContent = en ? 'Next ›' : 'التالي ›';
+        document.getElementById('ui-reciter-label').textContent = en ? 'Reciter:' : 'القارئ:';
+        document.getElementById('ui-loop-label').innerHTML = '<input type="checkbox" id="loop-box"> ' + (en ? 'Loop' : 'تكرار');
+        if (!playing) document.getElementById('play-btn').textContent = en ? '▶ Play' : '▶ تشغيل';
+        document.getElementById('ui-stop-btn').textContent = en ? '⏹ Stop' : '⏹';
+        if (!playing) document.getElementById('status').textContent = en ? 'Ready' : 'مستعد';
+        document.getElementById('ui-search-title').textContent = en ? 'Search' : 'البحث';
+        document.getElementById('ui-search-label').textContent = en ? 'Search:' : 'كلمة البحث:';
+        document.getElementById('ui-search-btn').textContent = en ? 'Search' : 'بحث';
+        document.getElementById('search-input').placeholder = en ? 'Type a word...' : 'اكتب كلمة...';
+        document.getElementById('ui-bm-title').textContent = en ? 'Bookmarks' : 'العلامات المرجعية';
+        document.getElementById('ui-sz-label').textContent = en ? 'Font Size' : 'حجم النص';
+        document.getElementById('ui-lh-label').textContent = en ? 'Line Height' : 'ارتفاع السطر';
+        document.getElementById('ui-ws-label').textContent = en ? 'Word Spacing' : 'المسافة بين الكلمات';
+        document.getElementById('ui-mw-label').textContent = en ? 'Content Width' : 'عرض المحتوى';
+        document.getElementById('ui-tsz-label').textContent = en ? 'Translation Size' : 'حجم الترجمة';
+        document.getElementById('ui-tfont-label').textContent = en ? 'Translation Font' : 'خط الترجمة';
+        document.getElementById('ui-clear-cache').textContent = en ? 'Clear Cache' : 'مسح الذاكرة المؤقتة';
     }
 
     async function fetchTranslation(surahNum) {
@@ -708,13 +737,13 @@ function resetAllConditions() { if (confirm('Reset all conditions and letter set
 }
 
         async function play() { 
-    if(playing) return; playing=true; paused=false; stopReq=false; const btn = document.getElementById('play-btn'); const reciter = document.getElementById('reciter-select').value; const sId = String(state.surah).padStart(3,'0'); const st = document.getElementById('status'); btn.innerText = "⏸ قيد التشغيل"; btn.style.background = "";
+    if(playing) return; playing=true; paused=false; stopReq=false; const btn = document.getElementById('play-btn'); const reciter = document.getElementById('reciter-select').value; const sId = String(state.surah).padStart(3,'0'); const st = document.getElementById('status'); btn.innerText = englishMode ? "⏸ Playing" : "⏸ قيد التشغيل"; btn.style.background = "";
     let loopMax = parseInt(document.getElementById('loop-count').value) || 0; let loopCurrent = 0;
-    while(true) { const start = parseInt(document.getElementById('v_start').value); const end = parseInt(document.getElementById('v_end').value); for(let a=start; a<=end; a++) { if(stopReq) break; hl(a); st.innerText = `تشغيل آية ${a} / ${end}`; aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`; try { await new Promise((resolve) => { stopRes = resolve; aud.onended = resolve; aud.onerror = () => { console.error('Audio Err'); st.innerText="خطأ: الصوت غير موجود"; resolve(); }; aud.play().catch(resolve); }); } catch(e){} if(!stopReq) await new Promise(r=> { stopRes = r; setTimeout(r, 200); }); } 
-        if(stopReq || !document.getElementById('loop-box').checked) break; loopCurrent++; if(loopMax > 0 && loopCurrent >= loopMax) break; st.innerText = "جاري التكرار..."; await new Promise(r=> { stopRes = r; setTimeout(r, 500); }); } 
-    playing=false; paused=false; btn.innerText = "▶ تشغيل"; btn.style.background = ""; st.innerText = "مستعد"; 
+    while(true) { const start = parseInt(document.getElementById('v_start').value); const end = parseInt(document.getElementById('v_end').value); for(let a=start; a<=end; a++) { if(stopReq) break; hl(a); st.innerText = englishMode ? `Playing Ayah ${a} / ${end}` : `تشغيل آية ${a} / ${end}`; aud.src = `https://everyayah.com/data/${reciter}/${sId}${String(a).padStart(3,'0')}.mp3`; try { await new Promise((resolve) => { stopRes = resolve; aud.onended = resolve; aud.onerror = () => { console.error('Audio Err'); st.innerText = englishMode ? "Error: Audio not found" : "خطأ: الصوت غير موجود"; resolve(); }; aud.play().catch(resolve); }); } catch(e){} if(!stopReq) await new Promise(r=> { stopRes = r; setTimeout(r, 200); }); } 
+        if(stopReq || !document.getElementById('loop-box').checked) break; loopCurrent++; if(loopMax > 0 && loopCurrent >= loopMax) break; st.innerText = englishMode ? "Looping..." : "جاري التكرار..."; await new Promise(r=> { stopRes = r; setTimeout(r, 500); }); } 
+    playing=false; paused=false; btn.innerText = englishMode ? "▶ Play" : "▶ تشغيل"; btn.style.background = ""; st.innerText = englishMode ? "Ready" : "مستعد"; 
 }
-    function stop() { stopReq = true; aud.pause(); if (stopRes) stopRes(); playing = false; paused = false; const btn = document.getElementById('play-btn'); btn.innerText = "▶ تشغيل"; btn.style.background = ""; document.getElementById('status').innerText = "مستعد";}
+    function stop() { stopReq = true; aud.pause(); if (stopRes) stopRes(); playing = false; paused = false; const btn = document.getElementById('play-btn'); btn.innerText = englishMode ? "▶ Play" : "▶ تشغيل"; btn.style.background = ""; document.getElementById('status').innerText = englishMode ? "Ready" : "مستعد";}
     function togglePanel(id) { document.querySelectorAll('.popover').forEach(p => { if(p.id !== id) p.classList.remove('show'); }); document.getElementById(id).classList.toggle('show'); }
     function toggleTheme() { document.body.classList.toggle('dark'); saveState(); }
     function toggleFullScreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); document.body.classList.add('is-fullscreen'); } else { if (document.exitFullscreen) document.exitFullscreen(); document.body.classList.remove('is-fullscreen'); } }
@@ -730,7 +759,7 @@ const originalTogglePlay = window.togglePlay || async function() {};
 window.togglePlay = async function() {
     document.body.classList.add('is-fullscreen');
     if (!document.fullscreenElement && !document.webkitFullscreenElement) { try { if (document.documentElement.requestFullscreen) { await document.documentElement.requestFullscreen().catch(()=>{}); } else if (document.documentElement.webkitRequestFullscreen) { await document.documentElement.webkitRequestFullscreen(); } } catch (e) { console.warn("Fullscreen blocked", e); } }
-    if (!playing) { play(); } else { const btn = document.getElementById('play-btn'); if (!paused) { aud.pause(); paused = true; btn.innerText = "▶ استئناف"; btn.style.background = "#d97706"; } else { aud.play(); paused = false; btn.innerText = "⏸ قيد التشغيل"; btn.style.background = ""; } }
+    if (!playing) { play(); } else { const btn = document.getElementById('play-btn'); if (!paused) { aud.pause(); paused = true; btn.innerText = englishMode ? "▶ Resume" : "▶ استئناف"; btn.style.background = "#d97706"; } else { aud.play(); paused = false; btn.innerText = englishMode ? "⏸ Playing" : "⏸ قيد التشغيل"; btn.style.background = ""; } }
 };
 
 let menuFsOffset = parseFloat(localStorage.getItem('menu_fs_offset')) || 0;
