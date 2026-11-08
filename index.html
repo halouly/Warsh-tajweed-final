@@ -79,7 +79,7 @@
         header { position: sticky; top: 0; z-index: 900; background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin:0; font-size: 1.2rem; color: var(--accent); }
         .tools { display: flex; gap: 8px; }
-        .popover { display: none; position: fixed; top: 60px; right: 20px; background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 8px; z-index: 2000; min-width: 300px; max-width: 100vw; max-height: calc(100vh - 220px); overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .popover { display: none; position: fixed; top: 60px; right: 20px; background: var(--panel); border: 1px solid var(--border); padding: 15px; border-radius: 8px; z-index: 2001; min-width: 300px; max-width: 100vw; max-height: calc(100vh - 220px); overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .popover.show { display: block; }
         html[dir="rtl"] .popover { right: auto; left: 20px; }
         @media (max-width: 768px) {
@@ -191,7 +191,8 @@
         }
 
         /* Popover backdrop on mobile */
-        .popover-backdrop { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 2000; }
+        .popover-backdrop { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: transparent; z-index: 2000; }
+        @media (max-width: 768px) { .popover-backdrop { background: rgba(0,0,0,0.3); } }
         .popover-backdrop.show { display: block; }
 
         @media (max-width: 480px) {
@@ -242,7 +243,7 @@
 
         @media (max-width: 768px) {
             .hamburger { display: block; }
-            header .tools:first-child { display: none; }
+            header > div.tools:first-of-type { display: none; }
         }
         @media (min-width: 769px) {
             .mobile-menu, .mobile-menu-overlay { display: none !important; }
